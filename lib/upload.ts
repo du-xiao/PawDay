@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import crypto from "node:crypto";
 
@@ -20,4 +20,15 @@ export async function saveImage(file: File) {
   const name = `${Date.now()}-${crypto.randomUUID()}.${allowed.get(file.type)}`;
   await writeFile(path.join(dir, name), Buffer.from(await file.arrayBuffer()));
   return `/uploads/${name}`;
+}
+
+export async function deleteImage(url?: string | null) {
+  if (!url?.startsWith("/uploads/")) return;
+  const name = url.slice("/uploads/".length);
+  if (!name || name !== path.basename(name)) return;
+  try {
+    await unlink(path.join(uploadDir(), name));
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+  }
 }

@@ -25,8 +25,6 @@ Next.js 15 App Router、TypeScript、Tailwind CSS v4、shadcn/ui 组件模式、
 ```bash
 cp .env.example .env
 pnpm install
-pnpm prisma migrate dev
-pnpm db:seed
 pnpm dev
 ```
 
@@ -34,40 +32,89 @@ pnpm dev
 
 本地环境中的 `file:../data/pawday.db` 是相对 `prisma/schema.prisma` 的路径；Docker Compose 会自动覆盖为 `file:/data/pawday.db`。
 
-首次只想使用空数据库时，可以跳过 `pnpm db:seed`。应用第一次收到请求时会自动建表，并在数据库没有用户的情况下创建管理员。
+应用第一次收到请求时会自动建表，并且只在数据库没有用户时创建一个管理员。不会自动创建小狗、日常、开销、健康、提醒或照片数据。`pnpm db:seed` 也只执行同一套管理员初始化逻辑。
+
+`ADMIN_EMAIL` 和 `ADMIN_PASSWORD` 只用于空数据库的首次初始化。数据库已有管理员后，修改环境变量不会覆盖现有账号或密码，密码请在应用的“设置”页面修改。
 
 ## Docker / 绿联云 NAS
 
-1. 复制环境变量并修改密码与密钥：
+### 1. 确认 NAS 架构
+
+在 NAS 终端运行：
 
 ```bash
-cp .env.example .env
+uname -m
 ```
 
-建议使用以下命令生成 `AUTH_SECRET`：
+- `x86_64`：使用 `linux/amd64`
+- `aarch64` 或 `arm64`：使用 `linux/arm64`
+
+### 2. 在 Mac 构建并导出镜像
+
+大多数 Intel / AMD 绿联云型号使用：
 
 ```bash
+docker buildx build --platform linux/amd64 -t pawday:1.0.0 --load .
+docker save -o pawday-1.0.0-amd64.tar pawday:1.0.0
+```
+
+ARM 型号改为：
+
+```bash
+docker buildx build --platform linux/arm64 -t pawday:1.0.0 --load .
+docker save -o pawday-1.0.0-arm64.tar pawday:1.0.0
+```
+
+将生成的 `.tar` 上传到绿联云，在 Docker 镜像管理中导入；也可以在 NAS 终端执行 `docker load -i pawday-1.0.0-amd64.tar`。
+
+### 3. NAS Compose 配置
+
+把 `docker-compose.nas.yml` 和一份 `.env.nas` 放在 NAS 的同一目录：
+
+```bash
+cp .env.nas.example .env.nas
 openssl rand -base64 32
 ```
 
-2. 构建并启动：
+把随机值填入 `.env.nas` 的 `AUTH_SECRET`，同时修改首次管理员密码。然后创建持久化目录并启动：
 
 ```bash
-docker compose up -d --build
+mkdir -p data uploads
+sudo chown -R 1001:1001 data uploads
+docker compose --env-file .env.nas -f docker-compose.nas.yml up -d
 ```
 
-3. 访问 `http://NAS-IP:3000`。
+访问 `http://NAS-IP:3000`。如果 NAS 没有 `sudo`，请在绿联云文件管理器中给 Compose 所在目录及 `data`、`uploads` 目录授予 Docker 容器可读写权限。
 
 Compose 会挂载：
 
 - `./data` → `/data`，数据库为 `/data/pawday.db`
 - `./uploads` → `/uploads`，保存上传图片
 
-更新应用时重新执行 `docker compose up -d --build`。只要保留这两个宿主机目录，重建容器不会丢失数据。
+镜像中不包含这两个目录的数据。删除或重建容器不会丢失数据，只要不删除 Compose 所在目录里的 `data` 和 `uploads`。
+
+### 4. 升级与回滚
+
+升级前先停容器并备份，避免复制 SQLite 正在写入的文件：
+
+```bash
+mkdir -p backups
+docker compose --env-file .env.nas -f docker-compose.nas.yml stop
+tar -czf "backups/pawday-$(date +%F-%H%M).tar.gz" data uploads .env.nas docker-compose.nas.yml
+docker compose --env-file .env.nas -f docker-compose.nas.yml start
+```
+
+在 Mac 上用新版本号构建，例如 `pawday:1.1.0`，上传并导入 NAS。然后把 `.env.nas` 中的 `PAWDAY_IMAGE` 改为 `pawday:1.1.0`：
+
+```bash
+docker compose --env-file .env.nas -f docker-compose.nas.yml up -d
+```
+
+升级只替换容器，原数据库和图片继续使用。需要回滚时，把 `PAWDAY_IMAGE` 改回旧标签并再次执行 `up -d`。不要删除 `data`、`uploads`，也不要执行会删除卷或数据目录的命令。
 
 ## 公网访问
 
-应用除 `/login`、`/api/auth/*`、`/favicon.ico`、`/uploads/*` 外均由 `middleware.ts` 保护。建议通过 NAS 自带反向代理或可信网关配置 HTTPS，不要直接把 3000 端口暴露到公网。
+应用除 `/login`、`/api/auth/*`、`/favicon.ico` 外均要求登录，上传图片也会校验会话。建议通过 NAS 自带反向代理或可信网关配置 HTTPS，不要直接把 3000 端口暴露到公网。
 
 请务必：
 
@@ -91,7 +138,7 @@ docker compose up -d
 - 格式：JPG、PNG、WebP
 - 单文件：最大 10MB
 - 文件名：服务端生成随机 UUID
-- `/uploads/*` 按需求设为公开资源路径，请不要在照片中保存敏感信息
+- 上传文件需要有效登录会话才能读取
 
 ## 常用命令
 

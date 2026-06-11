@@ -8,6 +8,7 @@ import { z } from "zod";
 import { Pencil, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { logSchema } from "@/lib/schemas";
+import { toDateTimeInput } from "@/lib/utils";
 import { saveLogAction } from "@/actions/app";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,7 +23,7 @@ const moods = ["开心", "平静", "兴奋", "困倦", "不舒服", "未记录"]
 
 export function LogForm({ initial, disabled = false }: { initial?: Values; disabled?: boolean }) {
   const [open, setOpen] = useState(false); const [pending, startTransition] = useTransition(); const fileRef = useRef<HTMLInputElement>(null); const router = useRouter();
-  const { register, handleSubmit, formState: { errors } } = useForm<Values>({ resolver: zodResolver(logSchema), defaultValues: initial || { type: "遛狗", title: "", notes: "", occurredAt: new Date().toISOString().slice(0,16), mood: "开心", imageUrl: "" } });
+  const { register, handleSubmit, formState: { errors } } = useForm<Values>({ resolver: zodResolver(logSchema), defaultValues: initial || { type: "遛狗", title: "", notes: "", occurredAt: toDateTimeInput(new Date()), mood: "开心", imageUrl: "" } });
   function submit(values: Values) { const fd = new FormData(); Object.entries(values).forEach(([k,v]) => fd.set(k, String(v ?? ""))); const file=fileRef.current?.files?.[0]; if(file) fd.set("image",file); startTransition(async()=>{const r=await saveLogAction(fd);if(r.ok){toast.success(initial?"记录已更新":"今天又多了一段回忆");setOpen(false);router.refresh();}else toast.error(r.error);}); }
   return <Dialog open={open} onOpenChange={setOpen}><DialogTrigger asChild><Button variant={initial?"ghost":"warm"} size={initial?"sm":"default"} disabled={disabled}>{initial?<Pencil className="size-3.5"/>:<Plus className="size-4"/>}{initial?"编辑":"记录今天"}</Button></DialogTrigger><DialogContent><DialogHeader><DialogTitle>{initial?"编辑日常记录":"今天发生了什么？"}</DialogTitle><DialogDescription>不需要写很多，几个词也能留住这一天。</DialogDescription></DialogHeader><form onSubmit={handleSubmit(submit)} className="space-y-4">
     <div className="grid gap-4 sm:grid-cols-2"><Field label="类型"><select className={selectClass} {...register("type")}>{types.map(x=><option key={x}>{x}</option>)}</select></Field><Field label="心情"><select className={selectClass} {...register("mood")}>{moods.map(x=><option key={x}>{x}</option>)}</select></Field></div>

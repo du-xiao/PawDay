@@ -1,4 +1,5 @@
 import bcrypt from "bcrypt";
+import { z } from "zod";
 import { prisma } from "@/lib/db";
 
 let bootstrapped: Promise<void> | null = null;
@@ -32,11 +33,13 @@ export async function ensureDatabase() {
       for (const statement of statements) await prisma.$executeRawUnsafe(statement);
       const count = await prisma.user.count();
       if (count === 0) {
-        const email = process.env.ADMIN_EMAIL?.trim().toLowerCase();
-        const password = process.env.ADMIN_PASSWORD;
-        if (!email || !password) throw new Error("首次启动需要设置 ADMIN_EMAIL 和 ADMIN_PASSWORD");
+        const config = z.object({
+          email: z.string().trim().toLowerCase().email(),
+          password: z.string().min(8),
+        }).safeParse({ email: process.env.ADMIN_EMAIL, password: process.env.ADMIN_PASSWORD });
+        if (!config.success) throw new Error("首次启动需要设置有效的 ADMIN_EMAIL，以及至少 8 位的 ADMIN_PASSWORD");
         await prisma.user.create({
-          data: { email, name: "PawDay 主人", passwordHash: await bcrypt.hash(password, 12) },
+          data: { email: config.data.email, name: "PawDay 主人", passwordHash: await bcrypt.hash(config.data.password, 12) },
         });
       }
     })().catch((error) => {

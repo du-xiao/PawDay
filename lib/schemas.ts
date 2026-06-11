@@ -3,9 +3,8 @@ import { z } from "zod";
 const optionalText = z.string().trim().max(500).optional().or(z.literal(""));
 
 export const loginSchema = z.object({
-  email: z.string().email("请输入正确的邮箱"),
+  email: z.string().trim().email("请输入正确的邮箱"),
   password: z.string().min(1, "请输入密码"),
-  remember: z.boolean(),
 });
 
 export const dogSchema = z.object({
@@ -19,7 +18,7 @@ export const dogSchema = z.object({
 });
 
 export const logSchema = z.object({
-  id: z.string().optional(),
+  id: z.string().cuid().optional(),
   type: z.enum(["喂食", "遛狗", "洗澡", "排便", "睡眠", "训练", "情绪", "其他"]),
   title: z.string().trim().min(1, "请填写标题").max(80),
   notes: optionalText,
@@ -29,7 +28,7 @@ export const logSchema = z.object({
 });
 
 export const expenseSchema = z.object({
-  id: z.string().optional(),
+  id: z.string().cuid().optional(),
   category: z.enum(["狗粮", "零食", "医疗", "洗护", "玩具", "用品", "保险", "寄养", "其他"]),
   amount: z.coerce.number().positive("金额必须大于 0").max(999999),
   date: z.string().min(1, "请选择日期"),
@@ -38,7 +37,7 @@ export const expenseSchema = z.object({
 });
 
 export const healthSchema = z.object({
-  id: z.string().optional(),
+  id: z.string().cuid().optional(),
   type: z.enum(["疫苗", "驱虫", "体检", "用药", "疾病", "绝育", "体重"]),
   title: z.string().trim().min(1, "请填写标题").max(80),
   date: z.string().min(1, "请选择日期"),
@@ -51,7 +50,7 @@ export const photoSchema = z.object({
   title: z.string().trim().max(80).optional().or(z.literal("")),
   notes: optionalText,
   date: z.string().min(1, "请选择日期"),
-  dailyLogId: z.string().optional().or(z.literal("")),
+  dailyLogId: z.string().cuid().optional().or(z.literal("")),
 });
 
 export const passwordSchema = z.object({

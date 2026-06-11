@@ -1,19 +1,19 @@
 services:
   pawday:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ${PAWDAY_IMAGE:-pawday:1.0.0}
     container_name: pawday
     restart: unless-stopped
+    init: true
     ports:
-      - "3000:3000"
-    env_file:
-      - .env
+      - "${PAWDAY_PORT:-3000}:3000"
     environment:
       DATABASE_URL: file:/data/pawday.db
       UPLOAD_DIR: /uploads
+      AUTH_SECRET: ${AUTH_SECRET:?请在 .env.nas 中设置 AUTH_SECRET}
       AUTH_TRUST_HOST: "true"
-      TZ: Asia/Shanghai
+      ADMIN_EMAIL: ${ADMIN_EMAIL:?请在 .env.nas 中设置 ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?请在 .env.nas 中设置 ADMIN_PASSWORD}
+      TZ: ${TZ:-Asia/Shanghai}
     volumes:
       - ./data:/data
       - ./uploads:/uploads

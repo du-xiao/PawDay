@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const isPublic = pathname === "/login" || pathname === "/favicon.ico" || pathname.startsWith("/api/auth/") || pathname.startsWith("/uploads/") || pathname.startsWith("/_next/");
+  const isPublic = pathname === "/login" || pathname === "/favicon.ico" || pathname.startsWith("/api/auth/") || pathname.startsWith("/_next/");
   if (isPublic) return NextResponse.next();
   const hasSession = request.cookies.has("authjs.session-token") || request.cookies.has("__Secure-authjs.session-token");
   if (hasSession) return NextResponse.next();

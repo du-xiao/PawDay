@@ -1,6 +1,7 @@
 node_modules
 .next
 .env
+.env.nas
 data/*
 !data/.gitkeep
 uploads/*

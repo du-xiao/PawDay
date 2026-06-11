@@ -12,12 +12,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   pages: { signIn: "/login" },
   providers: [
     Credentials({
-      credentials: { email: {}, password: {}, remember: {} },
+      credentials: { email: {}, password: {} },
       async authorize(credentials) {
         const parsed = loginSchema.safeParse({
           email: credentials.email,
           password: credentials.password,
-          remember: credentials.remember !== "false",
         });
         if (!parsed.success) return null;
         await ensureDatabase();
