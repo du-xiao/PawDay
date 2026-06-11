@@ -11,6 +11,7 @@ import { dogSchema } from "@/lib/schemas";
 import { saveDogAction } from "@/actions/app";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DateInput } from "@/components/ui/date-input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Field, selectClass } from "@/components/ui/form-field";
 import { FormActions } from "./shared";
@@ -37,7 +38,7 @@ export function DogForm({ dog, onboarding = false }: { dog?: DogValue; onboardin
       <Field label="头像" hint="JPG、PNG 或 WebP，最大 10MB"><Input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="pt-3" /></Field>
       <div className="grid gap-4 sm:grid-cols-2"><Field label="名字" error={errors.name?.message}><Input placeholder="例如：奶糖" {...register("name")} /></Field><Field label="品种" error={errors.breed?.message}><Input placeholder="例如：比熊" {...register("breed")} /></Field></div>
       <div className="grid gap-4 sm:grid-cols-2"><Field label="性别"><select className={selectClass} {...register("sex")}><option>男孩</option><option>女孩</option><option>未知</option></select></Field><Field label="当前体重（kg）" error={errors.weightKg?.message as string}><Input type="number" step="0.01" placeholder="5.20" {...register("weightKg")} /></Field></div>
-      <div className="grid gap-4 sm:grid-cols-2"><Field label="生日" error={errors.birthDate?.message}><Input type="date" {...register("birthDate")} /></Field><Field label="来到家的日子"><Input type="date" {...register("adoptionDate")} /></Field></div>
+      <div className="grid gap-4 sm:grid-cols-2"><Field label="生日" error={errors.birthDate?.message}><DateInput {...register("birthDate")} /></Field><Field label="来到家的日子"><DateInput {...register("adoptionDate")} /></Field></div>
       <FormActions pending={pending} submitLabel={dog ? "保存修改" : "创建档案"} onCancel={() => setOpen(false)} />
     </form>
   </DialogContent></Dialog>;

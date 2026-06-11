@@ -42,6 +42,14 @@ body {
 button, a, input, textarea, select { -webkit-tap-highlight-color: transparent; }
 ::selection { background: var(--orange-soft); }
 
+.dialog-scrollbar-hidden {
+  scrollbar-width: none;
+}
+
+.dialog-scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}
+
 .glass {
   background: color-mix(in srgb, var(--card) 88%, transparent);
   backdrop-filter: blur(22px);
