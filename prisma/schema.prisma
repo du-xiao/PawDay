@@ -1,0 +1,152 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  passwordHash  String
+  accounts      Account[]
+  sessions      Session[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Dog {
+  id           String         @id @default(cuid())
+  name         String
+  breed        String?
+  sex          String?
+  birthDate    DateTime
+  adoptionDate DateTime?
+  weightGrams  Int?
+  avatarUrl    String?
+  dailyLogs    DailyLog[]
+  expenses     Expense[]
+  health       HealthRecord[]
+  photos       Photo[]
+  reminders    Reminder[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+model DailyLog {
+  id         String   @id @default(cuid())
+  dogId      String
+  type       String
+  title      String
+  notes      String?
+  occurredAt DateTime
+  mood       String?
+  imageUrl   String?
+  dog        Dog      @relation(fields: [dogId], references: [id], onDelete: Cascade)
+  photos     Photo[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([occurredAt])
+}
+
+model Expense {
+  id          String   @id @default(cuid())
+  dogId       String
+  category    String
+  amountCents Int
+  date        DateTime
+  merchant    String?
+  notes       String?
+  dog         Dog      @relation(fields: [dogId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([date])
+}
+
+model HealthRecord {
+  id               String   @id @default(cuid())
+  dogId            String
+  type             String
+  title            String
+  date             DateTime
+  notes            String?
+  weightGrams      Int?
+  nextReminderDate DateTime?
+  dog              Dog      @relation(fields: [dogId], references: [id], onDelete: Cascade)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([date])
+}
+
+model Photo {
+  id         String    @id @default(cuid())
+  dogId      String
+  dailyLogId String?
+  url        String
+  title      String?
+  notes      String?
+  date       DateTime
+  dog        Dog       @relation(fields: [dogId], references: [id], onDelete: Cascade)
+  dailyLog   DailyLog? @relation(fields: [dailyLogId], references: [id], onDelete: SetNull)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([date])
+}
+
+model Reminder {
+  id        String   @id @default(cuid())
+  dogId     String
+  type      String
+  title     String
+  dueAt     DateTime
+  completed Boolean  @default(false)
+  notes     String?
+  dog       Dog      @relation(fields: [dogId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([dueAt])
+}
