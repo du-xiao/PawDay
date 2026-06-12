@@ -56,7 +56,11 @@ uname -m
 当前 Intel N100 绿联 NAS 使用下面的命令。即使 Mac 是 Apple 芯片，也必须指定目标平台为 `linux/amd64`：
 
 ```bash
-docker buildx build --platform linux/amd64 -t pawday:1.0.0 --load .
+docker buildx build \
+  --platform linux/amd64 \
+  --build-arg NODE_IMAGE=docker.m.daocloud.io/library/node:22-alpine \
+  -t pawday:1.0.0 \
+  --load .
 docker save -o pawday-1.0.0-amd64.tar pawday:1.0.0
 ```
 
