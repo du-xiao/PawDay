@@ -49,68 +49,88 @@ uname -m
 - `x86_64`：使用 `linux/amd64`
 - `aarch64` 或 `arm64`：使用 `linux/arm64`
 
+当前部署设备的 CPU 是 **Intel N100**，属于 `x86_64` 架构，因此 PawDay 镜像固定构建为 `linux/amd64`，不要使用 `linux/arm64`。
+
 ### 2. 在 Mac 构建并导出镜像
 
-大多数 Intel / AMD 绿联云型号使用：
+当前 Intel N100 绿联 NAS 使用下面的命令。即使 Mac 是 Apple 芯片，也必须指定目标平台为 `linux/amd64`：
 
 ```bash
 docker buildx build --platform linux/amd64 -t pawday:1.0.0 --load .
 docker save -o pawday-1.0.0-amd64.tar pawday:1.0.0
 ```
 
-ARM 型号改为：
+只有以后更换为 ARM 架构 NAS 时，才改用：
 
 ```bash
 docker buildx build --platform linux/arm64 -t pawday:1.0.0 --load .
 docker save -o pawday-1.0.0-arm64.tar pawday:1.0.0
 ```
 
-将生成的 `.tar` 上传到绿联云，在 Docker 镜像管理中导入；也可以在 NAS 终端执行 `docker load -i pawday-1.0.0-amd64.tar`。
+Apple 芯片 Mac 也可以构建 `linux/amd64` 镜像，目标平台必须与 NAS 架构一致。将生成的 `.tar` 上传到绿联云，在 Docker 镜像管理中导入；也可以在 NAS 终端执行：
+
+```bash
+docker load -i pawday-1.0.0-amd64.tar
+```
 
 ### 3. NAS Compose 配置
 
-把 `docker-compose.nas.yml` 和一份 `.env.nas` 放在 NAS 的同一目录：
+`docker-compose.nas.yml` 是自包含配置，不依赖额外的 `.env` 文件。使用前在文件中修改：
+
+- `image`：必须与导入 NAS 的镜像名称和版本一致
+- `ADMIN_EMAIL`：空数据库首次启动时创建的管理员邮箱
+- `ADMIN_PASSWORD`：空数据库首次启动时创建的管理员密码，至少 8 位
+- `AUTH_SECRET`：登录会话加密秘钥，生成后长期保留
+- `volumes` 左侧：NAS 上的数据库和上传图片存储路径
+
+在 Mac 生成认证秘钥：
 
 ```bash
-cp .env.nas.example .env.nas
-openssl rand -base64 32
+openssl rand -base64 48
 ```
 
-把随机值填入 `.env.nas` 的 `AUTH_SECRET`，同时修改首次管理员密码。然后创建持久化目录并启动：
+将输出完整填入 Compose 的 `AUTH_SECRET`。认证秘钥是一个配置值，不是文件路径；上传文件路径由 `volumes` 和 `UPLOAD_DIR` 共同配置。
+
+示例使用 `/volume1/docker/pawday/data` 和 `/volume1/docker/pawday/uploads`。先在 NAS 创建目录并授予容器用户 `1001` 读写权限：
 
 ```bash
-mkdir -p data uploads
-sudo chown -R 1001:1001 data uploads
-docker compose --env-file .env.nas -f docker-compose.nas.yml up -d
+sudo mkdir -p /volume1/docker/pawday/data /volume1/docker/pawday/uploads
+sudo chown -R 1001:1001 /volume1/docker/pawday/data /volume1/docker/pawday/uploads
+docker compose -f docker-compose.nas.yml up -d
 ```
 
-访问 `http://NAS-IP:3000`。如果 NAS 没有 `sudo`，请在绿联云文件管理器中给 Compose 所在目录及 `data`、`uploads` 目录授予 Docker 容器可读写权限。
+不同绿联型号的共享目录可能不是 `/volume1`，请以 NAS 文件管理器显示的实际绝对路径为准。访问 `http://NAS-IP:3000`。如果 NAS 没有 `sudo`，请在绿联云文件管理器中给两个存储目录授予 Docker 容器可读写权限。
 
 Compose 会挂载：
 
-- `./data` → `/data`，数据库为 `/data/pawday.db`
-- `./uploads` → `/uploads`，保存上传图片
+- `/volume1/docker/pawday/data` → `/data`，数据库为 `/data/pawday.db`
+- `/volume1/docker/pawday/uploads` → `/uploads`，保存上传图片
 
-镜像中不包含这两个目录的数据。删除或重建容器不会丢失数据，只要不删除 Compose 所在目录里的 `data` 和 `uploads`。
+镜像中不包含这两个目录的数据。删除或重建容器不会丢失数据，只要不删除 NAS 上挂载的 `data` 和 `uploads` 目录。
+
+管理员邮箱和密码只对空数据库生效。已有 `/data/pawday.db` 时，修改 Compose 中的管理员配置不会重置账号；登录后可在“设置”页面修改密码。
 
 ### 4. 升级与回滚
 
 升级前先停容器并备份，避免复制 SQLite 正在写入的文件：
 
 ```bash
-mkdir -p backups
-docker compose --env-file .env.nas -f docker-compose.nas.yml stop
-tar -czf "backups/pawday-$(date +%F-%H%M).tar.gz" data uploads .env.nas docker-compose.nas.yml
-docker compose --env-file .env.nas -f docker-compose.nas.yml start
+sudo mkdir -p /volume1/docker/pawday/backups
+docker compose -f docker-compose.nas.yml stop
+sudo tar -czf "/volume1/docker/pawday/backups/pawday-$(date +%F-%H%M).tar.gz" \
+  /volume1/docker/pawday/data \
+  /volume1/docker/pawday/uploads \
+  docker-compose.nas.yml
+docker compose -f docker-compose.nas.yml start
 ```
 
-在 Mac 上用新版本号构建，例如 `pawday:1.1.0`，上传并导入 NAS。然后把 `.env.nas` 中的 `PAWDAY_IMAGE` 改为 `pawday:1.1.0`：
+在 Mac 上用新版本号构建，例如 `pawday:1.1.0`，上传并导入 NAS。然后把 Compose 中的 `image` 改为 `pawday:1.1.0`：
 
 ```bash
-docker compose --env-file .env.nas -f docker-compose.nas.yml up -d
+docker compose -f docker-compose.nas.yml up -d
 ```
 
-升级只替换容器，原数据库和图片继续使用。需要回滚时，把 `PAWDAY_IMAGE` 改回旧标签并再次执行 `up -d`。不要删除 `data`、`uploads`，也不要执行会删除卷或数据目录的命令。
+升级只替换容器，原数据库和图片继续使用。需要回滚时，把 `image` 改回旧标签并再次执行 `up -d`。不要删除 `data`、`uploads`，也不要执行会删除这些宿主机目录的命令。
 
 ## 公网访问
 

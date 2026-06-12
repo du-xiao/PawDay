@@ -8,7 +8,7 @@ import { z } from "zod";
 import { ImagePlus, Pencil, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { logSchema } from "@/lib/schemas";
-import { toDateTimeInput } from "@/lib/utils";
+import { cn, toDateTimeInput } from "@/lib/utils";
 import { saveLogAction } from "@/actions/app";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,9 +55,9 @@ export function LogForm({ initial, disabled = false }: { initial?: Values; disab
       <form onSubmit={handleSubmit(submit)} className="space-y-4">
         <section className="rounded-2xl border bg-black/[.018] p-4 dark:bg-white/[.025]">
           <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">记录信息</p>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <Field label="类型"><select className={`${selectClass} ${compactControl}`} {...register("type")}>{types.map((type) => <option key={type}>{type}</option>)}</select></Field>
-            <Field label="心情"><select className={`${selectClass} ${compactControl}`} {...register("mood")}>{moods.map((mood) => <option key={mood}>{mood}</option>)}</select></Field>
+          <div className="grid gap-3 sm:grid-cols-[minmax(0,0.8fr)_minmax(0,0.8fr)_minmax(0,1.4fr)]">
+            <Field label="类型"><select className={cn(selectClass, compactControl)} {...register("type")}>{types.map((type) => <option key={type}>{type}</option>)}</select></Field>
+            <Field label="心情"><select className={cn(selectClass, compactControl)} {...register("mood")}>{moods.map((mood) => <option key={mood}>{mood}</option>)}</select></Field>
             <Field label="时间" error={errors.occurredAt?.message}><DateInput className={compactControl} type="datetime-local" {...register("occurredAt")} /></Field>
           </div>
           <Field label="标题" error={errors.title?.message} className="mt-3"><Input className={compactControl} placeholder="晚风里走了很远" {...register("title")} /></Field>

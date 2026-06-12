@@ -8,7 +8,7 @@ import { z } from "zod";
 import { BellRing, Pencil, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { healthSchema } from "@/lib/schemas";
-import { toDateInput } from "@/lib/utils";
+import { cn, toDateInput } from "@/lib/utils";
 import { saveHealthAction } from "@/actions/app";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -66,7 +66,7 @@ export function HealthForm({ initial, disabled = false }: { initial?: Values; di
         <section className="rounded-2xl border bg-black/[.018] p-4 dark:bg-white/[.025]">
           <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">基础信息</p>
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="类型"><select className={`${selectClass} ${compactControl}`} {...register("type")}>{types.map((type) => <option key={type}>{type}</option>)}</select></Field>
+            <Field label="类型"><select className={cn(selectClass, compactControl)} {...register("type")}>{types.map((type) => <option key={type}>{type}</option>)}</select></Field>
             <Field label="日期"><DateInput className={compactControl} {...register("date")} /></Field>
           </div>
           <div className={showWeight ? "mt-3 grid gap-3 sm:grid-cols-[1fr_180px]" : "mt-3"}>

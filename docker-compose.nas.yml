@@ -1,22 +1,32 @@
 services:
   pawday:
-    image: ${PAWDAY_IMAGE:-pawday:1.0.0}
+    # 升级时只修改镜像版本，下面的数据目录保持不变。
+    image: pawday:1.0.0
     container_name: pawday
     restart: unless-stopped
     init: true
+    stop_grace_period: 30s
     ports:
-      - "${PAWDAY_PORT:-3000}:3000"
+      # 左侧是 NAS 对外端口，可以按需修改。
+      - "3000:3000"
     environment:
+      # 管理员账号和密码只在数据库为空的第一次启动时使用。
+      ADMIN_EMAIL: ""
+      ADMIN_PASSWORD: ""
+
+      # 在 Mac 运行 `openssl rand -base64 48` 生成，升级时不要更换。
+      AUTH_SECRET: ""
+      AUTH_TRUST_HOST: "true"
+
+      # 容器内路径通常无需修改，持久化位置由下方 volumes 左侧决定。
       DATABASE_URL: file:/data/pawday.db
       UPLOAD_DIR: /uploads
-      AUTH_SECRET: ${AUTH_SECRET:?请在 .env.nas 中设置 AUTH_SECRET}
-      AUTH_TRUST_HOST: "true"
-      ADMIN_EMAIL: ${ADMIN_EMAIL:?请在 .env.nas 中设置 ADMIN_EMAIL}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?请在 .env.nas 中设置 ADMIN_PASSWORD}
-      TZ: ${TZ:-Asia/Shanghai}
+      TZ: Asia/Shanghai
     volumes:
-      - ./data:/data
-      - ./uploads:/uploads
+      # 左侧改成绿联 NAS 上实际存在的绝对路径。
+      # data 保存 SQLite 数据库，uploads 保存用户上传的图片。
+      - /volume1/docker/pawday/data:/data
+      - /volume1/docker/pawday/uploads:/uploads
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:3000/login"]
       interval: 30s

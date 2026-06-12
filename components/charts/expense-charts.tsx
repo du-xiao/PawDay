@@ -26,7 +26,7 @@ export function ExpenseCharts({categories,months,scope,selectedYear,selectedMont
     </div>
     <div className="soft-card min-w-0 rounded-3xl p-5 sm:p-6">
       <h3 className="font-semibold">月度趋势</h3><p className="mt-1 text-xs text-[var(--muted)]">过去 12 个月</p>
-      <div className="mt-6 h-64 min-w-0"><ResponsiveContainer minWidth={0}><BarChart data={months} margin={{left:-8,right:4}}><CartesianGrid vertical={false} stroke="var(--line)"/><XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fontSize:10,fill:"var(--muted)"}}/><YAxis width={46} axisLine={false} tickLine={false} tick={{fontSize:10,fill:"var(--muted)"}} tickFormatter={(value)=>`¥${Math.round(Number(value)/100)}`}/><Tooltip formatter={(value)=>money(Number(value))} contentStyle={{borderRadius:16,border:"1px solid var(--line)",background:"var(--background)",fontSize:12}}/><Bar dataKey="value" fill="#e88758" radius={[8,8,3,3]} maxBarSize={34}/></BarChart></ResponsiveContainer></div>
+      <div className="mt-6 h-64 min-w-0"><ResponsiveContainer minWidth={0}><BarChart data={months} margin={{left:-8,right:4}}><CartesianGrid vertical={false} stroke="var(--line)"/><XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fontSize:10,fill:"var(--muted)"}}/><YAxis width={46} axisLine={false} tickLine={false} tick={{fontSize:10,fill:"var(--muted)"}} tickFormatter={(value)=>`¥${Math.round(Number(value)/100)}`}/><Tooltip formatter={(value)=>[money(Number(value)),"费用"]} contentStyle={{borderRadius:16,border:"1px solid var(--line)",background:"var(--background)",fontSize:12}}/><Bar dataKey="value" name="费用" fill="#e88758" radius={[8,8,3,3]} maxBarSize={34}/></BarChart></ResponsiveContainer></div>
     </div>
   </div>;
 }

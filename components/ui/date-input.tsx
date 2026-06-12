@@ -25,7 +25,7 @@ function parseValue(value: string) {
 function displayValue(value: string, withTime: boolean) {
   const date = parseValue(value);
   if (!date) return "请选择日期";
-  return format(date, withTime ? "yyyy年M月d日 HH:mm" : "yyyy年M月d日", { locale: zhCN });
+  return format(date, withTime ? "yyyy-MM-dd HH:mm" : "yyyy-MM-dd", { locale: zhCN });
 }
 
 export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
@@ -115,7 +115,7 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
     const currentHour = selected?.getHours() ?? new Date().getHours();
     const currentMinute = selected?.getMinutes() ?? 0;
 
-    return <div className="relative">
+    return <div className="relative min-w-0 w-full">
       <input ref={setRef} type="hidden" name={name} defaultValue={defaultValue} {...props} />
       <button
         ref={triggerRef}
@@ -127,14 +127,14 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
           setOpen(true);
         }}
         className={cn(
-          "group flex h-12 w-full items-center gap-3 rounded-2xl border bg-white/65 px-3 text-left text-sm outline-none transition",
+          "group flex h-12 min-w-0 w-full items-center gap-2.5 rounded-2xl border bg-white/65 px-4 text-left text-sm outline-none transition",
           "hover:border-orange-200 hover:bg-white/85 focus:border-orange-300 focus:ring-4 focus:ring-orange-100/60 disabled:cursor-not-allowed disabled:opacity-50",
           "dark:bg-white/[.045] dark:hover:border-orange-700/60 dark:hover:bg-white/[.065] dark:focus:ring-orange-900/30",
           className,
         )}
       >
-        <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-[var(--orange-soft)] text-[var(--orange)] transition group-hover:scale-105"><Icon className="size-4" /></span>
-        <span className={cn("min-w-0 flex-1 truncate font-medium", !value && "text-[var(--muted)]")}>{displayValue(value, withTime)}</span>
+        <Icon className="size-4 shrink-0 text-[var(--orange)]" />
+        <span className={cn("min-w-0 flex-1 truncate", !value && "text-[var(--muted)]")}>{displayValue(value, withTime)}</span>
         <ChevronDown className={cn("size-4 shrink-0 text-[var(--muted)] transition", open && "rotate-180")} />
       </button>
 
