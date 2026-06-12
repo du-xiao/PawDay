@@ -4,6 +4,7 @@ import { Heart, ShieldCheck } from "lucide-react";
 import { LoginForm } from "@/components/login-form";
 import heroImg from "@/public/pawday-hero.png";
 export const metadata = { title: "登录" };
+export const dynamic = "force-dynamic";
 
 export default function LoginPage() {
   return <main className="min-h-dvh p-3 sm:p-5 lg:p-7">

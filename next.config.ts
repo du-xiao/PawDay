@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [],
   },
   experimental: {
+    isrFlushToDisk: false,
     serverActions: {
       bodySizeLimit: "12mb",
     },
