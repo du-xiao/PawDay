@@ -10,6 +10,10 @@ services:
       # 左侧是 NAS 对外端口，可以按需修改。
       - "3000:3000"
     environment:
+      # 参考 LinuxServer 镜像，填写 NAS 共享目录所属用户和用户组。
+      PUID: "1000"
+      PGID: "10"
+
       # 管理员账号和密码只在数据库为空的第一次启动时使用。
       ADMIN_EMAIL: ""
       ADMIN_PASSWORD: ""

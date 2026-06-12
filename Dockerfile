@@ -26,12 +26,16 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV HOSTNAME="0.0.0.0"
 ENV PORT=3000
+ENV PUID=1001
+ENV PGID=1001
 ENV DATABASE_URL="file:/data/pawday.db"
 ENV UPLOAD_DIR="/uploads"
-RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 nextjs && mkdir -p /data /uploads && chown -R nextjs:nodejs /data /uploads
+RUN apk add --no-cache su-exec && addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 nextjs && mkdir -p /data /uploads && chown -R nextjs:nodejs /data /uploads
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-USER nextjs
+COPY scripts/docker-entrypoint.sh /usr/local/bin/pawday-entrypoint
+RUN chmod +x /usr/local/bin/pawday-entrypoint
 EXPOSE 3000
+ENTRYPOINT ["pawday-entrypoint"]
 CMD ["node", "server.js"]
