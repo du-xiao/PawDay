@@ -1,5 +1,109 @@
-import Image from "next/image"; import Link from "next/link"; import { format } from "date-fns"; import { zhCN } from "date-fns/locale"; import { Filter,Search,Sparkles } from "lucide-react";
-import { prisma } from "@/lib/db"; import { deleteLogAction } from "@/actions/app"; import { formatDateTime,toDateTimeInput } from "@/lib/utils"; import { PageHeader } from "@/components/page-header"; import { LogForm } from "@/components/forms/log-form"; import { DeleteButton } from "@/components/forms/shared"; import { EmptyState } from "@/components/empty-state"; import { Input } from "@/components/ui/input"; import { Button } from "@/components/ui/button"; import { Badge } from "@/components/ui/badge"; import { selectClass } from "@/components/ui/form-field";
-const types=["喂食","遛狗","洗澡","排便","睡眠","训练","情绪","其他"];
-export const metadata={title:"日常记录"};
-export default async function LogsPage({searchParams}:{searchParams:Promise<{q?:string;type?:string}>}){const{q="",type=""}=await searchParams;const dog=await prisma.dog.findFirst();const logs=dog?await prisma.dailyLog.findMany({where:{dogId:dog.id,...(type?{type}:{}),...(q?{OR:[{title:{contains:q}},{notes:{contains:q}}]}:{})},orderBy:{occurredAt:"desc"}}):[];const groups=logs.reduce<Record<string,typeof logs>>((acc,x)=>{const key=format(x.occurredAt,"yyyy-MM-dd");(acc[key]??=[]).push(x);return acc},{});return <div className="page-enter"><PageHeader eyebrow="DAILY LOGS" title="日常记录" description="吃饭、散步、好心情，每一个普通瞬间都在组成它的一生。" action={<LogForm disabled={!dog}/>}/><form className="soft-card mb-6 flex flex-col gap-3 rounded-3xl p-3 sm:flex-row"><div className="relative flex-1"><Search className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-[var(--muted)]"/><Input name="q" defaultValue={q} placeholder="搜索标题或备注" className="border-0 bg-transparent pl-11 focus:ring-0"/></div><div className="relative sm:w-44"><Filter className="pointer-events-none absolute left-4 top-1/2 z-10 size-4 -translate-y-1/2 text-[var(--muted)]"/><select name="type" defaultValue={type} className={`${selectClass} border-0 bg-transparent pl-11 focus:ring-0`}><option value="">全部类型</option>{types.map(x=><option key={x}>{x}</option>)}</select></div><Button type="submit">筛选</Button>{(q||type)&&<Button asChild variant="ghost"><Link href="/logs">清除</Link></Button>}</form>{!dog?<div className="soft-card rounded-3xl"><EmptyState title="先创建小狗档案" description="有了档案后，才能开始记录它的每一天。"/></div>:logs.length?<div className="space-y-8">{Object.entries(groups).map(([day,items])=><section key={day}><div className="mb-3 flex items-center gap-3"><span className="text-sm font-semibold">{format(new Date(`${day}T00:00:00`),"M月d日 EEEE",{locale:zhCN})}</span><span className="h-px flex-1 bg-[var(--line)]"/><span className="text-xs text-[var(--muted)]">{items.length} 条</span></div><div className="space-y-3">{items.map(log=><article key={log.id} className="soft-card group rounded-3xl p-4 sm:p-5"><div className="flex gap-4"><div className="grid size-11 shrink-0 place-items-center rounded-2xl bg-[var(--orange-soft)] text-[var(--orange)]"><Sparkles className="size-5"/></div><div className="min-w-0 flex-1"><div className="flex flex-wrap items-start justify-between gap-2"><div><div className="flex flex-wrap items-center gap-2"><h3 className="font-semibold">{log.title}</h3><Badge>{log.type}</Badge>{log.mood&&<Badge className="bg-[var(--sage-soft)] text-[#5f775f] dark:text-[#b8d4b6]">{log.mood}</Badge>}</div><p className="mt-1 text-xs text-[var(--muted)]">{formatDateTime(log.occurredAt)}</p></div><div className="flex"><LogForm initial={{id:log.id,type:log.type as never,title:log.title,notes:log.notes||"",occurredAt:toDateTimeInput(log.occurredAt),mood:(log.mood||"未记录") as never,imageUrl:log.imageUrl||""}}/><DeleteButton action={deleteLogAction.bind(null,log.id)}/></div></div>{log.notes&&<p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-[var(--muted)]">{log.notes}</p>}{log.imageUrl&&<div className="relative mt-4 aspect-[16/8] max-w-xl overflow-hidden rounded-2xl"><Image src={log.imageUrl} alt={log.title} fill unoptimized className="object-cover" sizes="600px"/></div>}</div></div></article>)}</div></section>)}</div>:<div className="soft-card rounded-3xl"><EmptyState title={q||type?"没有找到符合条件的记录":"还没有日常记录"} description={q||type?"换个关键词或清除筛选，再看看。":"今天发生的第一件小事，就从这里写下吧。"} action={!q&&!type?<LogForm/>:undefined}/></div>}</div>}
+import Image from "next/image";
+import Link from "next/link";
+import { format } from "date-fns";
+import { zhCN } from "date-fns/locale";
+import { Filter, Search, Sparkles } from "lucide-react";
+import { prisma } from "@/lib/db";
+import { deleteLogAction } from "@/actions/app";
+import { formatDateTime, toDateTimeInput } from "@/lib/utils";
+import { PageHeader } from "@/components/page-header";
+import { LogForm } from "@/components/forms/log-form";
+import { DeleteButton, RecordActions } from "@/components/forms/shared";
+import { EmptyState } from "@/components/empty-state";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { selectClass } from "@/components/ui/form-field";
+
+const types = ["喂食", "遛狗", "洗澡", "排便", "睡眠", "训练", "情绪", "其他"];
+
+export const metadata = { title: "日常记录" };
+
+export default async function LogsPage({ searchParams }: { searchParams: Promise<{ q?: string; type?: string }> }) {
+  const { q = "", type = "" } = await searchParams;
+  const dog = await prisma.dog.findFirst();
+  const logs = dog ? await prisma.dailyLog.findMany({
+    where: {
+      dogId: dog.id,
+      ...(type ? { type } : {}),
+      ...(q ? { OR: [{ title: { contains: q } }, { notes: { contains: q } }] } : {}),
+    },
+    orderBy: { occurredAt: "desc" },
+  }) : [];
+  const groups = logs.reduce<Record<string, typeof logs>>((acc, log) => {
+    const key = format(log.occurredAt, "yyyy-MM-dd");
+    (acc[key] ??= []).push(log);
+    return acc;
+  }, {});
+  const hasFilters = Boolean(q || type);
+
+  return <div className="page-enter">
+    <PageHeader eyebrow="DAILY LOGS" title="日常记录" description="吃饭、散步、好心情，每一个普通瞬间都在组成它的一生。" action={<LogForm disabled={!dog} />} />
+
+    <form className="soft-card mb-6 rounded-3xl p-3 sm:p-4">
+      <div className="mb-3 flex items-center justify-between px-1">
+        <div>
+          <h2 className="text-sm font-semibold">查找记录</h2>
+          <p className="mt-0.5 text-xs text-[var(--muted)]">按关键词或日常类型快速定位</p>
+        </div>
+        {hasFilters && <span className="rounded-full bg-[var(--orange-soft)] px-2.5 py-1 text-xs font-medium text-[var(--orange)]">筛选中</span>}
+      </div>
+      <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_11rem_auto]">
+        <div className="relative rounded-2xl bg-black/[.025] dark:bg-white/[.04]">
+          <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-[var(--muted)]" />
+          <Input name="q" defaultValue={q} placeholder="搜索标题或备注" aria-label="搜索标题或备注" className="h-12 rounded-2xl border-0 bg-transparent pl-11 focus:ring-0" />
+        </div>
+        <div className="relative rounded-2xl bg-black/[.025] dark:bg-white/[.04]">
+          <Filter className="pointer-events-none absolute left-4 top-1/2 z-10 size-4 -translate-y-1/2 text-[var(--muted)]" />
+          <select name="type" defaultValue={type} aria-label="日常类型" className={`${selectClass} h-12 rounded-2xl border-0 bg-transparent pl-11 pr-9 focus:ring-0`}>
+            <option value="">全部类型</option>
+            {types.map((item) => <option key={item}>{item}</option>)}
+          </select>
+        </div>
+        <div className={`grid gap-2 ${hasFilters ? "grid-cols-2 sm:flex" : ""}`}>
+          <Button type="submit" className="h-12 rounded-2xl px-6">筛选</Button>
+          {hasFilters && <Button asChild variant="ghost" className="h-12 rounded-2xl px-5"><Link href="/logs">清除</Link></Button>}
+        </div>
+      </div>
+    </form>
+
+    {!dog ? <div className="soft-card rounded-3xl">
+      <EmptyState title="先创建小狗档案" description="有了档案后，才能开始记录它的每一天。" />
+    </div> : logs.length ? <div className="space-y-8">
+      {Object.entries(groups).map(([day, items]) => <section key={day}>
+        <div className="mb-3 flex items-center gap-3">
+          <span className="text-sm font-semibold">{format(new Date(`${day}T00:00:00`), "M月d日 EEEE", { locale: zhCN })}</span>
+          <span className="h-px flex-1 bg-[var(--line)]" />
+          <span className="text-xs text-[var(--muted)]">{items.length} 条</span>
+        </div>
+        <div className="space-y-3">
+          {items.map((log) => <article key={log.id} className="soft-card group rounded-3xl p-4 sm:p-5">
+            <div className="flex gap-3 sm:gap-4">
+              <div className="grid size-11 shrink-0 place-items-center rounded-2xl bg-[var(--orange-soft)] text-[var(--orange)]"><Sparkles className="size-5" /></div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="font-semibold">{log.title}</h3>
+                      <Badge>{log.type}</Badge>
+                      {log.mood && <Badge className="bg-[var(--sage-soft)] text-[#5f775f] dark:text-[#b8d4b6]">{log.mood}</Badge>}
+                    </div>
+                    <p className="mt-1 text-xs text-[var(--muted)]">{formatDateTime(log.occurredAt)}</p>
+                  </div>
+                  <RecordActions>
+                    <LogForm initial={{ id: log.id, type: log.type as never, title: log.title, notes: log.notes || "", occurredAt: toDateTimeInput(log.occurredAt), mood: (log.mood || "未记录") as never, imageUrl: log.imageUrl || "" }} />
+                    <DeleteButton action={deleteLogAction.bind(null, log.id)} />
+                  </RecordActions>
+                </div>
+                {log.notes && <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-[var(--muted)]">{log.notes}</p>}
+                {log.imageUrl && <div className="relative mt-4 aspect-[16/8] max-w-xl overflow-hidden rounded-2xl"><Image src={log.imageUrl} alt={log.title} fill unoptimized className="object-cover" sizes="600px" /></div>}
+              </div>
+            </div>
+          </article>)}
+        </div>
+      </section>)}
+    </div> : <div className="soft-card rounded-3xl">
+      <EmptyState title={hasFilters ? "没有找到符合条件的记录" : "还没有日常记录"} description={hasFilters ? "换个关键词或清除筛选，再看看。" : "今天发生的第一件小事，就从这里写下吧。"} action={!hasFilters ? <LogForm /> : undefined} />
+    </div>}
+  </div>;
+}

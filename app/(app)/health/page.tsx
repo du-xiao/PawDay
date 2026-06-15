@@ -5,7 +5,7 @@ import { deleteHealthAction } from "@/actions/app";
 import { cn, formatDate, toDateInput } from "@/lib/utils";
 import { PageHeader } from "@/components/page-header";
 import { HealthForm } from "@/components/forms/health-form";
-import { DeleteButton } from "@/components/forms/shared";
+import { DeleteButton, RecordActions } from "@/components/forms/shared";
 import { EmptyState } from "@/components/empty-state";
 import { WeightChart } from "@/components/charts/weight-chart";
 import { Pagination } from "@/components/pagination";
@@ -94,9 +94,9 @@ export default async function HealthPage({ searchParams }: { searchParams: Promi
       </div>
 
       {!dog ? <EmptyState title="先创建小狗档案" description="有了档案后，才能开始记录健康信息。" /> : records.length ? <>
-        <div className="divide-y">{records.map((record) => <article key={record.id} className="flex gap-4 p-4 sm:p-5">
+        <div className="divide-y">{records.map((record) => <article key={record.id} className="flex gap-3 p-4 sm:gap-4 sm:p-5">
           <div className={`grid size-11 shrink-0 place-items-center rounded-2xl ${tones[record.type] || "bg-stone-500/10"}`}><HeartPulse className="size-5" /></div>
-          <div className="min-w-0 flex-1"><div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start"><div><div className="flex flex-wrap items-center gap-2"><h3 className="font-medium">{record.title}</h3><Badge>{record.type}</Badge>{record.weightGrams && <Badge className="bg-[var(--sage-soft)] text-[#5f775f] dark:text-[#bdd8bb]">{(record.weightGrams / 1000).toFixed(2)} kg</Badge>}</div><p className="mt-1 text-xs text-[var(--muted)]">{formatDate(record.date)}{record.nextReminderDate ? ` · 下次 ${formatDate(record.nextReminderDate)}` : ""}</p></div><div className="flex"><HealthForm initial={{ id: record.id, type: record.type as never, title: record.title, date: toDateInput(record.date), notes: record.notes || "", weightKg: record.weightGrams ? record.weightGrams / 1000 : "", nextReminderDate: toDateInput(record.nextReminderDate) }} /><DeleteButton action={deleteHealthAction.bind(null, record.id)} /></div></div>{record.notes && <p className="mt-3 text-sm leading-relaxed text-[var(--muted)]">{record.notes}</p>}</div>
+          <div className="min-w-0 flex-1"><div className="flex items-start justify-between gap-2"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><h3 className="font-medium">{record.title}</h3><Badge>{record.type}</Badge>{record.weightGrams && <Badge className="bg-[var(--sage-soft)] text-[#5f775f] dark:text-[#bdd8bb]">{(record.weightGrams / 1000).toFixed(2)} kg</Badge>}</div><p className="mt-1 text-xs text-[var(--muted)]">{formatDate(record.date)}{record.nextReminderDate ? ` · 下次 ${formatDate(record.nextReminderDate)}` : ""}</p></div><RecordActions><HealthForm initial={{ id: record.id, type: record.type as never, title: record.title, date: toDateInput(record.date), notes: record.notes || "", weightKg: record.weightGrams ? record.weightGrams / 1000 : "", nextReminderDate: toDateInput(record.nextReminderDate) }} /><DeleteButton action={deleteHealthAction.bind(null, record.id)} /></RecordActions></div>{record.notes && <p className="mt-3 text-sm leading-relaxed text-[var(--muted)]">{record.notes}</p>}</div>
         </article>)}</div>
         <Pagination pathname="/health" page={page} totalPages={totalPages} params={{ type: selectedType }} anchor="health-records" />
       </> : <EmptyState title={selectedType ? `没有${selectedType}记录` : "还没有健康记录"} description={selectedType ? "换一个类型或清除筛选后再看看。" : "从最近一次体重、驱虫或疫苗开始补记就好。"} action={!selectedType ? <HealthForm disabled={!dog} /> : undefined} />}

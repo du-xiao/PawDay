@@ -6,7 +6,7 @@ import { deleteExpenseAction } from "@/actions/app";
 import { cn, formatDate, money, toDateInput } from "@/lib/utils";
 import { PageHeader } from "@/components/page-header";
 import { ExpenseForm } from "@/components/forms/expense-form";
-import { DeleteButton } from "@/components/forms/shared";
+import { DeleteButton, RecordActions } from "@/components/forms/shared";
 import { ExpenseCharts } from "@/components/charts/expense-charts";
 import { EmptyState } from "@/components/empty-state";
 import { Pagination } from "@/components/pagination";
@@ -95,11 +95,11 @@ export default async function ExpensesPage({ searchParams }: { searchParams: Pro
       </div>
 
       {!dog ? <EmptyState title="先创建小狗档案" description="有了档案后，才能开始记录养宠开销。" /> : expenses.length ? <>
-        <div className="divide-y">{expenses.map((expense) => <div key={expense.id} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:p-5">
+        <div className="divide-y">{expenses.map((expense) => <div key={expense.id} className="relative flex gap-3 p-4 sm:items-center sm:gap-4 sm:p-5">
           <div className="grid size-11 shrink-0 place-items-center rounded-2xl bg-[var(--orange-soft)] text-[var(--orange)]"><ReceiptText className="size-5" /></div>
-          <div className="min-w-0 flex-1"><div className="flex items-center gap-2"><h3 className="font-medium">{expense.merchant || expense.category}</h3><Badge>{expense.category}</Badge></div><p className="mt-1 truncate text-xs text-[var(--muted)]">{formatDate(expense.date)}{expense.notes ? ` · ${expense.notes}` : ""}</p></div>
-          <p className="text-lg font-semibold tabular-nums">{money(expense.amountCents)}</p>
-          <div className="flex"><ExpenseForm initial={{ id: expense.id, category: expense.category as never, amount: expense.amountCents / 100, date: toDateInput(expense.date), merchant: expense.merchant || "", notes: expense.notes || "" }} /><DeleteButton action={deleteExpenseAction.bind(null, expense.id)} /></div>
+          <div className="min-w-0 flex-1 pr-16 sm:pr-0"><div className="flex flex-wrap items-center gap-2"><h3 className="font-medium">{expense.merchant || expense.category}</h3><Badge>{expense.category}</Badge></div><p className="mt-1 truncate text-xs text-[var(--muted)]">{formatDate(expense.date)}{expense.notes ? ` · ${expense.notes}` : ""}</p><p className="mt-2 text-lg font-semibold tabular-nums sm:hidden">{money(expense.amountCents)}</p></div>
+          <p className="hidden text-lg font-semibold tabular-nums sm:block">{money(expense.amountCents)}</p>
+          <RecordActions className="absolute right-3 top-3 sm:static"><ExpenseForm initial={{ id: expense.id, category: expense.category as never, amount: expense.amountCents / 100, date: toDateInput(expense.date), merchant: expense.merchant || "", notes: expense.notes || "" }} /><DeleteButton action={deleteExpenseAction.bind(null, expense.id)} /></RecordActions>
         </div>)}</div>
         <Pagination pathname="/expenses" page={page} totalPages={totalPages} params={listParams} anchor="expense-records" />
       </> : <EmptyState title={selectedCategory ? `没有${selectedCategory}开销` : "还没有开销记录"} description={selectedCategory ? "换一个分类或清除筛选后再看看。" : "从下一袋狗粮或下一次洗护开始，慢慢了解每月花费。"} action={!selectedCategory ? <ExpenseForm disabled={!dog} /> : undefined} />}
