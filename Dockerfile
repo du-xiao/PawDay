@@ -16,7 +16,7 @@ RUN pnpm config set registry "${NPM_REGISTRY}" \
   && pnpm config set fetch-retry-factor 2 \
   && pnpm config set fetch-retry-mintimeout 20000 \
   && pnpm config set fetch-retry-maxtimeout 120000 \
-  && pnpm install --frozen-lockfile --network-concurrency=1
+  && pnpm install --frozen-lockfile
 
 FROM base AS builder
 WORKDIR /app
