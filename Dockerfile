@@ -7,10 +7,16 @@ RUN corepack enable
 FROM base AS deps
 WORKDIR /app
 ENV DATABASE_URL="file:/data/pawday.db"
+ARG NPM_REGISTRY=https://registry.npmmirror.com
 COPY package.json pnpm-lock.yaml* ./
 COPY prisma.config.ts ./
 COPY prisma ./prisma
-RUN pnpm install --frozen-lockfile
+RUN pnpm config set registry "${NPM_REGISTRY}" \
+  && pnpm config set fetch-retries 5 \
+  && pnpm config set fetch-retry-factor 2 \
+  && pnpm config set fetch-retry-mintimeout 20000 \
+  && pnpm config set fetch-retry-maxtimeout 120000 \
+  && pnpm install --frozen-lockfile --network-concurrency=1
 
 FROM base AS builder
 WORKDIR /app

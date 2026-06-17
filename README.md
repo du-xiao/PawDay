@@ -59,10 +59,13 @@ uname -m
 docker buildx build \
   --platform linux/amd64 \
   --build-arg NODE_IMAGE=docker.m.daocloud.io/library/node:22-alpine \
+  --build-arg NPM_REGISTRY=https://registry.npmmirror.com \
   -t pawday:1.0.0 \
   --load .
 docker save -o pawday-1.0.0-amd64.tar pawday:1.0.0
 ```
+
+如果构建时出现 `ECONNRESET`、`TLS handshake timeout` 或 npm 包下载失败，通常是网络到 Docker Hub / npm registry 不稳定。上面的命令已经使用 DaoCloud 的 Node 基础镜像和 npmmirror 的 npm 镜像源；重新执行同一条 `docker buildx build ...` 即可。`Dockerfile` 里也增加了 pnpm 下载重试和较低并发，弱网环境会慢一些，但更稳。
 
 只有以后更换为 ARM 架构 NAS 时，才改用：
 
