@@ -4,7 +4,7 @@ import type { ComponentProps } from "react";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer as RechartsResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 function ResponsiveContainer(props: ComponentProps<typeof RechartsResponsiveContainer>) {
-  return <RechartsResponsiveContainer initialDimension={{ width: 700, height: 208 }} {...props} />;
+  return <RechartsResponsiveContainer initialDimension={{ width: 320, height: 208 }} {...props} />;
 }
 
 export function WeightChart({ data, compact = false }: { data: { date: string; weight: number }[]; compact?: boolean }) {

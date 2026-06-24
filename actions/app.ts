@@ -30,7 +30,9 @@ function fail(error: unknown): ActionResult {
 }
 
 function inputDate(value: string) {
-  return new Date(value.length === 10 ? `${value}T00:00:00` : value);
+  const date = new Date(value.length === 10 ? `${value}T00:00:00` : value);
+  if (Number.isNaN(date.getTime())) throw new Error("日期格式不正确，请重新选择");
+  return date;
 }
 
 export async function saveDogAction(formData: FormData): Promise<ActionResult> {
@@ -86,7 +88,13 @@ export async function saveLogAction(formData: FormData): Promise<ActionResult> {
 }
 
 export async function deleteLogAction(id: string): Promise<ActionResult> {
-  try { await owner(); const current=await prisma.dailyLog.delete({ where: { id: z.string().cuid().parse(id) } }); await deleteImage(current.imageUrl); revalidatePath("/", "layout"); return { ok: true }; } catch (error) { return fail(error); }
+  try {
+    await owner();
+    const current = await prisma.dailyLog.delete({ where: { id: z.string().cuid().parse(id) } });
+    await deleteImage(current.imageUrl);
+    revalidatePath("/", "layout");
+    return { ok: true };
+  } catch (error) { return fail(error); }
 }
 
 export async function saveExpenseAction(input: unknown): Promise<ActionResult> {
@@ -101,7 +109,12 @@ export async function saveExpenseAction(input: unknown): Promise<ActionResult> {
 }
 
 export async function deleteExpenseAction(id: string): Promise<ActionResult> {
-  try { await owner(); await prisma.expense.delete({ where: { id: z.string().cuid().parse(id) } }); revalidatePath("/", "layout"); return { ok: true }; } catch (error) { return fail(error); }
+  try {
+    await owner();
+    await prisma.expense.delete({ where: { id: z.string().cuid().parse(id) } });
+    revalidatePath("/", "layout");
+    return { ok: true };
+  } catch (error) { return fail(error); }
 }
 
 export async function saveHealthAction(input: unknown): Promise<ActionResult> {
@@ -129,7 +142,16 @@ export async function saveHealthAction(input: unknown): Promise<ActionResult> {
 }
 
 export async function deleteHealthAction(id: string): Promise<ActionResult> {
-  try { await owner(); const recordId=z.string().cuid().parse(id); await prisma.$transaction([prisma.reminder.deleteMany({where:{notes:`health:${recordId}`}}),prisma.healthRecord.delete({where:{id:recordId}})]); revalidatePath("/", "layout"); return { ok: true }; } catch (error) { return fail(error); }
+  try {
+    await owner();
+    const recordId = z.string().cuid().parse(id);
+    await prisma.$transaction([
+      prisma.reminder.deleteMany({ where: { notes: `health:${recordId}` } }),
+      prisma.healthRecord.delete({ where: { id: recordId } }),
+    ]);
+    revalidatePath("/", "layout");
+    return { ok: true };
+  } catch (error) { return fail(error); }
 }
 
 export async function savePhotoAction(formData: FormData): Promise<ActionResult> {
@@ -155,7 +177,13 @@ export async function savePhotoAction(formData: FormData): Promise<ActionResult>
 }
 
 export async function deletePhotoAction(id: string): Promise<ActionResult> {
-  try { await owner(); const photo=await prisma.photo.delete({ where: { id: z.string().cuid().parse(id) } }); await deleteImage(photo.url); revalidatePath("/", "layout"); return { ok: true }; } catch (error) { return fail(error); }
+  try {
+    await owner();
+    const photo = await prisma.photo.delete({ where: { id: z.string().cuid().parse(id) } });
+    await deleteImage(photo.url);
+    revalidatePath("/", "layout");
+    return { ok: true };
+  } catch (error) { return fail(error); }
 }
 
 export async function changePasswordAction(input: unknown): Promise<ActionResult> {

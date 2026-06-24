@@ -30,9 +30,9 @@ export function Pagination({ pathname, page, totalPages, params, anchor }: Pagin
   if (totalPages <= 1) return null;
   const pages = visiblePages(page, totalPages);
 
-  return <nav aria-label="分页" className="flex flex-col items-center justify-between gap-3 border-t px-4 py-4 sm:flex-row sm:px-6">
+  return <nav aria-label="分页" className="flex flex-col items-center justify-between gap-3 border-t bg-black/[.012] px-4 py-4 sm:flex-row sm:px-6 dark:bg-white/[.018]">
     <p className="text-xs text-[var(--muted)]">第 {page} / {totalPages} 页</p>
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-1 rounded-2xl bg-black/[.025] p-1 dark:bg-white/[.035]">
       <PageLink href={pageHref(pathname, page - 1, params, anchor)} disabled={page === 1} label="上一页"><ChevronLeft className="size-4" /></PageLink>
       {pages.map((item) => <Link
         key={item}
@@ -40,7 +40,7 @@ export function Pagination({ pathname, page, totalPages, params, anchor }: Pagin
         aria-current={item === page ? "page" : undefined}
         className={cn(
           "grid size-9 place-items-center rounded-xl text-xs font-semibold transition",
-          item === page ? "bg-[var(--orange)] text-white" : "text-[var(--muted)] hover:bg-[var(--orange-soft)] hover:text-[var(--orange)]",
+          item === page ? "bg-[var(--orange)] text-white shadow-sm shadow-orange-300/25" : "text-[var(--muted)] hover:bg-[var(--orange-soft)] hover:text-[var(--orange)]",
         )}
       >{item}</Link>)}
       <PageLink href={pageHref(pathname, page + 1, params, anchor)} disabled={page === totalPages} label="下一页"><ChevronRight className="size-4" /></PageLink>

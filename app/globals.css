@@ -12,6 +12,8 @@
   --orange-soft: #f6ddcc;
   --sage: #8ca88b;
   --sage-soft: #dfe9dc;
+  --card-highlight: rgba(255, 255, 255, 0.72);
+  --shadow-soft: 0 18px 48px rgba(64, 49, 32, 0.08);
 }
 
 .dark {
@@ -24,23 +26,37 @@
   --orange-soft: #4b3327;
   --sage: #9fbd9e;
   --sage-soft: #29382a;
+  --card-highlight: rgba(255, 255, 255, 0.07);
+  --shadow-soft: 0 18px 52px rgba(0, 0, 0, 0.24);
 }
 
 * { border-color: var(--line); }
 html { scroll-behavior: smooth; }
 body {
   min-height: 100vh;
+  overflow-x: hidden;
   background:
     radial-gradient(circle at 8% 0%, color-mix(in srgb, var(--orange-soft) 48%, transparent) 0, transparent 28rem),
     radial-gradient(circle at 100% 20%, color-mix(in srgb, var(--sage-soft) 44%, transparent) 0, transparent 28rem),
     var(--background);
+  background-attachment: fixed;
   color: var(--foreground);
   font-family: Inter, ui-rounded, "SF Pro Rounded", "PingFang SC", "Microsoft YaHei", sans-serif;
+  -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
 button, a, input, textarea, select { -webkit-tap-highlight-color: transparent; }
 ::selection { background: var(--orange-soft); }
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--muted) 22%, transparent);
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover { background-color: color-mix(in srgb, var(--muted) 32%, transparent); }
 
 .dialog-scrollbar-hidden {
   scrollbar-width: none;
@@ -53,13 +69,15 @@ button, a, input, textarea, select { -webkit-tap-highlight-color: transparent; }
 .glass {
   background: color-mix(in srgb, var(--card) 88%, transparent);
   backdrop-filter: blur(22px);
-  box-shadow: 0 18px 60px rgba(70, 53, 34, 0.10);
+  box-shadow: inset 0 1px 0 var(--card-highlight), 0 18px 60px rgba(70, 53, 34, 0.10);
 }
 
 .soft-card {
-  background: var(--card);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--card-highlight) 38%, transparent), transparent 72px),
+    var(--card);
   border: 1px solid var(--line);
-  box-shadow: 0 8px 32px rgba(66, 51, 34, 0.055);
+  box-shadow: inset 0 1px 0 var(--card-highlight), var(--shadow-soft);
 }
 
 .fine-grid {

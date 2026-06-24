@@ -127,7 +127,7 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
           setOpen(true);
         }}
         className={cn(
-          "group flex h-12 min-w-0 w-full items-center gap-2.5 rounded-2xl border bg-white/65 px-4 text-left text-sm outline-none transition",
+          "group flex h-12 min-w-0 w-full items-center gap-2.5 rounded-2xl border bg-white/70 px-4 text-left text-sm shadow-[inset_0_1px_0_rgba(255,255,255,.55)] outline-none transition",
           "hover:border-orange-200 hover:bg-white/85 focus:border-orange-300 focus:ring-4 focus:ring-orange-100/60 disabled:cursor-not-allowed disabled:opacity-50",
           "dark:bg-white/[.045] dark:hover:border-orange-700/60 dark:hover:bg-white/[.065] dark:focus:ring-orange-900/30",
           className,
@@ -145,7 +145,7 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
           aria-label="选择日期"
           style={{ left: position.left, top: position.top, width: position.width }}
           onPointerDown={(event) => event.stopPropagation()}
-          className="pointer-events-auto fixed z-[70] max-h-[calc(100dvh-1rem)] overflow-y-auto rounded-2xl border bg-[var(--background)] p-3 shadow-2xl shadow-stone-900/15"
+          className="pointer-events-auto fixed z-[70] max-h-[calc(100dvh-1rem)] overflow-y-auto rounded-2xl border bg-[var(--background)] p-3 shadow-2xl shadow-stone-900/15 dark:shadow-black/35"
         >
             <div className="mb-2 flex items-center justify-between">
               <button type="button" aria-label="上个月" onClick={() => setViewMonth((month) => addMonths(month, -1))} className="grid size-8 place-items-center rounded-lg text-[var(--muted)] transition hover:bg-[var(--orange-soft)] hover:text-[var(--orange)]"><ChevronLeft className="size-4" /></button>
