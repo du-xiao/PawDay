@@ -7,6 +7,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { ensureDatabase } from "@/lib/bootstrap";
 import { dogSchema, expenseSchema, healthSchema, logSchema, passwordSchema, photoSchema } from "@/lib/schemas";
+import { syncDailyLogImagePhoto } from "@/lib/photo-sync";
 import { deleteImage, saveImage } from "@/lib/upload";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
@@ -73,10 +74,15 @@ export async function saveLogAction(formData: FormData): Promise<ActionResult> {
     const file = formData.get("image");
     const uploadedUrl = file instanceof File && file.size ? await saveImage(file) : null;
     const imageUrl = uploadedUrl || current?.imageUrl || null;
+    const currentDogId = current?.dogId ?? await dogId();
     const values = { type: data.type, title: data.title, notes: data.notes || null, occurredAt: inputDate(data.occurredAt), mood: data.mood === "未记录" ? null : data.mood, imageUrl };
     try {
-      if (data.id) await prisma.dailyLog.update({ where: { id: data.id }, data: values });
-      else await prisma.dailyLog.create({ data: { ...values, dogId: await dogId() } });
+      await prisma.$transaction(async (tx) => {
+        const log = data.id
+          ? await tx.dailyLog.update({ where: { id: data.id }, data: values })
+          : await tx.dailyLog.create({ data: { ...values, dogId: currentDogId } });
+        await syncDailyLogImagePhoto(tx, log, current?.imageUrl);
+      });
     } catch (error) {
       if (uploadedUrl) await deleteImage(uploadedUrl);
       throw error;
@@ -90,7 +96,13 @@ export async function saveLogAction(formData: FormData): Promise<ActionResult> {
 export async function deleteLogAction(id: string): Promise<ActionResult> {
   try {
     await owner();
-    const current = await prisma.dailyLog.delete({ where: { id: z.string().cuid().parse(id) } });
+    const logId = z.string().cuid().parse(id);
+    const current = await prisma.$transaction(async (tx) => {
+      const log = await tx.dailyLog.findUniqueOrThrow({ where: { id: logId } });
+      if (log.imageUrl) await tx.photo.deleteMany({ where: { dailyLogId: log.id, url: log.imageUrl } });
+      await tx.dailyLog.delete({ where: { id: log.id } });
+      return log;
+    });
     await deleteImage(current.imageUrl);
     revalidatePath("/", "layout");
     return { ok: true };
@@ -179,7 +191,18 @@ export async function savePhotoAction(formData: FormData): Promise<ActionResult>
 export async function deletePhotoAction(id: string): Promise<ActionResult> {
   try {
     await owner();
-    const photo = await prisma.photo.delete({ where: { id: z.string().cuid().parse(id) } });
+    const photoId = z.string().cuid().parse(id);
+    const photo = await prisma.$transaction(async (tx) => {
+      const current = await tx.photo.findUniqueOrThrow({
+        where: { id: photoId },
+        include: { dailyLog: { select: { id: true, imageUrl: true } } },
+      });
+      if (current.dailyLog?.imageUrl === current.url) {
+        await tx.dailyLog.update({ where: { id: current.dailyLog.id }, data: { imageUrl: null } });
+      }
+      await tx.photo.delete({ where: { id: current.id } });
+      return current;
+    });
     await deleteImage(photo.url);
     revalidatePath("/", "layout");
     return { ok: true };

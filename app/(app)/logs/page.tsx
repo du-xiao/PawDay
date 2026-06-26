@@ -1,8 +1,6 @@
-import Image from "next/image";
-import Link from "next/link";
 import { format } from "date-fns";
 import { zhCN } from "date-fns/locale";
-import { Filter, Search, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { deleteLogAction } from "@/actions/app";
 import { formatDateTime, toDateTimeInput } from "@/lib/utils";
@@ -10,10 +8,9 @@ import { PageHeader } from "@/components/page-header";
 import { LogForm } from "@/components/forms/log-form";
 import { DeleteButton, RecordActions } from "@/components/forms/shared";
 import { EmptyState } from "@/components/empty-state";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { LogImageViewer } from "@/components/log-image-viewer";
+import { LogFilterForm } from "@/components/log-filter-form";
 import { Badge } from "@/components/ui/badge";
-import { selectClass } from "@/components/ui/form-field";
 
 const types = ["喂食", "遛狗", "洗澡", "排便", "睡眠", "训练", "情绪", "其他"];
 
@@ -40,32 +37,7 @@ export default async function LogsPage({ searchParams }: { searchParams: Promise
   return <div className="page-enter">
     <PageHeader eyebrow="DAILY LOGS" title="日常记录" description="吃饭、散步、好心情，每一个普通瞬间都在组成它的一生。" action={<LogForm disabled={!dog} />} />
 
-    <form className="soft-card mb-6 rounded-3xl p-3 sm:p-4">
-      <div className="mb-3 flex items-center justify-between px-1">
-        <div>
-          <h2 className="text-sm font-semibold">查找记录</h2>
-          <p className="mt-0.5 text-xs text-[var(--muted)]">按关键词或日常类型快速定位</p>
-        </div>
-        {hasFilters && <span className="rounded-full bg-[var(--orange-soft)] px-2.5 py-1 text-xs font-medium text-[var(--orange)]">筛选中</span>}
-      </div>
-      <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_11rem_auto]">
-        <div className="relative rounded-2xl bg-black/[.025] dark:bg-white/[.04]">
-          <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-[var(--muted)]" />
-          <Input name="q" defaultValue={q} placeholder="搜索标题或备注" aria-label="搜索标题或备注" className="h-12 rounded-2xl border-0 bg-transparent pl-11 focus:ring-0" />
-        </div>
-        <div className="relative rounded-2xl bg-black/[.025] dark:bg-white/[.04]">
-          <Filter className="pointer-events-none absolute left-4 top-1/2 z-10 size-4 -translate-y-1/2 text-[var(--muted)]" />
-          <select name="type" defaultValue={type} aria-label="日常类型" className={`${selectClass} h-12 rounded-2xl border-0 bg-transparent pl-11 pr-9 focus:ring-0`}>
-            <option value="">全部类型</option>
-            {types.map((item) => <option key={item}>{item}</option>)}
-          </select>
-        </div>
-        <div className={`grid gap-2 ${hasFilters ? "grid-cols-2 sm:flex" : ""}`}>
-          <Button type="submit" className="h-12 rounded-2xl px-6">筛选</Button>
-          {hasFilters && <Button asChild variant="ghost" className="h-12 rounded-2xl px-5"><Link href="/logs">清除</Link></Button>}
-        </div>
-      </div>
-    </form>
+    <LogFilterForm q={q} type={type} types={types} />
 
     {!dog ? <div className="soft-card rounded-3xl">
       <EmptyState title="先创建小狗档案" description="有了档案后，才能开始记录它的每一天。" />
@@ -96,7 +68,7 @@ export default async function LogsPage({ searchParams }: { searchParams: Promise
                   </RecordActions>
                 </div>
                 {log.notes && <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-[var(--muted)]">{log.notes}</p>}
-                {log.imageUrl && <div className="relative mt-4 aspect-[16/8] max-w-xl overflow-hidden rounded-2xl"><Image src={log.imageUrl} alt={log.title} fill unoptimized className="object-cover" sizes="600px" /></div>}
+                {log.imageUrl && <LogImageViewer src={log.imageUrl} alt={log.title} />}
               </div>
             </div>
           </article>)}

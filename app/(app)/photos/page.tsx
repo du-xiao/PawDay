@@ -1,5 +1,6 @@
 import { Images } from "lucide-react";
 import { prisma } from "@/lib/db";
+import { ensureDailyLogImagePhotos } from "@/lib/photo-sync";
 import { PageHeader } from "@/components/page-header";
 import { PhotoForm } from "@/components/forms/photo-form";
 import { EmptyState } from "@/components/empty-state";
@@ -9,6 +10,7 @@ export const metadata = { title: "成长相册" };
 
 export default async function PhotosPage() {
   const dog = await prisma.dog.findFirst();
+  if (dog) await ensureDailyLogImagePhotos(dog.id);
   const [photos, logs] = dog ? await Promise.all([
     prisma.photo.findMany({
       where: { dogId: dog.id },

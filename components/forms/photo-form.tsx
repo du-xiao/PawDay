@@ -17,6 +17,7 @@ import { DateInput } from "@/components/ui/date-input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Field, selectClass } from "@/components/ui/form-field";
 import { FormActions } from "./shared";
+import { useImagePreview } from "./use-image-preview";
 
 type Values = z.infer<typeof photoSchema>;
 const compactControl = "h-10 rounded-xl";
@@ -26,6 +27,7 @@ export function PhotoForm({ logs, disabled = false }: { logs: { id: string; titl
   const [fileName, setFileName] = useState("");
   const [pending, startTransition] = useTransition();
   const fileRef = useRef<HTMLInputElement>(null);
+  const { previewUrl, setPreviewFile, resetPreview } = useImagePreview();
   const router = useRouter();
   const { register, handleSubmit, formState: { errors } } = useForm<Values>({
     resolver: zodResolver(photoSchema),
@@ -36,6 +38,7 @@ export function PhotoForm({ logs, disabled = false }: { logs: { id: string; titl
     setOpen(next);
     if (!next) {
       setFileName("");
+      resetPreview("");
       if (fileRef.current) fileRef.current.value = "";
     }
   }
@@ -55,6 +58,7 @@ export function PhotoForm({ logs, disabled = false }: { logs: { id: string; titl
         toast.success("照片已收进回忆里");
         if (fileRef.current) fileRef.current.value = "";
         setFileName("");
+        resetPreview("");
         setOpen(false);
         router.refresh();
       } else toast.error(result.error);
@@ -68,12 +72,18 @@ export function PhotoForm({ logs, disabled = false }: { logs: { id: string; titl
       <form onSubmit={handleSubmit(submit)} className="space-y-4">
         <section className="rounded-2xl border bg-black/[.018] p-4 dark:bg-white/[.025]">
           <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">照片信息</p>
-          <button type="button" onClick={() => fileRef.current?.click()} className="flex min-h-28 w-full flex-col items-center justify-center rounded-2xl border border-dashed bg-white/45 px-4 text-center transition hover:border-orange-300 hover:bg-[var(--orange-soft)]/45 dark:bg-white/[.025]">
-            <Plus className="mb-2 size-5 text-[var(--orange)]" />
-            <span className="text-sm font-semibold">{fileName || "选择一张照片"}</span>
-            <span className="mt-1 text-xs text-[var(--muted)]">JPG、PNG、WebP，最大 10MB</span>
+          <button type="button" onClick={() => fileRef.current?.click()} className="relative flex min-h-36 w-full flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed bg-white/45 px-4 text-center transition hover:border-orange-300 hover:bg-[var(--orange-soft)]/45 dark:bg-white/[.025]">
+            {previewUrl ? <>
+              <span className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${previewUrl})` }} />
+              <span className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
+              <span className="relative mt-auto rounded-full bg-white/90 px-3 py-1.5 text-xs font-semibold text-[#2d2924] shadow-lg">已选择：{fileName}</span>
+            </> : <>
+              <Plus className="mb-2 size-5 text-[var(--orange)]" />
+              <span className="text-sm font-semibold">选择一张照片</span>
+              <span className="mt-1 text-xs text-[var(--muted)]">JPG、PNG、WebP，最大 10MB</span>
+            </>}
           </button>
-          <Input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={(event) => setFileName(event.target.files?.[0]?.name || "")} />
+          <Input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={(event) => { const file = event.target.files?.[0]; setFileName(file?.name || ""); setPreviewFile(file); }} />
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             <Field label="标题"><Input className={compactControl} placeholder="今天的好天气" {...register("title")} /></Field>
             <Field label="日期" error={errors.date?.message}><DateInput className={compactControl} {...register("date")} /></Field>
