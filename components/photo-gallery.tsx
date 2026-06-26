@@ -19,15 +19,31 @@ type Photo = {
 
 export function PhotoGallery({ photos }: { photos: Photo[] }) {
   const [active, setActive] = useState<Photo | null>(null);
+  const groups = photos.reduce<{ key: string; label: string; photos: Photo[] }[]>((acc, photo) => {
+    const key = formatDate(photo.date, "yyyy-MM");
+    const group = acc.find((item) => item.key === key);
+    if (group) group.photos.push(photo);
+    else acc.push({ key, label: formatDate(photo.date, "yyyy年M月"), photos: [photo] });
+    return acc;
+  }, []);
 
   return <>
-    <div className="columns-2 gap-3 sm:columns-3 lg:columns-4 xl:columns-5">
-      {photos.map((photo, index) => <button key={photo.id} onClick={() => setActive(photo)} className="group relative mb-3 block w-full overflow-hidden rounded-3xl bg-black/[.05] text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-xl dark:bg-white/[.04]">
-        <Image src={photo.url} alt={photo.title || "小狗照片"} width={600} height={index % 3 === 0 ? 760 : 520} priority={index < 2} unoptimized className="h-auto w-full object-cover transition duration-500 group-hover:scale-[1.035]" />
-        <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-4 pt-12 text-white opacity-0 transition group-hover:opacity-100">
-          <span className="block text-sm font-medium">{photo.title || formatDate(photo.date, "M月d日")}</span>
-        </span>
-      </button>)}
+    <div className="space-y-9">
+      {groups.map((group) => <section key={group.key}>
+        <div className="mb-4 flex items-center gap-3">
+          <h2 className="text-lg font-semibold tracking-[-.03em]">{group.label}</h2>
+          <span className="h-px flex-1 bg-[var(--line)]" />
+          <span className="text-xs text-[var(--muted)]">{group.photos.length} 张</span>
+        </div>
+        <div className="columns-2 gap-3 sm:columns-3 lg:columns-4 xl:columns-5">
+          {group.photos.map((photo, index) => <button key={photo.id} onClick={() => setActive(photo)} className="group relative mb-3 block w-full overflow-hidden rounded-3xl bg-black/[.05] text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-xl dark:bg-white/[.04]">
+            <Image src={photo.url} alt={photo.title || "小狗照片"} width={600} height={index % 3 === 0 ? 760 : 520} priority={group.key === groups[0]?.key && index < 2} unoptimized className="h-auto w-full object-cover transition duration-500 group-hover:scale-[1.035]" />
+            <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-4 pt-12 text-white opacity-0 transition group-hover:opacity-100">
+              <span className="block text-sm font-medium">{photo.title || formatDate(photo.date, "M月d日")}</span>
+            </span>
+          </button>)}
+        </div>
+      </section>)}
     </div>
 
     {active && typeof document !== "undefined" && createPortal(<div className="fixed inset-0 z-50 grid place-items-center bg-black/75 p-3 backdrop-blur-md" onClick={() => setActive(null)}>

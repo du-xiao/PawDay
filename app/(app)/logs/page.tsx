@@ -1,6 +1,5 @@
 import { format } from "date-fns";
 import { zhCN } from "date-fns/locale";
-import { Sparkles } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { deleteLogAction } from "@/actions/app";
 import { formatDateTime, toDateTimeInput } from "@/lib/utils";
@@ -10,6 +9,7 @@ import { DeleteButton, RecordActions } from "@/components/forms/shared";
 import { EmptyState } from "@/components/empty-state";
 import { LogImageViewer } from "@/components/log-image-viewer";
 import { LogFilterForm } from "@/components/log-filter-form";
+import { TypeIcon } from "@/components/type-icon";
 import { Badge } from "@/components/ui/badge";
 
 const types = ["喂食", "遛狗", "洗澡", "排便", "睡眠", "训练", "情绪", "其他"];
@@ -51,7 +51,7 @@ export default async function LogsPage({ searchParams }: { searchParams: Promise
         <div className="space-y-3">
           {items.map((log) => <article key={log.id} className="soft-card group rounded-3xl p-4 sm:p-5">
             <div className="flex gap-3 sm:gap-4">
-              <div className="grid size-11 shrink-0 place-items-center rounded-2xl bg-[var(--orange-soft)] text-[var(--orange)]"><Sparkles className="size-5" /></div>
+              <TypeIcon kind="log" type={log.type} />
               <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">

@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { healthSchema } from "@/lib/schemas";
 import { cn, toDateInput } from "@/lib/utils";
 import { saveHealthAction } from "@/actions/app";
-import { Button } from "@/components/ui/button";
+import { Button, type ButtonProps } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DateInput } from "@/components/ui/date-input";
 import { Textarea } from "@/components/ui/textarea";
@@ -31,7 +31,14 @@ const defaultTitles: Record<Values["type"], string> = {
 };
 const compactControl = "h-10 rounded-xl";
 
-export function HealthForm({ initial, disabled = false }: { initial?: Values; disabled?: boolean }) {
+type TriggerOptions = {
+  triggerLabel?: string;
+  triggerVariant?: ButtonProps["variant"];
+  triggerSize?: ButtonProps["size"];
+  triggerClassName?: string;
+};
+
+export function HealthForm({ initial, disabled = false, triggerLabel, triggerVariant, triggerSize, triggerClassName }: { initial?: Values; disabled?: boolean } & TriggerOptions) {
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const router = useRouter();
@@ -59,7 +66,7 @@ export function HealthForm({ initial, disabled = false }: { initial?: Values; di
   const showWeight = type === "体重" || Boolean(initial?.weightKg);
 
   return <Dialog open={open} onOpenChange={setOpen}>
-    <DialogTrigger asChild><Button variant={initial ? "ghost" : "warm"} size={initial ? "sm" : "default"} disabled={disabled}>{initial ? <Pencil className="size-3.5" /> : <Plus className="size-4" />}{initial ? "编辑" : "新增健康记录"}</Button></DialogTrigger>
+    <DialogTrigger asChild><Button variant={triggerVariant ?? (initial ? "ghost" : "warm")} size={triggerSize ?? (initial ? "sm" : "default")} className={triggerClassName} disabled={disabled}>{initial ? <Pencil className="size-3.5" /> : <Plus className="size-4" />}{triggerLabel ?? (initial ? "编辑" : "新增健康记录")}</Button></DialogTrigger>
     <DialogContent className="dialog-scrollbar-hidden max-w-2xl p-5 sm:p-6">
       <DialogHeader className="mb-5"><DialogTitle>{initial ? "编辑健康记录" : "新增健康记录"}</DialogTitle><DialogDescription>重要日期和下一次提醒会一起出现在首页。</DialogDescription></DialogHeader>
       <form onSubmit={handleSubmit(submit)} className="space-y-4">
@@ -75,12 +82,12 @@ export function HealthForm({ initial, disabled = false }: { initial?: Values; di
           </div>
         </section>
 
-        <section className="grid gap-4 sm:grid-cols-[220px_1fr]">
+        <section className="grid gap-4 sm:grid-cols-[1fr_220px]">
+          <Field label="备注"><Textarea className="min-h-28 rounded-2xl p-3.5" placeholder="医院、剂量、医生建议…" {...register("notes")} /></Field>
           <div className="rounded-2xl bg-[var(--orange-soft)]/55 p-4">
             <div className="mb-3 flex items-center gap-2 text-[var(--orange)]"><BellRing className="size-4" /><span className="text-xs font-semibold">下次提醒</span></div>
             <Field label="提醒日期" hint="可选"><DateInput className={compactControl} {...register("nextReminderDate")} /></Field>
           </div>
-          <Field label="备注"><Textarea className="min-h-28 rounded-2xl p-3.5" placeholder="医院、剂量、医生建议…" {...register("notes")} /></Field>
         </section>
         <FormActions pending={pending} className="mt-5 border-t pt-4" onCancel={() => setOpen(false)} />
       </form>

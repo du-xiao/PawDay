@@ -90,12 +90,12 @@ export function PhotoForm({ logs, disabled = false }: { logs: { id: string; titl
           </div>
         </section>
 
-        <section className="grid gap-4 sm:grid-cols-[220px_1fr]">
+        <section className="grid gap-4 sm:grid-cols-[1fr_220px]">
+          <Field label="备注"><Textarea className="min-h-28 rounded-2xl p-3.5" placeholder="这一刻为什么特别…" {...register("notes")} /></Field>
           <div className="rounded-2xl bg-[var(--orange-soft)]/55 p-4">
             <div className="mb-3 flex items-center gap-2 text-[var(--orange)]"><Link2 className="size-4" /><span className="text-xs font-semibold">关联记录</span></div>
             <Field label="日常记录"><select className={cn(selectClass, compactControl)} {...register("dailyLogId")}><option value="">不关联</option>{logs.map((log) => <option key={log.id} value={log.id}>{log.title}</option>)}</select></Field>
           </div>
-          <Field label="备注"><Textarea className="min-h-28 rounded-2xl p-3.5" placeholder="这一刻为什么特别…" {...register("notes")} /></Field>
         </section>
         <FormActions pending={pending} className="mt-5 border-t pt-4" onCancel={() => setOpen(false)} />
       </form>

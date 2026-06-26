@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { logSchema } from "@/lib/schemas";
 import { cn, toDateTimeInput } from "@/lib/utils";
 import { saveLogAction } from "@/actions/app";
-import { Button } from "@/components/ui/button";
+import { Button, type ButtonProps } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DateInput } from "@/components/ui/date-input";
 import { Textarea } from "@/components/ui/textarea";
@@ -24,7 +24,14 @@ const types = ["喂食", "遛狗", "洗澡", "排便", "睡眠", "训练", "情�
 const moods = ["开心", "平静", "兴奋", "困倦", "不舒服", "未记录"] as const;
 const compactControl = "h-10 rounded-xl";
 
-export function LogForm({ initial, disabled = false }: { initial?: Values; disabled?: boolean }) {
+type TriggerOptions = {
+  triggerLabel?: string;
+  triggerVariant?: ButtonProps["variant"];
+  triggerSize?: ButtonProps["size"];
+  triggerClassName?: string;
+};
+
+export function LogForm({ initial, disabled = false, triggerLabel, triggerVariant, triggerSize, triggerClassName }: { initial?: Values; disabled?: boolean } & TriggerOptions) {
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -61,7 +68,7 @@ export function LogForm({ initial, disabled = false }: { initial?: Values; disab
   }
 
   return <Dialog open={open} onOpenChange={handleOpenChange}>
-    <DialogTrigger asChild><Button variant={initial ? "ghost" : "warm"} size={initial ? "sm" : "default"} disabled={disabled}>{initial ? <Pencil className="size-3.5" /> : <Plus className="size-4" />}{initial ? "编辑" : "记录今天"}</Button></DialogTrigger>
+    <DialogTrigger asChild><Button variant={triggerVariant ?? (initial ? "ghost" : "warm")} size={triggerSize ?? (initial ? "sm" : "default")} className={triggerClassName} disabled={disabled}>{initial ? <Pencil className="size-3.5" /> : <Plus className="size-4" />}{triggerLabel ?? (initial ? "编辑" : "记录今天")}</Button></DialogTrigger>
     <DialogContent className="dialog-scrollbar-hidden max-w-2xl p-5 sm:p-6">
       <DialogHeader className="mb-5"><DialogTitle>{initial ? "编辑日常记录" : "今天发生了什么？"}</DialogTitle><DialogDescription>不需要写很多，几个词也能留住这一天。</DialogDescription></DialogHeader>
       <form onSubmit={handleSubmit(submit)} className="space-y-4">

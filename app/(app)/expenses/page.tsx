@@ -1,18 +1,17 @@
-import Link from "next/link";
 import { endOfYear, startOfMonth, startOfYear, subMonths } from "date-fns";
-import { Filter, Landmark, ReceiptText, WalletCards } from "lucide-react";
+import { Landmark, ReceiptText, WalletCards } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { deleteExpenseAction } from "@/actions/app";
-import { cn, formatDate, money, toDateInput } from "@/lib/utils";
+import { formatDate, money, toDateInput } from "@/lib/utils";
 import { PageHeader } from "@/components/page-header";
 import { ExpenseForm } from "@/components/forms/expense-form";
 import { DeleteButton, RecordActions } from "@/components/forms/shared";
 import { ExpenseCharts } from "@/components/charts/expense-charts";
 import { EmptyState } from "@/components/empty-state";
 import { Pagination } from "@/components/pagination";
+import { TypeFilterForm } from "@/components/type-filter-form";
+import { TypeIcon } from "@/components/type-icon";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { selectClass } from "@/components/ui/form-field";
 
 export const metadata = { title: "养狗开销" };
 
@@ -22,15 +21,6 @@ const expenseCategories = ["狗粮", "零食", "医疗", "洗护", "玩具", "�
 function parsePage(value?: string) {
   const page = Number(value);
   return Number.isInteger(page) && page > 0 ? page : 1;
-}
-
-function expenseHref(params: Record<string, string | undefined>) {
-  const search = new URLSearchParams();
-  Object.entries(params).forEach(([key, value]) => {
-    if (value) search.set(key, value);
-  });
-  const query = search.toString();
-  return `/expenses${query ? `?${query}` : ""}#expense-records`;
 }
 
 export default async function ExpensesPage({ searchParams }: { searchParams: Promise<{ scope?: string; year?: string; month?: string; category?: string; page?: string }> }) {
@@ -84,25 +74,18 @@ export default async function ExpensesPage({ searchParams }: { searchParams: Pro
     <section id="expense-records" className="mt-6 scroll-mt-24 soft-card rounded-3xl">
       <div className="flex flex-col gap-4 border-b p-5 sm:flex-row sm:items-end sm:justify-between sm:p-6">
         <div><h2 className="font-semibold">开销明细</h2><p className="mt-1 text-xs text-[var(--muted)]">最近记录优先 · 每页 10 条</p></div>
-        <form className="flex gap-2">
-          <input type="hidden" name="scope" value={scope} />
-          <input type="hidden" name="year" value={selectedYear} />
-          <input type="hidden" name="month" value={selectedMonth} />
-          <div className="relative min-w-0 flex-1 sm:w-44"><Filter className="pointer-events-none absolute left-3.5 top-1/2 z-10 size-4 -translate-y-1/2 text-[var(--muted)]" /><select name="category" defaultValue={selectedCategory} aria-label="开销分类" className={cn(selectClass, "h-9 rounded-xl border-0 bg-black/[.025] pl-10 pr-8 focus:ring-0 dark:bg-white/[.04]")}><option value="">全部分类</option>{expenseCategories.map((category) => <option key={category}>{category}</option>)}</select></div>
-          <Button type="submit" size="sm">查询</Button>
-          {selectedCategory && <Button asChild size="sm" variant="ghost"><Link href={expenseHref({ scope, year: String(selectedYear), month: String(selectedMonth) })}>清除</Link></Button>}
-        </form>
+        <TypeFilterForm action="/expenses#expense-records" name="category" value={selectedCategory} options={expenseCategories} allLabel="全部分类" ariaLabel="开销分类" hidden={{ scope, year: selectedYear, month: selectedMonth }} />
       </div>
 
       {!dog ? <EmptyState title="先创建小狗档案" description="有了档案后，才能开始记录养宠开销。" /> : expenses.length ? <>
         <div className="divide-y">{expenses.map((expense) => <div key={expense.id} className="relative flex gap-3 p-4 sm:items-center sm:gap-4 sm:p-5">
-          <div className="grid size-11 shrink-0 place-items-center rounded-2xl bg-[var(--orange-soft)] text-[var(--orange)]"><ReceiptText className="size-5" /></div>
+          <TypeIcon kind="expense" type={expense.category} />
           <div className="min-w-0 flex-1 pr-16 sm:pr-0"><div className="flex flex-wrap items-center gap-2"><h3 className="font-medium">{expense.merchant || expense.category}</h3><Badge>{expense.category}</Badge></div><p className="mt-1 truncate text-xs text-[var(--muted)]">{formatDate(expense.date)}{expense.notes ? ` · ${expense.notes}` : ""}</p><p className="mt-2 text-lg font-semibold tabular-nums sm:hidden">{money(expense.amountCents)}</p></div>
           <p className="hidden text-lg font-semibold tabular-nums sm:block">{money(expense.amountCents)}</p>
           <RecordActions className="absolute right-3 top-3 sm:static"><ExpenseForm initial={{ id: expense.id, category: expense.category as never, amount: expense.amountCents / 100, date: toDateInput(expense.date), merchant: expense.merchant || "", notes: expense.notes || "" }} /><DeleteButton action={deleteExpenseAction.bind(null, expense.id)} /></RecordActions>
         </div>)}</div>
         <Pagination pathname="/expenses" page={page} totalPages={totalPages} params={listParams} anchor="expense-records" />
-      </> : <EmptyState title={selectedCategory ? `没有${selectedCategory}开销` : "还没有开销记录"} description={selectedCategory ? "换一个分类或清除筛选后再看看。" : "从下一袋狗粮或下一次洗护开始，慢慢了解每月花费。"} action={!selectedCategory ? <ExpenseForm disabled={!dog} /> : undefined} />}
+      </> : <EmptyState title={selectedCategory ? `没有${selectedCategory}开销` : "还没有开销记录"} description={selectedCategory ? "换一个分类或选择全部分类后再看看。" : "从下一袋狗粮或下一次洗护开始，慢慢了解每月花费。"} action={!selectedCategory ? <ExpenseForm disabled={!dog} /> : undefined} />}
     </section>
   </div>;
 }
