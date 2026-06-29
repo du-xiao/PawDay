@@ -30,7 +30,7 @@ export function ReminderCard({ id, title, type, detail, overdue, canWrite }: { i
         </span>
       </button>
       {canWrite && open && (
-        <div className="mt-3 border-t pt-3">
+        <div className="mt-3 border-t border-black/[.055] pt-2.5 dark:border-white/[.065]">
           <ReminderActions id={id} />
         </div>
       )}
