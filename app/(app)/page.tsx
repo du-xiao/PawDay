@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { endOfMonth, startOfMonth } from "date-fns";
+import { differenceInCalendarDays, endOfMonth, startOfMonth } from "date-fns";
 import { ArrowUpRight, CalendarHeart, CircleDollarSign, Clock3, HeartPulse, NotebookPen, PawPrint } from "lucide-react";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
@@ -49,7 +49,7 @@ export default async function DashboardPage() {
     prisma.dailyLog.findMany({ where: { dogId: dog.id }, orderBy: { occurredAt: "desc" }, take: 5 }),
     prisma.healthRecord.findMany({ where: { dogId: dog.id }, orderBy: { date: "desc" }, take: 4 }),
     prisma.expense.aggregate({ where: { dogId: dog.id, date: { gte: startOfMonth(now), lte: endOfMonth(now) } }, _sum: { amountCents: true } }),
-    prisma.reminder.findFirst({ where: { dogId: dog.id, completed: false, dueAt: { gte: new Date(now.toDateString()) } }, orderBy: { dueAt: "asc" } }),
+    prisma.reminder.findFirst({ where: { dogId: dog.id, completed: false }, orderBy: { dueAt: "asc" } }),
     prisma.healthRecord.findMany({ where: { dogId: dog.id, weightGrams: { not: null } }, orderBy: { date: "asc" }, take: 12 }),
   ]);
   const together = daysTogether(dog.adoptionDate);
@@ -148,7 +148,7 @@ export default async function DashboardPage() {
           icon={CalendarHeart}
           label="下次提醒"
           value={reminder ? reminder.title : "暂时没有提醒"}
-          meta={reminder ? formatDate(reminder.dueAt) : "可以在健康记录中设置"}
+          meta={reminder ? reminderDetail(reminder.dueAt, now) : "可以在健康记录中设置"}
           tone="violet"
         />
       </section>
@@ -180,6 +180,13 @@ export default async function DashboardPage() {
       </section>
     </div>
   );
+}
+
+function reminderDetail(dueAt: Date, now: Date) {
+  const days = differenceInCalendarDays(dueAt, now);
+  if (days === 0) return `今天到期 · ${formatDate(dueAt)}`;
+  if (days < 0) return `已逾期 ${Math.abs(days)} 天 · ${formatDate(dueAt)}`;
+  return `${days} 天后 · ${formatDate(dueAt)}`;
 }
 
 function Stat({ icon: Icon, label, value, meta, tone, action }: { icon: typeof Clock3; label: string; value: string; meta: string; tone: string; action?: ReactNode }) {

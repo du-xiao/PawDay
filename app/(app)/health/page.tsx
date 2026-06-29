@@ -1,3 +1,4 @@
+import { differenceInCalendarDays } from "date-fns";
 import { Activity, CalendarClock, Scale, ShieldPlus } from "lucide-react";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
@@ -10,6 +11,7 @@ import { DeleteButton, RecordActions } from "@/components/forms/shared";
 import { EmptyState } from "@/components/empty-state";
 import { WeightChart } from "@/components/charts/weight-chart";
 import { Pagination } from "@/components/pagination";
+import { ReminderActions } from "@/components/reminder-actions";
 import { TypeFilterForm } from "@/components/type-filter-form";
 import { TypeIcon } from "@/components/type-icon";
 import { Badge } from "@/components/ui/badge";
@@ -36,9 +38,9 @@ export default async function HealthPage({ searchParams }: { searchParams: Promi
   const [recordCount, reminders, weights, latestWeightRecord] = dog ? await Promise.all([
     prisma.healthRecord.count({ where: where! }),
     prisma.reminder.findMany({
-      where: { dogId: dog.id, completed: false, dueAt: { gte: new Date(new Date().toDateString()) } },
+      where: { dogId: dog.id, completed: false },
       orderBy: { dueAt: "asc" },
-      take: 3,
+      take: 6,
     }),
     prisma.healthRecord.findMany({
       where: { dogId: dog.id, weightGrams: { not: null } },
@@ -69,12 +71,15 @@ export default async function HealthPage({ searchParams }: { searchParams: Promi
     <section className="mb-6 grid gap-4 lg:grid-cols-[1fr_2fr]">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
         <div className="soft-card rounded-3xl p-5"><div className="grid size-10 place-items-center rounded-2xl bg-[var(--sage-soft)] text-[var(--sage)]"><Scale className="size-5" /></div><p className="mt-5 text-xs text-[var(--muted)]">最近体重</p><p className="mt-1 text-2xl font-semibold">{latestWeight ? `${(latestWeight / 1000).toFixed(2)} kg` : "等待记录"}</p></div>
-        <div className="soft-card rounded-3xl p-5"><div className="grid size-10 place-items-center rounded-2xl bg-[var(--orange-soft)] text-[var(--orange)]"><CalendarClock className="size-5" /></div><p className="mt-5 text-xs text-[var(--muted)]">下次提醒</p><p className="mt-1 truncate text-lg font-semibold">{reminders[0]?.title || "暂无提醒"}</p><p className="mt-1 text-xs text-[var(--muted)]">{reminders[0] ? formatDate(reminders[0].dueAt) : "新增健康记录时可以设置"}</p></div>
+        <div className="soft-card rounded-3xl p-5"><div className="grid size-10 place-items-center rounded-2xl bg-[var(--orange-soft)] text-[var(--orange)]"><CalendarClock className="size-5" /></div><p className="mt-5 text-xs text-[var(--muted)]">待处理提醒</p><p className="mt-1 truncate text-lg font-semibold">{reminders[0]?.title || "暂无提醒"}</p><p className="mt-1 text-xs text-[var(--muted)]">{reminders[0] ? reminderDetail(reminders[0].dueAt) : "新增健康记录时可以设置"}</p></div>
       </div>
       <Card><CardHeader><div><CardTitle>体重趋势</CardTitle><p className="mt-1 text-xs text-[var(--muted)]">长期趋势比单次数字更重要</p></div><Activity className="size-5 text-[var(--sage)]" /></CardHeader><CardContent><WeightChart data={weightData} compact /></CardContent></Card>
     </section>
 
-    {reminders.length > 0 && <section className="mb-6 rounded-3xl bg-[var(--orange-soft)] p-5 sm:p-6"><div className="flex items-center gap-3"><ShieldPlus className="size-5 text-[var(--orange)]" /><h2 className="font-semibold">接下来的提醒</h2></div><div className="mt-4 grid gap-3 sm:grid-cols-3">{reminders.map((item) => <div key={item.id} className="rounded-2xl bg-white/55 p-4 dark:bg-white/[.06]"><p className="text-sm font-medium">{item.title}</p><p className="mt-1 text-xs text-[var(--muted)]">{formatDate(item.dueAt)}</p></div>)}</div></section>}
+    {reminders.length > 0 && <section className="mb-6 rounded-3xl bg-[var(--orange-soft)] p-5 sm:p-6"><div className="flex items-center gap-3"><ShieldPlus className="size-5 text-[var(--orange)]" /><div><h2 className="font-semibold">待处理提醒</h2><p className="mt-1 text-xs text-[var(--muted)]">完成或取消后会从提醒列表中移除。</p></div></div><div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">{reminders.map((item) => {
+      const overdue = differenceInCalendarDays(item.dueAt, new Date()) < 0;
+      return <div key={item.id} className={`rounded-2xl p-4 ${overdue ? "bg-red-500/10" : "bg-white/55 dark:bg-white/[.06]"}`}><div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="truncate text-sm font-medium">{item.title}</p><p className={overdue ? "mt-1 text-xs font-medium text-red-600 dark:text-red-300" : "mt-1 text-xs text-[var(--muted)]"}>{reminderDetail(item.dueAt)}</p></div><Badge className={overdue ? "bg-red-500/10 text-red-600 dark:text-red-300" : undefined}>{item.type}</Badge></div>{canWrite && <ReminderActions id={item.id} />}</div>;
+    })}</div></section>}
 
     <section id="health-records" className="soft-card scroll-mt-24 rounded-3xl">
       <div className="flex flex-col gap-4 border-b p-5 sm:flex-row sm:items-end sm:justify-between sm:p-6">
@@ -91,4 +96,11 @@ export default async function HealthPage({ searchParams }: { searchParams: Promi
       </> : <EmptyState title={selectedType ? `没有${selectedType}记录` : "还没有健康记录"} description={selectedType ? "换一个类型或选择全部类型后再看看。" : "从最近一次体重、驱虫或疫苗开始补记就好。"} action={canWrite && !selectedType ? <HealthForm disabled={!dog} /> : undefined} />}
     </section>
   </div>;
+}
+
+function reminderDetail(dueAt: Date) {
+  const days = differenceInCalendarDays(dueAt, new Date());
+  if (days === 0) return `今天到期 · ${formatDate(dueAt)}`;
+  if (days < 0) return `已逾期 ${Math.abs(days)} 天 · ${formatDate(dueAt)}`;
+  return `${days} 天后 · ${formatDate(dueAt)}`;
 }

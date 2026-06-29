@@ -265,6 +265,36 @@ export async function deleteHealthAction(id: string): Promise<ActionResult> {
   } catch (error) { return fail(error); }
 }
 
+export async function completeReminderAction(id: string): Promise<ActionResult> {
+  try {
+    await requireOwner();
+    const reminderId = z.string().cuid().parse(id);
+    await prisma.$transaction(async (tx) => {
+      const reminder = await tx.reminder.findUniqueOrThrow({ where: { id: reminderId }, select: { notes: true } });
+      await tx.reminder.update({ where: { id: reminderId }, data: { completed: true } });
+      const linkedHealthId = linkedHealthRecordId(reminder.notes);
+      if (linkedHealthId) await tx.healthRecord.updateMany({ where: { id: linkedHealthId }, data: { nextReminderDate: null } });
+    });
+    revalidatePath("/", "layout");
+    return { ok: true };
+  } catch (error) { return fail(error); }
+}
+
+export async function cancelReminderAction(id: string): Promise<ActionResult> {
+  try {
+    await requireOwner();
+    const reminderId = z.string().cuid().parse(id);
+    await prisma.$transaction(async (tx) => {
+      const reminder = await tx.reminder.findUniqueOrThrow({ where: { id: reminderId }, select: { notes: true } });
+      await tx.reminder.delete({ where: { id: reminderId } });
+      const linkedHealthId = linkedHealthRecordId(reminder.notes);
+      if (linkedHealthId) await tx.healthRecord.updateMany({ where: { id: linkedHealthId }, data: { nextReminderDate: null } });
+    });
+    revalidatePath("/", "layout");
+    return { ok: true };
+  } catch (error) { return fail(error); }
+}
+
 export async function savePhotoAction(formData: FormData): Promise<ActionResult> {
   try {
     await requireOwner();
@@ -285,6 +315,12 @@ export async function savePhotoAction(formData: FormData): Promise<ActionResult>
     }
     revalidatePath("/", "layout"); return { ok: true };
   } catch (error) { return fail(error); }
+}
+
+function linkedHealthRecordId(notes?: string | null) {
+  const raw = notes?.startsWith("health:") ? notes.slice("health:".length) : "";
+  const parsed = z.string().cuid().safeParse(raw);
+  return parsed.success ? parsed.data : null;
 }
 
 export async function deletePhotoAction(id: string): Promise<ActionResult> {
