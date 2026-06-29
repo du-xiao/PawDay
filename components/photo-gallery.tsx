@@ -17,7 +17,7 @@ type Photo = {
   dailyLogTitle: string | null;
 };
 
-export function PhotoGallery({ photos }: { photos: Photo[] }) {
+export function PhotoGallery({ photos, canWrite = true }: { photos: Photo[]; canWrite?: boolean }) {
   const [active, setActive] = useState<Photo | null>(null);
   const groups = photos.reduce<{ key: string; label: string; photos: Photo[] }[]>((acc, photo) => {
     const key = formatDate(photo.date, "yyyy-MM");
@@ -56,7 +56,7 @@ export function PhotoGallery({ photos }: { photos: Photo[] }) {
           <div className="mt-5 flex items-center gap-2 text-sm text-[var(--muted)]"><CalendarDays className="size-4" />{formatDate(active.date)}</div>
           {active.dailyLogTitle && <div className="mt-3 flex items-center gap-2 text-sm text-[var(--muted)]"><Link2 className="size-4" />{active.dailyLogTitle}</div>}
           <p className="mt-6 whitespace-pre-wrap text-sm leading-relaxed text-[var(--muted)]">{active.notes || "没有备注，照片已经说了很多。"}</p>
-          <div className="mt-auto pt-8"><DeleteButton action={() => deletePhotoAction(active.id)} label="删除照片" onDeleted={() => setActive(null)} /></div>
+          {canWrite && <div className="mt-auto pt-8"><DeleteButton action={() => deletePhotoAction(active.id)} label="删除照片" onDeleted={() => setActive(null)} /></div>}
         </aside>
       </div>
     </div>, document.body)}

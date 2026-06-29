@@ -3,6 +3,7 @@ import { differenceInCalendarDays } from "date-fns";
 import { auth } from "@/auth";
 import { ensureDatabase } from "@/lib/bootstrap";
 import { prisma } from "@/lib/db";
+import { normalizeRole } from "@/lib/roles";
 import { formatDate } from "@/lib/utils";
 import { AppShell } from "@/components/app-shell";
 
@@ -11,7 +12,12 @@ export const dynamic = "force-dynamic";
 export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
   await ensureDatabase();
   const session = await auth();
-  if (!session?.user?.email) redirect("/login");
+  if (!session?.user?.id) redirect("/login");
+  const currentUser = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { email: true, role: true, disabledAt: true },
+  });
+  if (!currentUser || currentUser.disabledAt) redirect("/login");
   const dog = await prisma.dog.findFirst({ select: { id: true } });
   const reminder = dog ? await prisma.reminder.findFirst({
     where: { dogId: dog.id, completed: false },
@@ -33,5 +39,5 @@ export default async function ProtectedLayout({ children }: { children: React.Re
           urgent: daysUntilDue! <= 0,
         }
       : { href: "/health", title: "暂无健康提醒", detail: "新增健康记录时可以设置下次提醒。", urgent: false };
-  return <AppShell email={session.user.email} reminder={reminderCard}>{children}</AppShell>;
+  return <AppShell email={currentUser.email} role={normalizeRole(currentUser.role)} reminder={reminderCard}>{children}</AppShell>;
 }

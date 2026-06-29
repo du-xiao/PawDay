@@ -1,7 +1,9 @@
 import { endOfYear, startOfMonth, startOfYear, subMonths } from "date-fns";
 import { Landmark, ReceiptText, WalletCards } from "lucide-react";
+import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { deleteExpenseAction } from "@/actions/app";
+import { isGuestRole } from "@/lib/roles";
 import { formatDate, money, toDateInput } from "@/lib/utils";
 import { PageHeader } from "@/components/page-header";
 import { ExpenseForm } from "@/components/forms/expense-form";
@@ -24,6 +26,8 @@ function parsePage(value?: string) {
 }
 
 export default async function ExpensesPage({ searchParams }: { searchParams: Promise<{ scope?: string; year?: string; month?: string; category?: string; page?: string }> }) {
+  const session = await auth();
+  const canWrite = !isGuestRole(session?.user.role);
   const params = await searchParams;
   const dog = await prisma.dog.findFirst();
   const now = new Date();
@@ -67,7 +71,7 @@ export default async function ExpensesPage({ searchParams }: { searchParams: Pro
   const listParams = { scope, year: String(selectedYear), month: String(selectedMonth), category: selectedCategory };
 
   return <div className="page-enter">
-    <PageHeader eyebrow="EXPENSES" title="养狗开销" description="看见钱都花去了哪里，也更从容地照顾好每一个需要。" action={<ExpenseForm disabled={!dog} />} />
+    <PageHeader eyebrow="EXPENSES" title="养狗开销" description="看见钱都花去了哪里，也更从容地照顾好每一个需要。" action={canWrite ? <ExpenseForm disabled={!dog} /> : undefined} />
     <section className="mb-6 grid gap-4 sm:grid-cols-3"><Metric icon={WalletCards} label="本月总开销" value={money(monthTotal)} tone="orange" /><Metric icon={Landmark} label="本年度总开销" value={money(yearTotal)} tone="sage" /><Metric icon={ReceiptText} label="累计记录" value={`${summaryExpenses.length} 笔`} tone="violet" /></section>
     <ExpenseCharts key={`${scope}-${selectedYear}-${selectedMonth}`} categories={categories} months={months} scope={scope} selectedYear={selectedYear} selectedMonth={selectedMonth} years={years} />
 
@@ -80,12 +84,12 @@ export default async function ExpensesPage({ searchParams }: { searchParams: Pro
       {!dog ? <EmptyState title="先创建小狗档案" description="有了档案后，才能开始记录养宠开销。" /> : expenses.length ? <>
         <div className="divide-y">{expenses.map((expense) => <div key={expense.id} className="relative flex gap-3 p-4 sm:items-center sm:gap-4 sm:p-5">
           <TypeIcon kind="expense" type={expense.category} />
-          <div className="min-w-0 flex-1 pr-16 sm:pr-0"><div className="flex flex-wrap items-center gap-2"><h3 className="font-medium">{expense.merchant || expense.category}</h3><Badge>{expense.category}</Badge></div><p className="mt-1 truncate text-xs text-[var(--muted)]">{formatDate(expense.date)}{expense.notes ? ` · ${expense.notes}` : ""}</p><p className="mt-2 text-lg font-semibold tabular-nums sm:hidden">{money(expense.amountCents)}</p></div>
+          <div className={`min-w-0 flex-1 ${canWrite ? "pr-16 sm:pr-0" : ""}`}><div className="flex flex-wrap items-center gap-2"><h3 className="font-medium">{expense.merchant || expense.category}</h3><Badge>{expense.category}</Badge></div><p className="mt-1 truncate text-xs text-[var(--muted)]">{formatDate(expense.date)}{expense.notes ? ` · ${expense.notes}` : ""}</p><p className="mt-2 text-lg font-semibold tabular-nums sm:hidden">{money(expense.amountCents)}</p></div>
           <p className="hidden text-lg font-semibold tabular-nums sm:block">{money(expense.amountCents)}</p>
-          <RecordActions className="absolute right-3 top-3 sm:static"><ExpenseForm initial={{ id: expense.id, category: expense.category as never, amount: expense.amountCents / 100, date: toDateInput(expense.date), merchant: expense.merchant || "", notes: expense.notes || "" }} /><DeleteButton action={deleteExpenseAction.bind(null, expense.id)} /></RecordActions>
+          {canWrite && <RecordActions className="absolute right-3 top-3 sm:static"><ExpenseForm initial={{ id: expense.id, category: expense.category as never, amount: expense.amountCents / 100, date: toDateInput(expense.date), merchant: expense.merchant || "", notes: expense.notes || "" }} /><DeleteButton action={deleteExpenseAction.bind(null, expense.id)} /></RecordActions>}
         </div>)}</div>
         <Pagination pathname="/expenses" page={page} totalPages={totalPages} params={listParams} anchor="expense-records" />
-      </> : <EmptyState title={selectedCategory ? `没有${selectedCategory}开销` : "还没有开销记录"} description={selectedCategory ? "换一个分类或选择全部分类后再看看。" : "从下一袋狗粮或下一次洗护开始，慢慢了解每月花费。"} action={!selectedCategory ? <ExpenseForm disabled={!dog} /> : undefined} />}
+      </> : <EmptyState title={selectedCategory ? `没有${selectedCategory}开销` : "还没有开销记录"} description={selectedCategory ? "换一个分类或选择全部分类后再看看。" : "从下一袋狗粮或下一次洗护开始，慢慢了解每月花费。"} action={canWrite && !selectedCategory ? <ExpenseForm disabled={!dog} /> : undefined} />}
     </section>
   </div>;
 }

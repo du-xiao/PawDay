@@ -1,7 +1,9 @@
 import { format } from "date-fns";
 import { zhCN } from "date-fns/locale";
+import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { deleteLogAction } from "@/actions/app";
+import { isGuestRole } from "@/lib/roles";
 import { formatDateTime, toDateTimeInput } from "@/lib/utils";
 import { PageHeader } from "@/components/page-header";
 import { LogForm } from "@/components/forms/log-form";
@@ -17,6 +19,8 @@ const types = ["喂食", "遛狗", "洗澡", "排便", "睡眠", "训练", "情�
 export const metadata = { title: "日常记录" };
 
 export default async function LogsPage({ searchParams }: { searchParams: Promise<{ q?: string; type?: string }> }) {
+  const session = await auth();
+  const canWrite = !isGuestRole(session?.user.role);
   const { q = "", type = "" } = await searchParams;
   const dog = await prisma.dog.findFirst();
   const logs = dog ? await prisma.dailyLog.findMany({
@@ -35,7 +39,7 @@ export default async function LogsPage({ searchParams }: { searchParams: Promise
   const hasFilters = Boolean(q || type);
 
   return <div className="page-enter">
-    <PageHeader eyebrow="DAILY LOGS" title="日常记录" description="吃饭、散步、好心情，每一个普通瞬间都在组成它的一生。" action={<LogForm disabled={!dog} />} />
+    <PageHeader eyebrow="DAILY LOGS" title="日常记录" description="吃饭、散步、好心情，每一个普通瞬间都在组成它的一生。" action={canWrite ? <LogForm disabled={!dog} /> : undefined} />
 
     <LogFilterForm q={q} type={type} types={types} />
 
@@ -62,10 +66,10 @@ export default async function LogsPage({ searchParams }: { searchParams: Promise
                     </div>
                     <p className="mt-1 text-xs text-[var(--muted)]">{formatDateTime(log.occurredAt)}</p>
                   </div>
-                  <RecordActions>
+                  {canWrite && <RecordActions>
                     <LogForm initial={{ id: log.id, type: log.type as never, title: log.title, notes: log.notes || "", occurredAt: toDateTimeInput(log.occurredAt), mood: (log.mood || "未记录") as never, imageUrl: log.imageUrl || "" }} />
                     <DeleteButton action={deleteLogAction.bind(null, log.id)} />
-                  </RecordActions>
+                  </RecordActions>}
                 </div>
                 {log.notes && <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-[var(--muted)]">{log.notes}</p>}
                 {log.imageUrl && <LogImageViewer src={log.imageUrl} alt={log.title} />}
@@ -75,7 +79,7 @@ export default async function LogsPage({ searchParams }: { searchParams: Promise
         </div>
       </section>)}
     </div> : <div className="soft-card rounded-3xl">
-      <EmptyState title={hasFilters ? "没有找到符合条件的记录" : "还没有日常记录"} description={hasFilters ? "换个关键词或清除筛选，再看看。" : "今天发生的第一件小事，就从这里写下吧。"} action={!hasFilters ? <LogForm /> : undefined} />
+      <EmptyState title={hasFilters ? "没有找到符合条件的记录" : "还没有日常记录"} description={hasFilters ? "换个关键词或清除筛选，再看看。" : "今天发生的第一件小事，就从这里写下吧。"} action={canWrite && !hasFilters ? <LogForm /> : undefined} />
     </div>}
   </div>;
 }

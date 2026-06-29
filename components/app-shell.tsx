@@ -8,6 +8,7 @@ import { useTheme } from "next-themes";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { Bone, CalendarClock, Camera, ChevronDown, ChevronRight, CircleDollarSign, Dog, HeartPulse, Home, KeyRound, LogOut, Menu, Moon, Settings, Sun, NotebookPen } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { isGuestRole, roleLabel, type UserRole } from "@/lib/roles";
 import { Button } from "@/components/ui/button";
 
 const nav = [
@@ -21,10 +22,11 @@ const nav = [
 
 type ReminderCard = { href: string; title: string; detail: string; urgent: boolean };
 
-export function AppShell({ email, reminder, children }: { email: string; reminder: ReminderCard; children: React.ReactNode }) {
+export function AppShell({ email, role, reminder, children }: { email: string; role: UserRole; reminder: ReminderCard; children: React.ReactNode }) {
   const pathname = usePathname();
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const isGuest = isGuestRole(role);
   useEffect(() => setMounted(true), []);
   return <div className="min-h-dvh">
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-[248px] border-r bg-[var(--card)]/82 p-4 shadow-xl shadow-stone-900/[.035] backdrop-blur-xl lg:flex lg:flex-col">
@@ -46,9 +48,9 @@ export function AppShell({ email, reminder, children }: { email: string; reminde
           {mounted ? <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild><button className="flex items-center gap-2 rounded-2xl p-1.5 pr-2 outline-none transition hover:bg-black/[.04] focus-visible:ring-4 focus-visible:ring-orange-200/45 dark:hover:bg-white/[.05]"><span className="grid size-9 place-items-center rounded-xl bg-gradient-to-br from-[var(--orange)] to-[#d36e54] text-sm font-semibold text-white">{email.slice(0,1).toUpperCase()}</span><span className="hidden max-w-40 truncate text-sm sm:block">{email}</span><ChevronDown className="size-4 text-[var(--muted)]" /></button></DropdownMenu.Trigger>
             <DropdownMenu.Portal><DropdownMenu.Content align="end" sideOffset={8} className="z-50 w-56 rounded-2xl border bg-[var(--background)] p-2 shadow-2xl shadow-stone-950/10">
-              <DropdownMenu.Label className="px-3 py-2 text-xs text-[var(--muted)]">主人账号</DropdownMenu.Label>
+              <DropdownMenu.Label className="px-3 py-2 text-xs text-[var(--muted)]">{roleLabel(role)}账号{isGuest ? " · 只读模式" : ""}</DropdownMenu.Label>
               <DropdownMenu.Item asChild><Link href="/settings" className="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm outline-none hover:bg-black/[.04] dark:hover:bg-white/[.05]"><Settings className="size-4" />设置</Link></DropdownMenu.Item>
-              <DropdownMenu.Item asChild><Link href="/settings#password" className="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm outline-none hover:bg-black/[.04] dark:hover:bg-white/[.05]"><KeyRound className="size-4" />修改密码</Link></DropdownMenu.Item>
+              {!isGuest && <DropdownMenu.Item asChild><Link href="/settings#password" className="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm outline-none hover:bg-black/[.04] dark:hover:bg-white/[.05]"><KeyRound className="size-4" />修改密码</Link></DropdownMenu.Item>}
               <DropdownMenu.Separator className="my-1 h-px bg-[var(--line)]" />
               <DropdownMenu.Item onSelect={() => signOut({ callbackUrl: "/login" })} className="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-red-500 outline-none hover:bg-red-500/10"><LogOut className="size-4" />退出登录</DropdownMenu.Item>
             </DropdownMenu.Content></DropdownMenu.Portal>

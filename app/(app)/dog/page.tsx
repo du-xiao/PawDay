@@ -2,8 +2,10 @@ import Image from "next/image";
 import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 import { CalendarDays, CheckCircle2, Heart, PawPrint, Scale, ShieldCheck, UserRound as VenusAndMars } from "lucide-react";
+import { auth } from "@/auth";
 import { ensureDatabase } from "@/lib/bootstrap";
 import { prisma } from "@/lib/db";
+import { isGuestRole } from "@/lib/roles";
 import { daysTogether, dogAge, formatDate, toDateInput } from "@/lib/utils";
 import { PageHeader } from "@/components/page-header";
 import { DogDocumentCard, type DogDocumentView } from "@/components/dog-document-card";
@@ -33,6 +35,8 @@ type RawDogDocument = {
 
 export default async function DogPage() {
   await ensureDatabase();
+  const session = await auth();
+  const canWrite = !isGuestRole(session?.user.role);
 
   const dog = await prisma.dog.findFirst({
     include: {
@@ -46,7 +50,7 @@ export default async function DogPage() {
       <>
         <PageHeader eyebrow="DOG PROFILE" title="小狗档案" description="从名字开始，建立属于它的成长档案。" />
         <div className="soft-card rounded-3xl">
-          <EmptyState title="还没有小狗档案" description="先记录名字和生日，PawDay 才能开始计算你们的陪伴时光。" action={<DogForm onboarding />} />
+          <EmptyState title="还没有小狗档案" description="先记录名字和生日，PawDay 才能开始计算你们的陪伴时光。" action={canWrite ? <DogForm onboarding /> : undefined} />
         </div>
       </>
     );
@@ -91,7 +95,7 @@ export default async function DogPage() {
         eyebrow="DOG PROFILE"
         title={`${dog.name} 的档案`}
         description="关于它的基本信息、证件、健康护理，以及你们一起走过的时间。"
-        action={<DogForm dog={{
+        action={canWrite ? <DogForm dog={{
           name: dog.name,
           breed: dog.breed || "",
           sex: (dog.sex || "未知") as "男孩" | "女孩" | "未知",
@@ -99,7 +103,7 @@ export default async function DogPage() {
           adoptionDate: toDateInput(dog.adoptionDate),
           weightKg: dog.weightGrams ? dog.weightGrams / 1000 : "",
           avatarUrl: dog.avatarUrl || "",
-        }} />}
+        }} /> : undefined}
       />
 
       <section className="grid gap-5 xl:grid-cols-[0.86fr_1.14fr]">
@@ -148,12 +152,12 @@ export default async function DogPage() {
             <DogDocumentCard
               type="狗证"
               document={dogLicense}
-              action={<DogDocumentForm key={dogLicense?.updatedAt || "new-dog-license"} type="狗证" initial={documentFormValue("狗证", dogLicense)} triggerLabel={dogLicense ? "编辑" : "新增"} triggerVariant="ghost" />}
+              action={canWrite ? <DogDocumentForm key={dogLicense?.updatedAt || "new-dog-license"} type="狗证" initial={documentFormValue("狗证", dogLicense)} triggerLabel={dogLicense ? "编辑" : "新增"} triggerVariant="ghost" /> : undefined}
             />
             <DogDocumentCard
               type="免疫证"
               document={immunityCard}
-              action={<DogDocumentForm key={immunityCard?.updatedAt || "new-immunity-card"} type="免疫证" initial={documentFormValue("免疫证", immunityCard)} triggerLabel={immunityCard ? "编辑" : "新增"} triggerVariant="ghost" />}
+              action={canWrite ? <DogDocumentForm key={immunityCard?.updatedAt || "new-immunity-card"} type="免疫证" initial={documentFormValue("免疫证", immunityCard)} triggerLabel={immunityCard ? "编辑" : "新增"} triggerVariant="ghost" /> : undefined}
             />
           </div>
         </div>

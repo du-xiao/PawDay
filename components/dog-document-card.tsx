@@ -21,7 +21,7 @@ export type DogDocumentView = {
   updatedAt: string;
 };
 
-export function DogDocumentCard({ type, document, action }: { type: "狗证" | "免疫证"; document?: DogDocumentView | null; action: ReactNode }) {
+export function DogDocumentCard({ type, document, action }: { type: "狗证" | "免疫证"; document?: DogDocumentView | null; action?: ReactNode }) {
   const status = getStatus(document?.expiresAt || null);
 
   if (!document) {

@@ -3,7 +3,9 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { endOfMonth, startOfMonth } from "date-fns";
 import { ArrowUpRight, CalendarHeart, CircleDollarSign, Clock3, HeartPulse, NotebookPen, PawPrint } from "lucide-react";
+import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
+import { isGuestRole } from "@/lib/roles";
 import { daysTogether, dogAge, formatDate, formatDateTime, money } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +21,8 @@ import { TypeIcon } from "@/components/type-icon";
 const addButtonClass = "h-8 rounded-xl px-2.5 text-xs text-[var(--muted)] hover:text-[var(--foreground)]";
 
 export default async function DashboardPage() {
+  const session = await auth();
+  const canWrite = !isGuestRole(session?.user.role);
   const dog = await prisma.dog.findFirst();
 
   if (!dog) {
@@ -29,7 +33,7 @@ export default async function DashboardPage() {
             <Badge className="bg-[var(--sage-soft)] text-[#587158] dark:text-[#b9d6b8]">第一次来到 PawDay</Badge>
             <h1 className="mt-6 text-4xl font-semibold leading-[1.08] tracking-[-.055em] sm:text-6xl">先把它的名字，<br />写进这里。</h1>
             <p className="mt-5 max-w-lg text-base leading-relaxed text-[var(--muted)] sm:text-lg">创建小狗档案后，就可以开始记录散步、健康、照片和每一件值得记住的小事。</p>
-            <div className="mt-8"><DogForm onboarding /></div>
+            {canWrite && <div className="mt-8"><DogForm onboarding /></div>}
           </div>
           <div className="relative mt-10 h-72 overflow-hidden rounded-[2rem] lg:absolute lg:inset-y-8 lg:right-8 lg:mt-0 lg:h-auto lg:w-[43%]">
             <Image src="/pawday-hero.png" alt="温暖的小狗插画" fill className="object-cover" sizes="50vw" />
@@ -122,7 +126,7 @@ export default async function DashboardPage() {
           value={logs.length ? logs[0].title : "还没有记录"}
           meta={logs.length ? formatDateTime(logs[0].occurredAt) : "从今天开始"}
           tone="orange"
-          action={<LogForm triggerLabel="新增" triggerVariant="ghost" triggerSize="sm" triggerClassName={addButtonClass} />}
+          action={canWrite ? <LogForm triggerLabel="新增" triggerVariant="ghost" triggerSize="sm" triggerClassName={addButtonClass} /> : undefined}
         />
         <Stat
           icon={HeartPulse}
@@ -130,7 +134,7 @@ export default async function DashboardPage() {
           value={health.length ? health[0].title : "等待第一次记录"}
           meta={health.length ? formatDate(health[0].date) : "体重、疫苗、驱虫"}
           tone="sage"
-          action={<HealthForm triggerLabel="新增" triggerVariant="ghost" triggerSize="sm" triggerClassName={addButtonClass} />}
+          action={canWrite ? <HealthForm triggerLabel="新增" triggerVariant="ghost" triggerSize="sm" triggerClassName={addButtonClass} /> : undefined}
         />
         <Stat
           icon={CircleDollarSign}
@@ -138,7 +142,7 @@ export default async function DashboardPage() {
           value={money(expenses._sum.amountCents || 0)}
           meta="本月累计"
           tone="gold"
-          action={<ExpenseForm triggerLabel="新增" triggerVariant="ghost" triggerSize="sm" triggerClassName={addButtonClass} />}
+          action={canWrite ? <ExpenseForm triggerLabel="新增" triggerVariant="ghost" triggerSize="sm" triggerClassName={addButtonClass} /> : undefined}
         />
         <Stat
           icon={CalendarHeart}

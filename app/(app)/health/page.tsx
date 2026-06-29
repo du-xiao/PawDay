@@ -1,6 +1,8 @@
 import { Activity, CalendarClock, Scale, ShieldPlus } from "lucide-react";
+import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { deleteHealthAction } from "@/actions/app";
+import { isGuestRole } from "@/lib/roles";
 import { formatDate, toDateInput } from "@/lib/utils";
 import { PageHeader } from "@/components/page-header";
 import { HealthForm } from "@/components/forms/health-form";
@@ -23,6 +25,8 @@ function parsePage(value?: string) {
 }
 
 export default async function HealthPage({ searchParams }: { searchParams: Promise<{ type?: string; page?: string }> }) {
+  const session = await auth();
+  const canWrite = !isGuestRole(session?.user.role);
   const params = await searchParams;
   const selectedType = healthTypes.includes(params.type as typeof healthTypes[number]) ? params.type || "" : "";
   const requestedPage = parsePage(params.page);
@@ -60,7 +64,7 @@ export default async function HealthPage({ searchParams }: { searchParams: Promi
   const latestWeight = latestWeightRecord?.weightGrams;
 
   return <div className="page-enter">
-    <PageHeader eyebrow="HEALTH" title="健康与关怀" description="把疫苗、驱虫、用药和体重放在一起，照顾就会更有把握。" action={<HealthForm disabled={!dog} />} />
+    <PageHeader eyebrow="HEALTH" title="健康与关怀" description="把疫苗、驱虫、用药和体重放在一起，照顾就会更有把握。" action={canWrite ? <HealthForm disabled={!dog} /> : undefined} />
 
     <section className="mb-6 grid gap-4 lg:grid-cols-[1fr_2fr]">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
@@ -81,10 +85,10 @@ export default async function HealthPage({ searchParams }: { searchParams: Promi
       {!dog ? <EmptyState title="先创建小狗档案" description="有了档案后，才能开始记录健康信息。" /> : records.length ? <>
         <div className="divide-y">{records.map((record) => <article key={record.id} className="flex gap-3 p-4 sm:gap-4 sm:p-5">
           <TypeIcon kind="health" type={record.type} />
-          <div className="min-w-0 flex-1"><div className="flex items-start justify-between gap-2"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><h3 className="font-medium">{record.title}</h3><Badge>{record.type}</Badge>{record.weightGrams && <Badge className="bg-[var(--sage-soft)] text-[#5f775f] dark:text-[#bdd8bb]">{(record.weightGrams / 1000).toFixed(2)} kg</Badge>}</div><p className="mt-1 text-xs text-[var(--muted)]">{formatDate(record.date)}{record.nextReminderDate ? ` · 下次 ${formatDate(record.nextReminderDate)}` : ""}</p></div><RecordActions><HealthForm initial={{ id: record.id, type: record.type as never, title: record.title, date: toDateInput(record.date), notes: record.notes || "", weightKg: record.weightGrams ? record.weightGrams / 1000 : "", nextReminderDate: toDateInput(record.nextReminderDate) }} /><DeleteButton action={deleteHealthAction.bind(null, record.id)} /></RecordActions></div>{record.notes && <p className="mt-3 text-sm leading-relaxed text-[var(--muted)]">{record.notes}</p>}</div>
+          <div className="min-w-0 flex-1"><div className="flex items-start justify-between gap-2"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><h3 className="font-medium">{record.title}</h3><Badge>{record.type}</Badge>{record.weightGrams && <Badge className="bg-[var(--sage-soft)] text-[#5f775f] dark:text-[#bdd8bb]">{(record.weightGrams / 1000).toFixed(2)} kg</Badge>}</div><p className="mt-1 text-xs text-[var(--muted)]">{formatDate(record.date)}{record.nextReminderDate ? ` · 下次 ${formatDate(record.nextReminderDate)}` : ""}</p></div>{canWrite && <RecordActions><HealthForm initial={{ id: record.id, type: record.type as never, title: record.title, date: toDateInput(record.date), notes: record.notes || "", weightKg: record.weightGrams ? record.weightGrams / 1000 : "", nextReminderDate: toDateInput(record.nextReminderDate) }} /><DeleteButton action={deleteHealthAction.bind(null, record.id)} /></RecordActions>}</div>{record.notes && <p className="mt-3 text-sm leading-relaxed text-[var(--muted)]">{record.notes}</p>}</div>
         </article>)}</div>
         <Pagination pathname="/health" page={page} totalPages={totalPages} params={{ type: selectedType }} anchor="health-records" />
-      </> : <EmptyState title={selectedType ? `没有${selectedType}记录` : "还没有健康记录"} description={selectedType ? "换一个类型或选择全部类型后再看看。" : "从最近一次体重、驱虫或疫苗开始补记就好。"} action={!selectedType ? <HealthForm disabled={!dog} /> : undefined} />}
+      </> : <EmptyState title={selectedType ? `没有${selectedType}记录` : "还没有健康记录"} description={selectedType ? "换一个类型或选择全部类型后再看看。" : "从最近一次体重、驱虫或疫苗开始补记就好。"} action={canWrite && !selectedType ? <HealthForm disabled={!dog} /> : undefined} />}
     </section>
   </div>;
 }

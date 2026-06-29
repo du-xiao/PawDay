@@ -18,6 +18,12 @@ services:
       ADMIN_EMAIL: ""
       ADMIN_PASSWORD: ""
 
+      # 可选：访客只读账号。也可以部署后由管理员在“设置”页面管理。
+      # 访客只能查看，不能新增、修改、删除或改密码。
+      GUEST_ENABLED: ""
+      GUEST_EMAIL: ""
+      GUEST_PASSWORD: ""
+
       # 在 Mac 运行 `openssl rand -base64 48` 生成，升级时不要更换。
       AUTH_SECRET: ""
       AUTH_TRUST_HOST: "true"

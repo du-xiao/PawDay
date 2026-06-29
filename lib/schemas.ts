@@ -27,6 +27,24 @@ export const dogDocumentSchema = z.object({
   notes: optionalText,
 });
 
+export const guestAccountSchema = z.object({
+  enabled: z.boolean(),
+  email: z.string().trim().max(120).optional().or(z.literal("")),
+  password: z.string().max(128).optional().or(z.literal("")),
+}).superRefine((data, ctx) => {
+  if (!data.enabled) return;
+  if (!data.email) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "请填写访客邮箱", path: ["email"] });
+    return;
+  }
+  if (!z.string().email().safeParse(data.email).success) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "请输入正确的访客邮箱", path: ["email"] });
+  }
+  if (data.password && data.password.length < 8) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "访客密码至少 8 位，留空则不修改", path: ["password"] });
+  }
+});
+
 export const logSchema = z.object({
   id: z.string().cuid().optional(),
   type: z.enum(["喂食", "遛狗", "洗澡", "排便", "睡眠", "训练", "情绪", "其他"]),

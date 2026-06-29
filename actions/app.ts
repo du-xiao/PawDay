@@ -7,17 +7,29 @@ import { z } from "zod";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { ensureDatabase } from "@/lib/bootstrap";
-import { dogDocumentSchema, dogSchema, expenseSchema, healthSchema, logSchema, passwordSchema, photoSchema } from "@/lib/schemas";
+import { dogDocumentSchema, dogSchema, expenseSchema, guestAccountSchema, healthSchema, logSchema, passwordSchema, photoSchema } from "@/lib/schemas";
 import { syncDailyLogImagePhoto } from "@/lib/photo-sync";
+import { USER_ROLES, normalizeRole } from "@/lib/roles";
 import { deleteImage, saveImage } from "@/lib/upload";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
-async function owner() {
+async function requireUser() {
   await ensureDatabase();
   const session = await auth();
   if (!session?.user?.id) throw new Error("登录已过期，请重新登录");
-  return session.user.id;
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { id: true, role: true, disabledAt: true },
+  });
+  if (!user || user.disabledAt) throw new Error("账号不可用，请重新登录");
+  return user;
+}
+
+async function requireOwner() {
+  const user = await requireUser();
+  if (normalizeRole(user.role) !== USER_ROLES.OWNER) throw new Error("访客账号仅可查看，不能新增、修改或删除数据");
+  return user.id;
 }
 
 async function dogId() {
@@ -59,7 +71,7 @@ type DogDocumentRow = {
 
 export async function saveDogAction(formData: FormData): Promise<ActionResult> {
   try {
-    await owner();
+    await requireOwner();
     const current = await prisma.dog.findFirst();
     const data = dogSchema.parse({
       name: formData.get("name"), breed: formData.get("breed"), sex: formData.get("sex"),
@@ -92,7 +104,7 @@ export async function saveDogDocumentAction(formData: FormData): Promise<ActionR
   let uploadedBackUrl: string | null = null;
 
   try {
-    await owner();
+    await requireOwner();
     const currentDogId = await dogId();
     const data = dogDocumentSchema.parse({
       type: formData.get("type"),
@@ -155,7 +167,7 @@ export async function saveDogDocumentAction(formData: FormData): Promise<ActionR
 
 export async function saveLogAction(formData: FormData): Promise<ActionResult> {
   try {
-    await owner();
+    await requireOwner();
     const data = logSchema.parse(Object.fromEntries(formData));
     const current = data.id ? await prisma.dailyLog.findUnique({ where: { id: data.id } }) : null;
     const file = formData.get("image");
@@ -182,7 +194,7 @@ export async function saveLogAction(formData: FormData): Promise<ActionResult> {
 
 export async function deleteLogAction(id: string): Promise<ActionResult> {
   try {
-    await owner();
+    await requireOwner();
     const logId = z.string().cuid().parse(id);
     const current = await prisma.$transaction(async (tx) => {
       const log = await tx.dailyLog.findUniqueOrThrow({ where: { id: logId } });
@@ -198,7 +210,7 @@ export async function deleteLogAction(id: string): Promise<ActionResult> {
 
 export async function saveExpenseAction(input: unknown): Promise<ActionResult> {
   try {
-    await owner();
+    await requireOwner();
     const data = expenseSchema.parse(input);
     const values = { category: data.category, amountCents: Math.round(data.amount * 100), date: inputDate(data.date), merchant: data.merchant || null, notes: data.notes || null };
     if (data.id) await prisma.expense.update({ where: { id: data.id }, data: values });
@@ -209,7 +221,7 @@ export async function saveExpenseAction(input: unknown): Promise<ActionResult> {
 
 export async function deleteExpenseAction(id: string): Promise<ActionResult> {
   try {
-    await owner();
+    await requireOwner();
     await prisma.expense.delete({ where: { id: z.string().cuid().parse(id) } });
     revalidatePath("/", "layout");
     return { ok: true };
@@ -218,7 +230,7 @@ export async function deleteExpenseAction(id: string): Promise<ActionResult> {
 
 export async function saveHealthAction(input: unknown): Promise<ActionResult> {
   try {
-    await owner();
+    await requireOwner();
     const data = healthSchema.parse(input);
     const currentDogId = await dogId();
     const values = { type: data.type, title: data.title, date: inputDate(data.date), notes: data.notes || null, weightGrams: data.weightKg ? Math.round(Number(data.weightKg) * 1000) : null, nextReminderDate: data.nextReminderDate ? inputDate(data.nextReminderDate) : null };
@@ -242,7 +254,7 @@ export async function saveHealthAction(input: unknown): Promise<ActionResult> {
 
 export async function deleteHealthAction(id: string): Promise<ActionResult> {
   try {
-    await owner();
+    await requireOwner();
     const recordId = z.string().cuid().parse(id);
     await prisma.$transaction([
       prisma.reminder.deleteMany({ where: { notes: `health:${recordId}` } }),
@@ -255,7 +267,7 @@ export async function deleteHealthAction(id: string): Promise<ActionResult> {
 
 export async function savePhotoAction(formData: FormData): Promise<ActionResult> {
   try {
-    await owner();
+    await requireOwner();
     const file = formData.get("image");
     if (!(file instanceof File) || !file.size) throw new Error("请选择一张图片");
     const data = photoSchema.parse(Object.fromEntries(formData));
@@ -277,7 +289,7 @@ export async function savePhotoAction(formData: FormData): Promise<ActionResult>
 
 export async function deletePhotoAction(id: string): Promise<ActionResult> {
   try {
-    await owner();
+    await requireOwner();
     const photoId = z.string().cuid().parse(id);
     const photo = await prisma.$transaction(async (tx) => {
       const current = await tx.photo.findUniqueOrThrow({
@@ -298,11 +310,47 @@ export async function deletePhotoAction(id: string): Promise<ActionResult> {
 
 export async function changePasswordAction(input: unknown): Promise<ActionResult> {
   try {
-    const userId = await owner();
+    const userId = await requireOwner();
     const data = passwordSchema.parse(input);
     const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
     if (!(await bcrypt.compare(data.currentPassword, user.passwordHash))) throw new Error("当前密码不正确");
     await prisma.user.update({ where: { id: userId }, data: { passwordHash: await bcrypt.hash(data.newPassword, 12) } });
+    return { ok: true };
+  } catch (error) { return fail(error); }
+}
+
+export async function saveGuestAccountAction(input: unknown): Promise<ActionResult> {
+  try {
+    await requireOwner();
+    const data = guestAccountSchema.parse(input);
+    if (!data.enabled) {
+      await prisma.user.updateMany({ where: { role: USER_ROLES.GUEST }, data: { disabledAt: new Date() } });
+      revalidatePath("/settings");
+      return { ok: true };
+    }
+
+    const email = data.email!.trim().toLowerCase();
+    const guestByRole = await prisma.user.findFirst({ where: { role: USER_ROLES.GUEST }, orderBy: { createdAt: "asc" } });
+    const userWithEmail = await prisma.user.findUnique({ where: { email }, select: { id: true, role: true } });
+    const guest = guestByRole ?? (userWithEmail && normalizeRole(userWithEmail.role) === USER_ROLES.GUEST ? userWithEmail : null);
+    if (userWithEmail && userWithEmail.id !== guest?.id) throw new Error("这个邮箱已经被其他账号使用");
+    if (!guest && !data.password) throw new Error("首次创建访客账号需要设置至少 8 位密码");
+
+    const passwordHash = data.password ? await bcrypt.hash(data.password, 12) : null;
+    const passwordData = passwordHash ? { passwordHash } : {};
+    if (guest) {
+      await prisma.user.update({
+        where: { id: guest.id },
+        data: { email, name: "PawDay 访客", role: USER_ROLES.GUEST, disabledAt: null, ...passwordData },
+      });
+      await prisma.user.updateMany({ where: { role: USER_ROLES.GUEST, id: { not: guest.id } }, data: { disabledAt: new Date() } });
+    } else {
+      await prisma.user.create({
+        data: { email, name: "PawDay 访客", role: USER_ROLES.GUEST, passwordHash: passwordHash! },
+      });
+    }
+
+    revalidatePath("/settings");
     return { ok: true };
   } catch (error) { return fail(error); }
 }

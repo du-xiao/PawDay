@@ -4,6 +4,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcrypt";
 import { prisma } from "@/lib/db";
 import { ensureDatabase } from "@/lib/bootstrap";
+import { normalizeRole } from "@/lib/roles";
 import { loginSchema } from "@/lib/schemas";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -21,18 +22,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!parsed.success) return null;
         await ensureDatabase();
         const user = await prisma.user.findUnique({ where: { email: parsed.data.email.toLowerCase() } });
+        if (user?.disabledAt) return null;
         if (!user || !(await bcrypt.compare(parsed.data.password, user.passwordHash))) return null;
-        return { id: user.id, email: user.email, name: user.name, image: user.image };
+        return { id: user.id, email: user.email, name: user.name, image: user.image, role: normalizeRole(user.role) };
       },
     }),
   ],
   callbacks: {
     jwt({ token, user }) {
       if (user?.id) token.id = user.id;
+      if (user?.role) token.role = normalizeRole(user.role);
       return token;
     },
     session({ session, token }) {
       if (session.user) session.user.id = token.id as string;
+      if (session.user) session.user.role = normalizeRole(token.role);
       return session;
     },
   },
