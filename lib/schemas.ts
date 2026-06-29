@@ -17,6 +17,16 @@ export const dogSchema = z.object({
   avatarUrl: z.string().optional().or(z.literal("")),
 });
 
+export const dogDocumentSchema = z.object({
+  type: z.enum(["狗证", "免疫证"]),
+  title: z.string().trim().max(80).optional().or(z.literal("")),
+  identifier: z.string().trim().max(80).optional().or(z.literal("")),
+  issuer: z.string().trim().max(80).optional().or(z.literal("")),
+  issuedAt: z.string().optional().or(z.literal("")),
+  expiresAt: z.string().optional().or(z.literal("")),
+  notes: optionalText,
+});
+
 export const logSchema = z.object({
   id: z.string().cuid().optional(),
   type: z.enum(["喂食", "遛狗", "洗澡", "排便", "睡眠", "训练", "情绪", "其他"]),

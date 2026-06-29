@@ -59,44 +59,60 @@ export default async function DashboardPage() {
         <p className="mt-3 text-[var(--muted)]">陪 {dog.name} 认真度过普通的一天。</p>
       </section>
 
-      <section className="relative overflow-hidden rounded-[2.25rem] border border-orange-100/60 bg-[#d87959] p-3 text-white shadow-xl shadow-orange-300/20 dark:border-white/10">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(255,255,255,.45),transparent_28%),linear-gradient(135deg,#f1b789_0%,#e6845c_52%,#c5665c_100%)]" />
-        <div className="absolute -right-24 -top-24 size-72 rounded-full bg-white/15 blur-3xl" />
-        <div className="absolute -bottom-28 left-1/3 size-72 rounded-full bg-[#8f3f31]/18 blur-3xl" />
-        <div className="relative z-10 grid gap-3 lg:grid-cols-[minmax(0,.92fr)_minmax(0,1.08fr)] lg:items-stretch">
-          <div className="relative min-h-[260px] overflow-hidden rounded-[1.9rem] bg-white/15 shadow-2xl shadow-black/10 ring-1 ring-white/20 sm:min-h-[340px] lg:min-h-[360px]">
-            {dog.avatarUrl ? <Image src={dog.avatarUrl} alt={dog.name} fill priority unoptimized className="object-cover" sizes="(max-width: 1024px) 100vw, 42vw" /> : <div className="grid size-full place-items-center"><PawPrint className="size-24 text-white/75" /></div>}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-white/5" />
-            <div className="absolute bottom-4 left-4 right-4 rounded-2xl bg-black/18 px-4 py-3 backdrop-blur-md ring-1 ring-white/15 lg:hidden">
-              <p className="text-[10px] font-semibold uppercase tracking-[.22em] text-white/70">PawDay Today</p>
-              <p className="mt-1 text-2xl font-semibold tracking-[-.04em]">{dog.name}</p>
+      <section className="soft-card relative overflow-hidden rounded-[2.25rem] p-4 sm:p-5 lg:p-6">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_8%_0%,rgba(232,137,95,.22),transparent_34%),linear-gradient(135deg,rgba(255,246,235,.92),rgba(255,255,255,.56)_48%,rgba(220,231,217,.42))] dark:bg-[radial-gradient(circle_at_8%_0%,rgba(232,137,95,.18),transparent_34%),linear-gradient(135deg,rgba(70,48,37,.42),rgba(255,255,255,.035)_48%,rgba(77,97,75,.16))]" />
+        <div className="absolute -right-16 -top-20 size-56 rounded-full bg-[var(--orange-soft)]/70 blur-3xl" />
+        <div className="absolute -bottom-24 left-16 size-56 rounded-full bg-[var(--sage-soft)]/60 blur-3xl" />
+        <div className="relative z-10 sm:hidden">
+          <div className="flex items-center gap-3.5">
+            <div className="relative size-20 shrink-0 overflow-hidden rounded-[1.35rem] border border-white/75 bg-white/75 shadow-lg shadow-orange-200/25 ring-1 ring-black/[.03] dark:border-white/10 dark:bg-white/[.08] dark:shadow-black/20 dark:ring-white/[.06]">
+              {dog.avatarUrl ? <Image src={dog.avatarUrl} alt={dog.name} fill priority unoptimized className="object-cover" sizes="80px" /> : <div className="grid size-full place-items-center"><PawPrint className="size-10 text-[var(--orange)]" /></div>}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-semibold uppercase tracking-[.22em] text-[var(--orange)]">MY BEST FRIEND</p>
+              <h2 className="mt-1 truncate text-3xl font-semibold tracking-[-.055em]">{dog.name}</h2>
+              <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-[var(--muted)]">今天也在认真长大，慢慢留下普通日子里的小事。</p>
             </div>
           </div>
 
-          <div className="flex min-h-[280px] flex-col justify-between rounded-[1.9rem] bg-white/[.18] p-5 backdrop-blur-xl ring-1 ring-white/25 sm:p-6 lg:p-7">
-            <div>
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[.24em] text-white/70">MY BEST FRIEND</p>
-                  <h2 className="mt-2 text-4xl font-semibold tracking-[-.055em] sm:text-5xl lg:text-6xl">{dog.name}</h2>
-                </div>
-                <Button asChild variant="outline" className="w-full border-white/25 bg-white/15 text-white hover:bg-white/20 sm:w-auto">
-                  <Link href="/dog">查看档案<ArrowUpRight className="size-4" /></Link>
-                </Button>
+          <div className="mt-4 grid grid-cols-2 gap-2.5">
+            <ProfileFact label="品种" value={dog.breed || "未记录"} tone="orange" />
+            <ProfileFact label="性别" value={dog.sex || "未知"} tone="sage" />
+            <ProfileFact label="年龄" value={dogAge(dog.birthDate)} tone="gold" />
+            <ProfileFact label="陪伴" value={together ? `${together} 天` : "待记录"} tone="violet" />
+          </div>
+
+          <Button asChild variant="outline" className="mt-4 w-full border-orange-200/70 bg-white/70 text-[#8d4d2f] shadow-sm shadow-orange-200/20 hover:bg-white/85 dark:border-white/10 dark:bg-white/[.06] dark:text-[#ffc09b] dark:hover:bg-white/[.1]">
+            <Link href="/dog">查看档案<ArrowUpRight className="size-4" /></Link>
+          </Button>
+        </div>
+
+        <div className="relative z-10 hidden sm:block">
+          <div className="flex items-center justify-between gap-5">
+            <div className="flex min-w-0 items-center gap-5">
+              <div className="relative size-28 shrink-0 overflow-hidden rounded-[1.65rem] border border-white/70 bg-white/70 shadow-xl shadow-orange-200/25 ring-1 ring-black/[.03] lg:size-32 dark:border-white/10 dark:bg-white/[.08] dark:shadow-black/20 dark:ring-white/[.06]">
+                {dog.avatarUrl ? <Image src={dog.avatarUrl} alt={dog.name} fill priority unoptimized className="object-cover" sizes="(max-width: 1024px) 112px, 128px" /> : <div className="grid size-full place-items-center"><PawPrint className="size-12 text-[var(--orange)]" /></div>}
               </div>
-
-              <p className="mt-5 max-w-2xl text-sm leading-relaxed text-white/78 sm:text-base">今天也在认真长大。把普通日子里的吃饭、散步、健康和小表情都慢慢留下来。</p>
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-[.24em] text-[var(--orange)]">MY BEST FRIEND</p>
+                <h2 className="mt-2 text-5xl font-semibold tracking-[-.055em]">{dog.name}</h2>
+                <p className="mt-3 max-w-2xl text-base leading-relaxed text-[var(--muted)]">今天也在认真长大。把普通日子里的吃饭、散步、健康和小表情都慢慢留下来。</p>
+              </div>
             </div>
 
-            <div className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-4">
-              <ProfileFact label="品种" value={dog.breed || "未记录"} />
-              <ProfileFact label="性别" value={dog.sex || "未知"} />
-              <ProfileFact label="年龄" value={dogAge(dog.birthDate)} />
-              <ProfileFact label="陪伴" value={together ? `${together} 天` : "待记录"} />
-            </div>
+            <Button asChild variant="outline" className="shrink-0 border-orange-200/70 bg-white/70 text-[#8d4d2f] shadow-sm shadow-orange-200/20 hover:bg-white/85 dark:border-white/10 dark:bg-white/[.06] dark:text-[#ffc09b] dark:hover:bg-white/[.1]">
+              <Link href="/dog">查看档案<ArrowUpRight className="size-4" /></Link>
+            </Button>
+          </div>
+
+          <div className="mt-5 grid grid-cols-4 gap-3">
+            <ProfileFact label="品种" value={dog.breed || "未记录"} tone="orange" />
+            <ProfileFact label="性别" value={dog.sex || "未知"} tone="sage" />
+            <ProfileFact label="年龄" value={dogAge(dog.birthDate)} tone="gold" />
+            <ProfileFact label="陪伴" value={together ? `${together} 天` : "待记录"} tone="violet" />
           </div>
         </div>
-        <PawPrint className="absolute -bottom-16 -right-7 size-56 rotate-[-18deg] text-white/[.07]" />
+        <PawPrint className="absolute -bottom-12 -right-5 size-44 rotate-[-18deg] text-[var(--orange)] opacity-[.055]" />
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -183,11 +199,19 @@ function Stat({ icon: Icon, label, value, meta, tone, action }: { icon: typeof C
   );
 }
 
-function ProfileFact({ label, value }: { label: string; value: string }) {
+function ProfileFact({ label, value, tone }: { label: string; value: string; tone: "orange" | "sage" | "gold" | "violet" }) {
+  const tones = {
+    orange: "from-[var(--orange)] to-[#f0ad81]",
+    sage: "from-[var(--sage)] to-[#b9cdae]",
+    gold: "from-amber-500 to-[#e5c075]",
+    violet: "from-violet-500 to-[#b5a5d6]",
+  };
+
   return (
-    <div className="rounded-2xl bg-white/[.16] p-3 ring-1 ring-white/15 backdrop-blur">
-      <p className="text-[10px] font-semibold uppercase tracking-[.18em] text-white/60">{label}</p>
-      <p className="mt-1 truncate text-sm font-semibold text-white sm:text-base">{value}</p>
+    <div className="group overflow-hidden rounded-2xl border border-black/[.035] bg-white/[.66] p-3 shadow-sm shadow-stone-900/[.02] backdrop-blur transition hover:-translate-y-0.5 hover:bg-white/80 hover:shadow-md dark:border-white/[.08] dark:bg-white/[.045] dark:hover:bg-white/[.07]">
+      <p className="text-[10px] font-semibold uppercase tracking-[.18em] text-[var(--muted)]">{label}</p>
+      <span className={`mt-1.5 block h-1 w-7 rounded-full bg-gradient-to-r ${tones[tone]}`} />
+      <p className="mt-2 truncate text-sm font-semibold tracking-[-.02em] text-[var(--foreground)] sm:text-base">{value}</p>
     </div>
   );
 }

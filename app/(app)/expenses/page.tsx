@@ -69,7 +69,7 @@ export default async function ExpensesPage({ searchParams }: { searchParams: Pro
   return <div className="page-enter">
     <PageHeader eyebrow="EXPENSES" title="养狗开销" description="看见钱都花去了哪里，也更从容地照顾好每一个需要。" action={<ExpenseForm disabled={!dog} />} />
     <section className="mb-6 grid gap-4 sm:grid-cols-3"><Metric icon={WalletCards} label="本月总开销" value={money(monthTotal)} tone="orange" /><Metric icon={Landmark} label="本年度总开销" value={money(yearTotal)} tone="sage" /><Metric icon={ReceiptText} label="累计记录" value={`${summaryExpenses.length} 笔`} tone="violet" /></section>
-    <ExpenseCharts categories={categories} months={months} scope={scope} selectedYear={selectedYear} selectedMonth={selectedMonth} years={years} />
+    <ExpenseCharts key={`${scope}-${selectedYear}-${selectedMonth}`} categories={categories} months={months} scope={scope} selectedYear={selectedYear} selectedMonth={selectedMonth} years={years} />
 
     <section id="expense-records" className="mt-6 scroll-mt-24 soft-card rounded-3xl">
       <div className="flex flex-col gap-4 border-b p-5 sm:flex-row sm:items-end sm:justify-between sm:p-6">

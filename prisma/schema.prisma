@@ -68,8 +68,29 @@ model Dog {
   health       HealthRecord[]
   photos       Photo[]
   reminders    Reminder[]
+  documents    DogDocument[]
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
+}
+
+model DogDocument {
+  id            String    @id @default(cuid())
+  dogId         String
+  type          String
+  title         String?
+  identifier    String?
+  issuer        String?
+  issuedAt      DateTime?
+  expiresAt     DateTime?
+  frontImageUrl String?
+  backImageUrl  String?
+  notes         String?
+  dog           Dog       @relation(fields: [dogId], references: [id], onDelete: Cascade)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([dogId, type])
+  @@index([type])
 }
 
 model DailyLog {

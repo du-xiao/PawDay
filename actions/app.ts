@@ -1,12 +1,13 @@
 "use server";
 
+import crypto from "node:crypto";
 import bcrypt from "bcrypt";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { ensureDatabase } from "@/lib/bootstrap";
-import { dogSchema, expenseSchema, healthSchema, logSchema, passwordSchema, photoSchema } from "@/lib/schemas";
+import { dogDocumentSchema, dogSchema, expenseSchema, healthSchema, logSchema, passwordSchema, photoSchema } from "@/lib/schemas";
 import { syncDailyLogImagePhoto } from "@/lib/photo-sync";
 import { deleteImage, saveImage } from "@/lib/upload";
 
@@ -36,6 +37,26 @@ function inputDate(value: string) {
   return date;
 }
 
+function optionalInputDate(value?: string) {
+  return value ? inputDate(value) : null;
+}
+
+type DogDocumentRow = {
+  id: string;
+  dogId: string;
+  type: string;
+  title: string | null;
+  identifier: string | null;
+  issuer: string | null;
+  issuedAt: Date | string | null;
+  expiresAt: Date | string | null;
+  frontImageUrl: string | null;
+  backImageUrl: string | null;
+  notes: string | null;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+};
+
 export async function saveDogAction(formData: FormData): Promise<ActionResult> {
   try {
     await owner();
@@ -64,6 +85,72 @@ export async function saveDogAction(formData: FormData): Promise<ActionResult> {
     revalidatePath("/", "layout");
     return { ok: true };
   } catch (error) { return fail(error); }
+}
+
+export async function saveDogDocumentAction(formData: FormData): Promise<ActionResult> {
+  let uploadedFrontUrl: string | null = null;
+  let uploadedBackUrl: string | null = null;
+
+  try {
+    await owner();
+    const currentDogId = await dogId();
+    const data = dogDocumentSchema.parse({
+      type: formData.get("type"),
+      title: formData.get("title"),
+      identifier: formData.get("identifier"),
+      issuer: formData.get("issuer"),
+      issuedAt: formData.get("issuedAt"),
+      expiresAt: formData.get("expiresAt"),
+      notes: formData.get("notes"),
+    });
+    const [current] = await prisma.$queryRaw<DogDocumentRow[]>`
+      SELECT * FROM "DogDocument" WHERE "dogId" = ${currentDogId} AND "type" = ${data.type} LIMIT 1
+    `;
+    const frontFile = formData.get("frontImage");
+    const backFile = formData.get("backImage");
+    uploadedFrontUrl = frontFile instanceof File && frontFile.size ? await saveImage(frontFile) : null;
+    uploadedBackUrl = backFile instanceof File && backFile.size ? await saveImage(backFile) : null;
+    const values = {
+      title: data.title || null,
+      identifier: data.identifier || null,
+      issuer: data.issuer || null,
+      issuedAt: optionalInputDate(data.issuedAt),
+      expiresAt: optionalInputDate(data.expiresAt),
+      frontImageUrl: uploadedFrontUrl || current?.frontImageUrl || null,
+      backImageUrl: uploadedBackUrl || current?.backImageUrl || null,
+      notes: data.notes || null,
+    };
+
+    if (current) {
+      await prisma.$executeRaw`
+        UPDATE "DogDocument"
+        SET "title" = ${values.title},
+            "identifier" = ${values.identifier},
+            "issuer" = ${values.issuer},
+            "issuedAt" = ${values.issuedAt},
+            "expiresAt" = ${values.expiresAt},
+            "frontImageUrl" = ${values.frontImageUrl},
+            "backImageUrl" = ${values.backImageUrl},
+            "notes" = ${values.notes},
+            "updatedAt" = ${new Date()}
+        WHERE "id" = ${current.id}
+      `;
+    } else {
+      await prisma.$executeRaw`
+        INSERT INTO "DogDocument" ("id", "dogId", "type", "title", "identifier", "issuer", "issuedAt", "expiresAt", "frontImageUrl", "backImageUrl", "notes", "updatedAt")
+        VALUES (${crypto.randomUUID()}, ${currentDogId}, ${data.type}, ${values.title}, ${values.identifier}, ${values.issuer}, ${values.issuedAt}, ${values.expiresAt}, ${values.frontImageUrl}, ${values.backImageUrl}, ${values.notes}, ${new Date()})
+      `;
+    }
+
+    if (uploadedFrontUrl && current?.frontImageUrl) await deleteImage(current.frontImageUrl);
+    if (uploadedBackUrl && current?.backImageUrl) await deleteImage(current.backImageUrl);
+    revalidatePath("/", "layout");
+    return { ok: true };
+  } catch (error) {
+    if (uploadedFrontUrl) await deleteImage(uploadedFrontUrl);
+    if (uploadedBackUrl) await deleteImage(uploadedBackUrl);
+    return fail(error);
+  }
 }
 
 export async function saveLogAction(formData: FormData): Promise<ActionResult> {
