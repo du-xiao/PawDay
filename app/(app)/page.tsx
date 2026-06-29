@@ -59,25 +59,42 @@ export default async function DashboardPage() {
         <p className="mt-3 text-[var(--muted)]">陪 {dog.name} 认真度过普通的一天。</p>
       </section>
 
-      <section className="relative overflow-hidden rounded-[2.25rem] bg-gradient-to-br from-[#e9a476] via-[#e8895f] to-[#cc705b] p-5 text-white shadow-xl shadow-orange-300/20 sm:p-7 lg:p-8">
-        <div className="relative z-10 grid gap-6 lg:grid-cols-[minmax(180px,230px)_1fr_auto] lg:items-center">
-          <div className="relative mx-auto size-36 shrink-0 overflow-hidden rounded-[2rem] border-4 border-white/35 bg-white/20 shadow-2xl shadow-black/10 sm:size-44 lg:mx-0 lg:size-52">
-            {dog.avatarUrl ? <Image src={dog.avatarUrl} alt={dog.name} fill priority unoptimized className="object-cover" sizes="(max-width: 640px) 144px, (max-width: 1024px) 176px, 208px" /> : <div className="grid size-full place-items-center"><PawPrint className="size-16 sm:size-20" /></div>}
-          </div>
-          <div className="text-center lg:text-left">
-            <p className="text-xs font-semibold uppercase tracking-[.22em] text-white/70">MY BEST FRIEND</p>
-            <h2 className="mt-2 text-4xl font-semibold tracking-[-.05em] sm:text-5xl">{dog.name}</h2>
-            <p className="mt-3 text-sm leading-relaxed text-white/78 sm:max-w-xl">今天也在认真长大。把普通日子里的吃饭、散步、健康和小表情都慢慢留下来。</p>
-            <div className="mt-4 flex flex-wrap justify-center gap-2 lg:justify-start">
-              <Badge className="bg-white/20 text-white">{dog.breed || "品种未记录"}</Badge>
-              <Badge className="bg-white/20 text-white">{dog.sex || "性别未记录"}</Badge>
-              <Badge className="bg-white/20 text-white">{dogAge(dog.birthDate)}</Badge>
-              {together && <Badge className="bg-white/20 text-white">陪伴第 {together} 天</Badge>}
+      <section className="relative overflow-hidden rounded-[2.25rem] border border-orange-100/60 bg-[#d87959] p-3 text-white shadow-xl shadow-orange-300/20 dark:border-white/10">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(255,255,255,.45),transparent_28%),linear-gradient(135deg,#f1b789_0%,#e6845c_52%,#c5665c_100%)]" />
+        <div className="absolute -right-24 -top-24 size-72 rounded-full bg-white/15 blur-3xl" />
+        <div className="absolute -bottom-28 left-1/3 size-72 rounded-full bg-[#8f3f31]/18 blur-3xl" />
+        <div className="relative z-10 grid gap-3 lg:grid-cols-[minmax(0,.92fr)_minmax(0,1.08fr)] lg:items-stretch">
+          <div className="relative min-h-[260px] overflow-hidden rounded-[1.9rem] bg-white/15 shadow-2xl shadow-black/10 ring-1 ring-white/20 sm:min-h-[340px] lg:min-h-[360px]">
+            {dog.avatarUrl ? <Image src={dog.avatarUrl} alt={dog.name} fill priority unoptimized className="object-cover" sizes="(max-width: 1024px) 100vw, 42vw" /> : <div className="grid size-full place-items-center"><PawPrint className="size-24 text-white/75" /></div>}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-white/5" />
+            <div className="absolute bottom-4 left-4 right-4 rounded-2xl bg-black/18 px-4 py-3 backdrop-blur-md ring-1 ring-white/15 lg:hidden">
+              <p className="text-[10px] font-semibold uppercase tracking-[.22em] text-white/70">PawDay Today</p>
+              <p className="mt-1 text-2xl font-semibold tracking-[-.04em]">{dog.name}</p>
             </div>
           </div>
-          <Button asChild variant="outline" className="mx-auto border-white/25 bg-white/15 text-white hover:bg-white/20 lg:mx-0 lg:self-start">
-            <Link href="/dog">查看档案<ArrowUpRight className="size-4" /></Link>
-          </Button>
+
+          <div className="flex min-h-[280px] flex-col justify-between rounded-[1.9rem] bg-white/[.18] p-5 backdrop-blur-xl ring-1 ring-white/25 sm:p-6 lg:p-7">
+            <div>
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[.24em] text-white/70">MY BEST FRIEND</p>
+                  <h2 className="mt-2 text-4xl font-semibold tracking-[-.055em] sm:text-5xl lg:text-6xl">{dog.name}</h2>
+                </div>
+                <Button asChild variant="outline" className="w-full border-white/25 bg-white/15 text-white hover:bg-white/20 sm:w-auto">
+                  <Link href="/dog">查看档案<ArrowUpRight className="size-4" /></Link>
+                </Button>
+              </div>
+
+              <p className="mt-5 max-w-2xl text-sm leading-relaxed text-white/78 sm:text-base">今天也在认真长大。把普通日子里的吃饭、散步、健康和小表情都慢慢留下来。</p>
+            </div>
+
+            <div className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <ProfileFact label="品种" value={dog.breed || "未记录"} />
+              <ProfileFact label="性别" value={dog.sex || "未知"} />
+              <ProfileFact label="年龄" value={dogAge(dog.birthDate)} />
+              <ProfileFact label="陪伴" value={together ? `${together} 天` : "待记录"} />
+            </div>
+          </div>
         </div>
         <PawPrint className="absolute -bottom-16 -right-7 size-56 rotate-[-18deg] text-white/[.07]" />
       </section>
@@ -119,14 +136,6 @@ export default async function DashboardPage() {
       <section className="grid gap-5 xl:grid-cols-[1.15fr_.85fr]">
         <Card>
           <CardHeader>
-            <div><CardTitle>体重趋势</CardTitle><p className="mt-1 text-xs text-[var(--muted)]">轻轻关注每一点变化</p></div>
-            <Button asChild size="sm" variant="ghost"><Link href="/health">查看健康<ArrowUpRight className="size-3.5" /></Link></Button>
-          </CardHeader>
-          <CardContent><WeightChart data={chart} compact /></CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
             <div><CardTitle>最近的日子</CardTitle><p className="mt-1 text-xs text-[var(--muted)]">刚刚发生的小事</p></div>
             <Button asChild size="sm" variant="ghost"><Link href="/logs">全部记录<ArrowUpRight className="size-3.5" /></Link></Button>
           </CardHeader>
@@ -139,6 +148,14 @@ export default async function DashboardPage() {
               </Link>)}
             </div> : <EmptyState compact title="今天还没有记录" description="散步、吃饭、打盹，都值得被记下来。" />}
           </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <div><CardTitle>体重趋势</CardTitle><p className="mt-1 text-xs text-[var(--muted)]">轻轻关注每一点变化</p></div>
+            <Button asChild size="sm" variant="ghost"><Link href="/health">查看健康<ArrowUpRight className="size-3.5" /></Link></Button>
+          </CardHeader>
+          <CardContent><WeightChart data={chart} compact /></CardContent>
         </Card>
       </section>
     </div>
@@ -163,5 +180,14 @@ function Stat({ icon: Icon, label, value, meta, tone, action }: { icon: typeof C
       <p className="mt-1 truncate text-lg font-semibold tracking-tight">{value}</p>
       <p className="mt-1 truncate text-xs text-[var(--muted)]">{meta}</p>
     </Card>
+  );
+}
+
+function ProfileFact({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl bg-white/[.16] p-3 ring-1 ring-white/15 backdrop-blur">
+      <p className="text-[10px] font-semibold uppercase tracking-[.18em] text-white/60">{label}</p>
+      <p className="mt-1 truncate text-sm font-semibold text-white sm:text-base">{value}</p>
+    </div>
   );
 }
