@@ -5,9 +5,10 @@ import { useRouter } from "next/navigation";
 import { Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { cancelReminderAction, completeReminderAction } from "@/actions/app";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
-export function ReminderActions({ id }: { id: string }) {
+export function ReminderActions({ id, className }: { id: string; className?: string }) {
   const [pending, startTransition] = useTransition();
   const router = useRouter();
 
@@ -24,14 +25,14 @@ export function ReminderActions({ id }: { id: string }) {
   }
 
   return (
-    <div className="mt-4 flex gap-2">
-      <Button type="button" size="sm" variant="warm" disabled={pending} onClick={() => run("complete")} className="flex-1">
+    <div className={cn("flex flex-wrap justify-end gap-2", className)}>
+      <Button type="button" size="sm" variant="warm" disabled={pending} onClick={() => run("complete")}>
         <Check className="size-3.5" />
         完成
       </Button>
-      <Button type="button" size="sm" variant="ghost" disabled={pending} onClick={() => run("cancel")} className="flex-1">
+      <Button type="button" size="sm" variant="ghost" disabled={pending} onClick={() => run("cancel")} className="text-[var(--muted)] hover:text-red-600 dark:hover:text-red-300">
         <X className="size-3.5" />
-        取消
+        取消提醒
       </Button>
     </div>
   );

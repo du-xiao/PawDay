@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { useTheme } from "next-themes";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { Bone, CalendarClock, Camera, ChevronDown, ChevronRight, CircleDollarSign, Dog, HeartPulse, Home, KeyRound, LogOut, Menu, Moon, Settings, Sun, NotebookPen } from "lucide-react";
+import { Bone, Camera, ChevronDown, CircleDollarSign, Dog, HeartPulse, Home, KeyRound, LogOut, Menu, Moon, Settings, Sun, NotebookPen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isGuestRole, roleLabel, type UserRole } from "@/lib/roles";
 import { Button } from "@/components/ui/button";
@@ -20,9 +20,7 @@ const nav = [
   { href: "/dog", label: "档案", icon: Dog },
 ];
 
-type ReminderStatus = { href: string; hasPending: boolean; overdue: boolean };
-
-export function AppShell({ email, role, reminder, children }: { email: string; role: UserRole; reminder?: ReminderStatus | null; children: React.ReactNode }) {
+export function AppShell({ email, role, children }: { email: string; role: UserRole; children: React.ReactNode }) {
   const pathname = usePathname();
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -32,20 +30,6 @@ export function AppShell({ email, role, reminder, children }: { email: string; r
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-[248px] border-r bg-[var(--card)]/82 p-4 shadow-xl shadow-stone-900/[.035] backdrop-blur-xl lg:flex lg:flex-col">
       <Link href="/" className="flex items-center gap-3 rounded-3xl px-3 py-4 transition hover:bg-black/[.025] dark:hover:bg-white/[.035]"><span className="grid size-11 place-items-center rounded-2xl bg-gradient-to-br from-[var(--orange)] to-[#d36e54] text-white shadow-lg shadow-orange-300/25"><Bone className="size-5 rotate-[-25deg]" /></span><div><div className="text-lg font-bold tracking-[-.04em]">PawDay</div><div className="text-[11px] text-[var(--muted)]">OUR LITTLE DAYS</div></div></Link>
       <nav className="mt-8 space-y-1.5">{nav.map((item) => { const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href); return <Link key={item.href} href={item.href} className={cn("flex h-11 items-center gap-3 rounded-2xl px-3 text-sm font-medium text-[var(--muted)] transition hover:translate-x-0.5 hover:bg-black/[.04] hover:text-[var(--foreground)] dark:hover:bg-white/[.05]", active && "bg-[var(--orange-soft)] text-[#9a5838] shadow-sm shadow-orange-200/20 dark:text-[#ffc19d]")}><item.icon className="size-[18px]" />{item.label}</Link>; })}</nav>
-      <div className="mt-auto">
-        {reminder?.hasPending ? (
-          <Link href={reminder.href} className={cn("group flex h-11 items-center gap-3 rounded-2xl px-3 text-sm font-medium text-[var(--muted)] transition hover:bg-black/[.04] hover:text-[var(--foreground)] dark:hover:bg-white/[.05]", reminder.overdue && "text-red-600 dark:text-red-300")}>
-            <span className={cn("relative grid size-8 place-items-center rounded-xl bg-black/[.035] dark:bg-white/[.06]", reminder.overdue ? "text-red-500" : "text-[var(--orange)]")}>
-              <CalendarClock className="size-4" />
-              <span className="absolute right-1.5 top-1.5 size-2 rounded-full bg-red-500 ring-2 ring-[var(--card)]" />
-            </span>
-            <span className="flex-1">待处理提醒</span>
-            <ChevronRight className="size-4 text-[var(--muted)] transition group-hover:translate-x-0.5" />
-          </Link>
-        ) : (
-          <p className="px-3 py-2 text-xs text-[var(--muted)]">暂无提醒</p>
-        )}
-      </div>
     </aside>
     <div className="min-w-0 pb-24 lg:ml-[248px] lg:pb-0">
       <header className="sticky top-0 z-20 flex h-20 items-center justify-between border-b bg-[var(--background)]/78 px-4 shadow-sm shadow-stone-900/[.025] backdrop-blur-xl sm:px-7 lg:px-10">

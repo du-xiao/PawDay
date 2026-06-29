@@ -11,7 +11,7 @@ import { DeleteButton, RecordActions } from "@/components/forms/shared";
 import { EmptyState } from "@/components/empty-state";
 import { WeightChart } from "@/components/charts/weight-chart";
 import { Pagination } from "@/components/pagination";
-import { ReminderActions } from "@/components/reminder-actions";
+import { ReminderCard } from "@/components/reminder-card";
 import { TypeFilterForm } from "@/components/type-filter-form";
 import { TypeIcon } from "@/components/type-icon";
 import { Badge } from "@/components/ui/badge";
@@ -76,9 +76,9 @@ export default async function HealthPage({ searchParams }: { searchParams: Promi
       <Card><CardHeader><div><CardTitle>体重趋势</CardTitle><p className="mt-1 text-xs text-[var(--muted)]">长期趋势比单次数字更重要</p></div><Activity className="size-5 text-[var(--sage)]" /></CardHeader><CardContent><WeightChart data={weightData} compact /></CardContent></Card>
     </section>
 
-    {reminders.length > 0 && <section className="mb-6 rounded-3xl bg-[var(--orange-soft)] p-5 sm:p-6"><div className="flex items-center gap-3"><ShieldPlus className="size-5 text-[var(--orange)]" /><div><h2 className="font-semibold">待处理提醒</h2><p className="mt-1 text-xs text-[var(--muted)]">完成或取消后会从提醒列表中移除。</p></div></div><div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">{reminders.map((item) => {
+    {reminders.length > 0 && <section className="mb-6 rounded-3xl bg-[var(--orange-soft)] p-5 sm:p-6"><div className="flex items-center gap-3"><ShieldPlus className="size-5 text-[var(--orange)]" /><div><h2 className="font-semibold">待处理提醒</h2><p className="mt-1 text-xs text-[var(--muted)]">到期时间越近越靠前，逾期会保持标红。</p></div></div><div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">{reminders.map((item) => {
       const overdue = differenceInCalendarDays(item.dueAt, new Date()) < 0;
-      return <div key={item.id} className={`rounded-2xl p-4 ${overdue ? "bg-red-500/10" : "bg-white/55 dark:bg-white/[.06]"}`}><div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="truncate text-sm font-medium">{item.title}</p><p className={overdue ? "mt-1 text-xs font-medium text-red-600 dark:text-red-300" : "mt-1 text-xs text-[var(--muted)]"}>{reminderDetail(item.dueAt)}</p></div><Badge className={overdue ? "bg-red-500/10 text-red-600 dark:text-red-300" : undefined}>{item.type}</Badge></div>{canWrite && <ReminderActions id={item.id} />}</div>;
+      return <ReminderCard key={item.id} id={item.id} title={item.title} type={item.type} detail={reminderDetail(item.dueAt)} overdue={overdue} canWrite={canWrite} />;
     })}</div></section>}
 
     <section id="health-records" className="soft-card scroll-mt-24 rounded-3xl">

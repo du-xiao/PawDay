@@ -6,7 +6,7 @@ import { ArrowUpRight, CalendarHeart, CircleDollarSign, Clock3, HeartPulse, Note
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { isGuestRole } from "@/lib/roles";
-import { daysTogether, dogAge, formatDate, formatDateTime, money } from "@/lib/utils";
+import { cn, daysTogether, dogAge, formatDate, formatDateTime, money } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -54,6 +54,7 @@ export default async function DashboardPage() {
   ]);
   const together = daysTogether(dog.adoptionDate);
   const chart = weights.map((item) => ({ date: formatDate(item.date, "M/d"), weight: (item.weightGrams || 0) / 1000 }));
+  const reminderOverdue = reminder ? differenceInCalendarDays(reminder.dueAt, now) < 0 : false;
 
   return (
     <div className="page-enter space-y-6 sm:space-y-8">
@@ -149,7 +150,9 @@ export default async function DashboardPage() {
           label="下次提醒"
           value={reminder ? reminder.title : "暂时没有提醒"}
           meta={reminder ? reminderDetail(reminder.dueAt, now) : "可以在健康记录中设置"}
-          tone="violet"
+          tone={reminderOverdue ? "red" : "violet"}
+          href="/health"
+          urgent={reminderOverdue}
         />
       </section>
 
@@ -189,25 +192,28 @@ function reminderDetail(dueAt: Date, now: Date) {
   return `${days} 天后 · ${formatDate(dueAt)}`;
 }
 
-function Stat({ icon: Icon, label, value, meta, tone, action }: { icon: typeof Clock3; label: string; value: string; meta: string; tone: string; action?: ReactNode }) {
+function Stat({ icon: Icon, label, value, meta, tone, action, href, urgent }: { icon: typeof Clock3; label: string; value: string; meta: string; tone: string; action?: ReactNode; href?: string; urgent?: boolean }) {
   const tones: Record<string, string> = {
     orange: "bg-[var(--orange-soft)] text-[var(--orange)]",
     sage: "bg-[var(--sage-soft)] text-[var(--sage)]",
     gold: "bg-amber-500/10 text-amber-600",
     violet: "bg-violet-500/10 text-violet-600",
+    red: "bg-red-500/10 text-red-600 dark:text-red-300",
   };
-
-  return (
-    <Card className="p-5">
+  const content = (
+    <>
       <div className="flex items-start justify-between gap-3">
         <div className={`grid size-10 place-items-center rounded-2xl ${tones[tone]}`}><Icon className="size-5" /></div>
-        {action}
+        {action || (href ? <ArrowUpRight className="size-4 text-[var(--muted)]" /> : null)}
       </div>
       <p className="mt-5 text-xs font-medium text-[var(--muted)]">{label}</p>
       <p className="mt-1 truncate text-lg font-semibold tracking-tight">{value}</p>
-      <p className="mt-1 truncate text-xs text-[var(--muted)]">{meta}</p>
-    </Card>
+      <p className={cn("mt-1 truncate text-xs text-[var(--muted)]", urgent && "font-medium text-red-600 dark:text-red-300")}>{meta}</p>
+    </>
   );
+
+  if (href) return <Link href={href} className={cn("soft-card block rounded-3xl p-5 transition hover:-translate-y-0.5 hover:shadow-lg", urgent && "border-red-500/20 bg-red-500/10 shadow-red-500/10")}>{content}</Link>;
+  return <Card className="p-5">{content}</Card>;
 }
 
 function ProfileFact({ label, value, tone }: { label: string; value: string; tone: "orange" | "sage" | "gold" | "violet" }) {
