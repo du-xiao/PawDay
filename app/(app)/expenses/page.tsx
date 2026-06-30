@@ -11,29 +11,25 @@ import { DeleteButton, RecordActions } from "@/components/forms/shared";
 import { ExpenseCharts } from "@/components/charts/expense-charts";
 import { EmptyState } from "@/components/empty-state";
 import { Pagination } from "@/components/pagination";
-import { PetFilterForm } from "@/components/pet-filter-form";
 import { TypeFilterForm } from "@/components/type-filter-form";
 import { TypeIcon } from "@/components/type-icon";
 import { Badge } from "@/components/ui/badge";
 
-export const metadata = { title: "养宠开销" };
+export const metadata = { title: "养狗开销" };
 
 const PAGE_SIZE = 10;
-const expenseCategories = ["主粮", "狗粮", "猫粮", "零食", "医疗", "洗护", "玩具", "用品", "保险", "寄养", "其他"] as const;
+const expenseCategories = ["狗粮", "零食", "医疗", "洗护", "玩具", "用品", "保险", "寄养", "其他"] as const;
 
 function parsePage(value?: string) {
   const page = Number(value);
   return Number.isInteger(page) && page > 0 ? page : 1;
 }
 
-export default async function ExpensesPage({ searchParams }: { searchParams: Promise<{ scope?: string; year?: string; month?: string; category?: string; page?: string; pet?: string }> }) {
+export default async function ExpensesPage({ searchParams }: { searchParams: Promise<{ scope?: string; year?: string; month?: string; category?: string; page?: string }> }) {
   const session = await auth();
   const canWrite = !isGuestRole(session?.user.role);
   const params = await searchParams;
-  const pets = await prisma.dog.findMany({ orderBy: { createdAt: "asc" }, select: { id: true, name: true, species: true } });
-  const petOptions = pets.map((item) => ({ id: item.id, name: item.name, species: item.species }));
-  const selectedPetId = pets.some((item) => item.id === params.pet) ? params.pet || "" : "";
-  const dogWhere = selectedPetId ? { dogId: selectedPetId } : { dogId: { in: pets.map((item) => item.id) } };
+  const dog = await prisma.dog.findFirst();
   const now = new Date();
   const currentYear = now.getFullYear();
   const scope = params.scope === "year" ? "year" : "month";
@@ -43,17 +39,16 @@ export default async function ExpensesPage({ searchParams }: { searchParams: Pro
   const selectedMonth = Number.isInteger(requestedMonth) && requestedMonth >= 1 && requestedMonth <= 12 ? requestedMonth : now.getMonth() + 1;
   const selectedCategory = expenseCategories.includes(params.category as typeof expenseCategories[number]) ? params.category || "" : "";
   const requestedPage = parsePage(params.page);
-  const detailWhere = pets.length ? { ...dogWhere, ...(selectedCategory ? { category: selectedCategory } : {}) } : null;
+  const detailWhere = dog ? { dogId: dog.id, ...(selectedCategory ? { category: selectedCategory } : {}) } : null;
 
-  const [summaryExpenses, expenseCount] = pets.length ? await Promise.all([
-    prisma.expense.findMany({ where: dogWhere, orderBy: { date: "desc" }, select: { date: true, amountCents: true, category: true } }),
+  const [summaryExpenses, expenseCount] = dog ? await Promise.all([
+    prisma.expense.findMany({ where: { dogId: dog.id }, orderBy: { date: "desc" }, select: { date: true, amountCents: true, category: true } }),
     prisma.expense.count({ where: detailWhere! }),
   ]) : [[], 0];
   const totalPages = Math.max(1, Math.ceil(expenseCount / PAGE_SIZE));
   const page = Math.min(requestedPage, totalPages);
-  const expenses = pets.length ? await prisma.expense.findMany({
+  const expenses = dog ? await prisma.expense.findMany({
     where: detailWhere!,
-    include: { dog: { select: { name: true } } },
     orderBy: { date: "desc" },
     skip: (page - 1) * PAGE_SIZE,
     take: PAGE_SIZE,
@@ -73,31 +68,28 @@ export default async function ExpensesPage({ searchParams }: { searchParams: Pro
     };
   });
   const years = Array.from(new Set([currentYear, selectedYear, ...summaryExpenses.map((item) => item.date.getFullYear())])).sort((a, b) => b - a);
-  const listParams = { scope, year: String(selectedYear), month: String(selectedMonth), category: selectedCategory, pet: selectedPetId };
+  const listParams = { scope, year: String(selectedYear), month: String(selectedMonth), category: selectedCategory };
 
   return <div className="page-enter">
-    <PageHeader eyebrow="EXPENSES" title="养宠开销" description="看见钱都花去了哪里，也更从容地照顾好每一个需要。" action={canWrite ? <ExpenseForm pets={petOptions} disabled={!pets.length} /> : undefined} />
+    <PageHeader eyebrow="EXPENSES" title="养狗开销" description="看见钱都花去了哪里，也更从容地照顾好每一个需要。" action={canWrite ? <ExpenseForm disabled={!dog} /> : undefined} />
     <section className="mb-6 grid gap-4 sm:grid-cols-3"><Metric icon={WalletCards} label="本月总开销" value={money(monthTotal)} tone="orange" /><Metric icon={Landmark} label="本年度总开销" value={money(yearTotal)} tone="sage" /><Metric icon={ReceiptText} label="累计记录" value={`${summaryExpenses.length} 笔`} tone="violet" /></section>
-    <ExpenseCharts key={`${scope}-${selectedYear}-${selectedMonth}-${selectedPetId}`} categories={categories} months={months} scope={scope} selectedYear={selectedYear} selectedMonth={selectedMonth} years={years} />
+    <ExpenseCharts key={`${scope}-${selectedYear}-${selectedMonth}`} categories={categories} months={months} scope={scope} selectedYear={selectedYear} selectedMonth={selectedMonth} years={years} />
 
     <section id="expense-records" className="mt-6 scroll-mt-24 soft-card rounded-3xl">
       <div className="flex flex-col gap-4 border-b p-5 sm:flex-row sm:items-end sm:justify-between sm:p-6">
         <div><h2 className="font-semibold">开销明细</h2><p className="mt-1 text-xs text-[var(--muted)]">最近记录优先 · 每页 10 条</p></div>
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <PetFilterForm action="/expenses#expense-records" value={selectedPetId} pets={petOptions} hidden={{ scope, year: selectedYear, month: selectedMonth, category: selectedCategory }} />
-          <TypeFilterForm action="/expenses#expense-records" name="category" value={selectedCategory} options={expenseCategories} allLabel="全部分类" ariaLabel="开销分类" hidden={{ scope, year: selectedYear, month: selectedMonth, pet: selectedPetId }} />
-        </div>
+        <TypeFilterForm action="/expenses#expense-records" name="category" value={selectedCategory} options={expenseCategories} allLabel="全部分类" ariaLabel="开销分类" hidden={{ scope, year: selectedYear, month: selectedMonth }} />
       </div>
 
-      {!pets.length ? <EmptyState title="先创建宠物档案" description="有了档案后，才能开始记录养宠开销。" /> : expenses.length ? <>
+      {!dog ? <EmptyState title="先创建小狗档案" description="有了档案后，才能开始记录养宠开销。" /> : expenses.length ? <>
         <div className="divide-y">{expenses.map((expense) => <div key={expense.id} className="relative flex gap-3 p-4 sm:items-center sm:gap-4 sm:p-5">
           <TypeIcon kind="expense" type={expense.category} />
-          <div className={`min-w-0 flex-1 ${canWrite ? "pr-16 sm:pr-0" : ""}`}><div className="flex flex-wrap items-center gap-2"><h3 className="font-medium">{expense.merchant || expense.category}</h3><Badge className="bg-[var(--orange-soft)] text-[#9a5838] dark:text-[#ffc19d]">{expense.dog.name}</Badge><Badge>{expense.category}</Badge></div><p className="mt-1 truncate text-xs text-[var(--muted)]">{formatDate(expense.date)}{expense.notes ? ` · ${expense.notes}` : ""}</p><p className="mt-2 text-lg font-semibold tabular-nums sm:hidden">{money(expense.amountCents)}</p></div>
+          <div className={`min-w-0 flex-1 ${canWrite ? "pr-16 sm:pr-0" : ""}`}><div className="flex flex-wrap items-center gap-2"><h3 className="font-medium">{expense.merchant || expense.category}</h3><Badge>{expense.category}</Badge></div><p className="mt-1 truncate text-xs text-[var(--muted)]">{formatDate(expense.date)}{expense.notes ? ` · ${expense.notes}` : ""}</p><p className="mt-2 text-lg font-semibold tabular-nums sm:hidden">{money(expense.amountCents)}</p></div>
           <p className="hidden text-lg font-semibold tabular-nums sm:block">{money(expense.amountCents)}</p>
-          {canWrite && <RecordActions className="absolute right-3 top-3 sm:static"><ExpenseForm pets={petOptions} initial={{ id: expense.id, dogId: expense.dogId, category: expense.category as never, amount: expense.amountCents / 100, date: toDateInput(expense.date), merchant: expense.merchant || "", notes: expense.notes || "" }} /><DeleteButton action={deleteExpenseAction.bind(null, expense.id)} /></RecordActions>}
+          {canWrite && <RecordActions className="absolute right-3 top-3 sm:static"><ExpenseForm initial={{ id: expense.id, category: expense.category as never, amount: expense.amountCents / 100, date: toDateInput(expense.date), merchant: expense.merchant || "", notes: expense.notes || "" }} /><DeleteButton action={deleteExpenseAction.bind(null, expense.id)} /></RecordActions>}
         </div>)}</div>
         <Pagination pathname="/expenses" page={page} totalPages={totalPages} params={listParams} anchor="expense-records" />
-      </> : <EmptyState title={selectedCategory ? `没有${selectedCategory}开销` : "还没有开销记录"} description={selectedCategory ? "换一个分类或选择全部分类后再看看。" : "从下一袋主粮或下一次洗护开始，慢慢了解每月花费。"} action={canWrite && !selectedCategory ? <ExpenseForm pets={petOptions} disabled={!pets.length} /> : undefined} />}
+      </> : <EmptyState title={selectedCategory ? `没有${selectedCategory}开销` : "还没有开销记录"} description={selectedCategory ? "换一个分类或选择全部分类后再看看。" : "从下一袋狗粮或下一次洗护开始，慢慢了解每月花费。"} action={canWrite && !selectedCategory ? <ExpenseForm disabled={!dog} /> : undefined} />}
     </section>
   </div>;
 }

@@ -1,7 +1,6 @@
 import { z } from "zod";
 
 const optionalText = z.string().trim().max(500).optional().or(z.literal(""));
-const optionalCuid = z.string().cuid().optional().or(z.literal(""));
 
 export const loginSchema = z.object({
   email: z.string().trim().email("请输入正确的邮箱"),
@@ -9,8 +8,6 @@ export const loginSchema = z.object({
 });
 
 export const dogSchema = z.object({
-  id: optionalCuid,
-  species: z.enum(["DOG", "CAT"]),
   name: z.string().trim().min(1, "请填写名字").max(30),
   breed: z.string().trim().max(50).optional().or(z.literal("")),
   sex: z.enum(["男孩", "女孩", "未知"]),
@@ -21,8 +18,7 @@ export const dogSchema = z.object({
 });
 
 export const dogDocumentSchema = z.object({
-  dogId: optionalCuid,
-  type: z.enum(["狗证", "登记证", "免疫证"]),
+  type: z.enum(["狗证", "免疫证"]),
   title: z.string().trim().max(80).optional().or(z.literal("")),
   identifier: z.string().trim().max(80).optional().or(z.literal("")),
   issuer: z.string().trim().max(80).optional().or(z.literal("")),
@@ -51,8 +47,7 @@ export const guestAccountSchema = z.object({
 
 export const logSchema = z.object({
   id: z.string().cuid().optional(),
-  dogId: optionalCuid,
-  type: z.enum(["喂食", "外出", "遛狗", "洗澡", "排便", "睡眠", "训练", "玩耍", "情绪", "其他"]),
+  type: z.enum(["喂食", "遛狗", "洗澡", "排便", "睡眠", "训练", "情绪", "其他"]),
   title: z.string().trim().min(1, "请填写标题").max(80),
   notes: optionalText,
   occurredAt: z.string().min(1, "请选择时间"),
@@ -62,8 +57,7 @@ export const logSchema = z.object({
 
 export const expenseSchema = z.object({
   id: z.string().cuid().optional(),
-  dogId: optionalCuid,
-  category: z.enum(["主粮", "狗粮", "猫粮", "零食", "医疗", "洗护", "玩具", "用品", "保险", "寄养", "其他"]),
+  category: z.enum(["狗粮", "零食", "医疗", "洗护", "玩具", "用品", "保险", "寄养", "其他"]),
   amount: z.coerce.number().positive("金额必须大于 0").max(999999),
   date: z.string().min(1, "请选择日期"),
   merchant: z.string().trim().max(80).optional().or(z.literal("")),
@@ -72,7 +66,6 @@ export const expenseSchema = z.object({
 
 export const healthSchema = z.object({
   id: z.string().cuid().optional(),
-  dogId: optionalCuid,
   type: z.enum(["疫苗", "驱虫", "体检", "用药", "疾病", "绝育", "体重"]),
   title: z.string().trim().min(1, "请填写标题").max(80),
   date: z.string().min(1, "请选择日期"),
@@ -82,7 +75,6 @@ export const healthSchema = z.object({
 });
 
 export const photoSchema = z.object({
-  dogId: optionalCuid,
   title: z.string().trim().max(80).optional().or(z.literal("")),
   notes: optionalText,
   date: z.string().min(1, "请选择日期"),

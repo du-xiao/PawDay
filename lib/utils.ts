@@ -19,15 +19,13 @@ export function money(cents: number) {
   return new Intl.NumberFormat("zh-CN", { style: "currency", currency: "CNY" }).format(cents / 100);
 }
 
-export function petAge(birthDate: Date | string) {
+export function dogAge(birthDate: Date | string) {
   const months = Math.max(0, differenceInMonths(new Date(), new Date(birthDate)));
   if (months < 12) return `${months} 个月`;
   const years = Math.floor(months / 12);
   const rest = months % 12;
   return rest ? `${years} 岁 ${rest} 个月` : `${years} 岁`;
 }
-
-export const dogAge = petAge;
 
 export function daysTogether(adoptionDate?: Date | string | null) {
   if (!adoptionDate) return null;

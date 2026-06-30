@@ -58,7 +58,6 @@ model VerificationToken {
 
 model Dog {
   id           String         @id @default(cuid())
-  species      String         @default("DOG")
   name         String
   breed        String?
   sex          String?

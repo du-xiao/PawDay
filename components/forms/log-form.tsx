@@ -9,7 +9,6 @@ import { ImagePlus, Pencil, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { logSchema } from "@/lib/schemas";
 import { cn, toDateTimeInput } from "@/lib/utils";
-import type { PetOption } from "@/lib/pets";
 import { saveLogAction } from "@/actions/app";
 import { Button, type ButtonProps } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,12 +16,11 @@ import { DateInput } from "@/components/ui/date-input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Field, selectClass } from "@/components/ui/form-field";
-import { PetSelectField } from "./pet-select";
 import { FormActions } from "./shared";
 import { useImagePreview } from "./use-image-preview";
 
 type Values = z.infer<typeof logSchema>;
-const types = ["喂食", "外出", "遛狗", "洗澡", "排便", "睡眠", "训练", "玩耍", "情绪", "其他"] as const;
+const types = ["喂食", "遛狗", "洗澡", "排便", "睡眠", "训练", "情绪", "其他"] as const;
 const moods = ["开心", "平静", "兴奋", "困倦", "不舒服", "未记录"] as const;
 const compactControl = "h-10 rounded-xl";
 
@@ -33,7 +31,7 @@ type TriggerOptions = {
   triggerClassName?: string;
 };
 
-export function LogForm({ initial, pets = [], disabled = false, triggerLabel, triggerVariant, triggerSize, triggerClassName }: { initial?: Values; pets?: PetOption[]; disabled?: boolean } & TriggerOptions) {
+export function LogForm({ initial, disabled = false, triggerLabel, triggerVariant, triggerSize, triggerClassName }: { initial?: Values; disabled?: boolean } & TriggerOptions) {
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -41,7 +39,7 @@ export function LogForm({ initial, pets = [], disabled = false, triggerLabel, tr
   const router = useRouter();
   const { register, handleSubmit, formState: { errors } } = useForm<Values>({
     resolver: zodResolver(logSchema),
-    defaultValues: initial || { dogId: pets[0]?.id || "", type: "外出", title: "", notes: "", occurredAt: toDateTimeInput(new Date()), mood: "开心", imageUrl: "" },
+    defaultValues: initial || { type: "遛狗", title: "", notes: "", occurredAt: toDateTimeInput(new Date()), mood: "开心", imageUrl: "" },
   });
 
   function handleOpenChange(next: boolean) {
@@ -76,8 +74,7 @@ export function LogForm({ initial, pets = [], disabled = false, triggerLabel, tr
       <form onSubmit={handleSubmit(submit)} className="space-y-4">
         <section className="rounded-2xl border bg-black/[.018] p-4 dark:bg-white/[.025]">
           <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">记录信息</p>
-          <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,.85fr)_minmax(0,.85fr)_minmax(0,1.25fr)]">
-            {pets.length > 0 && <PetSelectField pets={pets} registration={register("dogId")} />}
+          <div className="grid gap-3 sm:grid-cols-[minmax(0,0.8fr)_minmax(0,0.8fr)_minmax(0,1.4fr)]">
             <Field label="类型"><select className={cn(selectClass, compactControl)} {...register("type")}>{types.map((type) => <option key={type}>{type}</option>)}</select></Field>
             <Field label="心情"><select className={cn(selectClass, compactControl)} {...register("mood")}>{moods.map((mood) => <option key={mood}>{mood}</option>)}</select></Field>
             <Field label="时间" error={errors.occurredAt?.message}><DateInput className={compactControl} type="datetime-local" {...register("occurredAt")} /></Field>

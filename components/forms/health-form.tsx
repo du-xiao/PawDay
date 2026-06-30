@@ -9,7 +9,6 @@ import { BellRing, Pencil, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { healthSchema } from "@/lib/schemas";
 import { cn, toDateInput } from "@/lib/utils";
-import type { PetOption } from "@/lib/pets";
 import { saveHealthAction } from "@/actions/app";
 import { Button, type ButtonProps } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +16,6 @@ import { DateInput } from "@/components/ui/date-input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Field, selectClass } from "@/components/ui/form-field";
-import { PetSelectField } from "./pet-select";
 import { FormActions } from "./shared";
 
 type Values = z.infer<typeof healthSchema>;
@@ -40,13 +38,13 @@ type TriggerOptions = {
   triggerClassName?: string;
 };
 
-export function HealthForm({ initial, pets = [], disabled = false, triggerLabel, triggerVariant, triggerSize, triggerClassName }: { initial?: Values; pets?: PetOption[]; disabled?: boolean } & TriggerOptions) {
+export function HealthForm({ initial, disabled = false, triggerLabel, triggerVariant, triggerSize, triggerClassName }: { initial?: Values; disabled?: boolean } & TriggerOptions) {
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const router = useRouter();
   const { register, handleSubmit, watch, setValue, formState: { errors, dirtyFields } } = useForm<Values>({
     resolver: zodResolver(healthSchema),
-    defaultValues: initial || { dogId: pets[0]?.id || "", type: "体重", title: defaultTitles.体重, date: toDateInput(new Date()), notes: "", weightKg: "", nextReminderDate: "" },
+    defaultValues: initial || { type: "体重", title: defaultTitles.体重, date: toDateInput(new Date()), notes: "", weightKg: "", nextReminderDate: "" },
   });
   const type = watch("type");
 
@@ -74,8 +72,7 @@ export function HealthForm({ initial, pets = [], disabled = false, triggerLabel,
       <form onSubmit={handleSubmit(submit)} className="space-y-4">
         <section className="rounded-2xl border bg-black/[.018] p-4 dark:bg-white/[.025]">
           <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">基础信息</p>
-          <div className="grid gap-3 sm:grid-cols-3">
-            {pets.length > 0 && <PetSelectField pets={pets} registration={register("dogId")} />}
+          <div className="grid gap-3 sm:grid-cols-2">
             <Field label="类型"><select className={cn(selectClass, compactControl)} {...register("type")}>{types.map((type) => <option key={type}>{type}</option>)}</select></Field>
             <Field label="日期"><DateInput className={compactControl} {...register("date")} /></Field>
           </div>

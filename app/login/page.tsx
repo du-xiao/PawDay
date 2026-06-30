@@ -10,7 +10,7 @@ export default function LoginPage() {
   return <main className="min-h-dvh p-3 sm:p-5 lg:p-7">
     <div className="mx-auto grid min-h-[calc(100dvh-1.5rem)] max-w-[1500px] overflow-hidden rounded-[2rem] border bg-[var(--card)] shadow-2xl shadow-stone-900/10 sm:min-h-[calc(100dvh-2.5rem)] lg:grid-cols-[1.15fr_.85fr]">
       <section className="relative hidden overflow-hidden bg-[#efe6d8] lg:block dark:bg-[#28251f]">
-        <Image src={heroImg} alt="沐浴在晨光中的宠物生活" fill priority className="object-cover" sizes="60vw" />
+        <Image src={heroImg} alt="一只沐浴在晨光中的小狗" fill priority className="object-cover" sizes="60vw" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#372d22]/55 via-transparent to-white/10" />
         <div className="absolute inset-x-0 bottom-0 p-10 text-white xl:p-14">
           <div className="mb-5 flex size-12 items-center justify-center rounded-2xl bg-white/20 backdrop-blur"><Heart className="size-6 fill-white/80" /></div>

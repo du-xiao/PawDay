@@ -8,7 +8,6 @@ import { z } from "zod";
 import { Camera } from "lucide-react";
 import { toast } from "sonner";
 import { dogSchema } from "@/lib/schemas";
-import { speciesLabel } from "@/lib/pets";
 import { saveDogAction } from "@/actions/app";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,7 +18,7 @@ import { FormActions } from "./shared";
 import { useImagePreview } from "./use-image-preview";
 
 type Values = z.infer<typeof dogSchema>;
-type DogValue = { id?: string; species: "DOG" | "CAT"; name: string; breed: string; sex: "男孩" | "女孩" | "未知"; birthDate: string; adoptionDate: string; weightKg: number | ""; avatarUrl: string };
+type DogValue = { name: string; breed: string; sex: "男孩" | "女孩" | "未知"; birthDate: string; adoptionDate: string; weightKg: number | ""; avatarUrl: string };
 
 export function DogForm({ dog, onboarding = false }: { dog?: DogValue; onboarding?: boolean }) {
   const [open, setOpen] = useState(onboarding);
@@ -27,11 +26,7 @@ export function DogForm({ dog, onboarding = false }: { dog?: DogValue; onboardin
   const fileRef = useRef<HTMLInputElement>(null);
   const { previewUrl, setPreviewFile, resetPreview } = useImagePreview(dog?.avatarUrl || "");
   const router = useRouter();
-  const { register, handleSubmit, watch, formState: { errors } } = useForm<Values>({
-    resolver: zodResolver(dogSchema),
-    defaultValues: dog || { id: "", species: "DOG", name: "", breed: "", sex: "未知", birthDate: "", adoptionDate: "", weightKg: "", avatarUrl: "" },
-  });
-  const species = watch("species");
+  const { register, handleSubmit, formState: { errors } } = useForm<Values>({ resolver: zodResolver(dogSchema), defaultValues: dog || { name: "", breed: "", sex: "未知", birthDate: "", adoptionDate: "", weightKg: "", avatarUrl: "" } });
 
   function handleOpenChange(next: boolean) {
     setOpen(next);
@@ -47,10 +42,9 @@ export function DogForm({ dog, onboarding = false }: { dog?: DogValue; onboardin
     startTransition(async () => { const result = await saveDogAction(fd); if (result.ok) { toast.success(dog ? "档案已更新" : "欢迎加入 PawDay"); resetPreview(dog?.avatarUrl || ""); if (fileRef.current) fileRef.current.value = ""; setOpen(false); router.refresh(); } else toast.error(result.error); });
   }
 
-  return <Dialog open={open} onOpenChange={handleOpenChange}><DialogTrigger asChild><Button variant={onboarding ? "warm" : "outline"}><Camera className="size-4" />{dog ? "编辑档案" : "新增宠物档案"}</Button></DialogTrigger><DialogContent>
-    <DialogHeader><DialogTitle>{dog ? "编辑宠物档案" : "先认识一下新朋友"}</DialogTitle><DialogDescription>支持猫咪和狗狗，这些信息会用来计算年龄、陪伴天数和健康趋势。</DialogDescription></DialogHeader>
+  return <Dialog open={open} onOpenChange={handleOpenChange}><DialogTrigger asChild><Button variant={onboarding ? "warm" : "outline"}><Camera className="size-4" />{dog ? "编辑档案" : "创建小狗档案"}</Button></DialogTrigger><DialogContent>
+    <DialogHeader><DialogTitle>{dog ? "编辑小狗档案" : "先认识一下新朋友"}</DialogTitle><DialogDescription>这些信息会用来计算年龄、陪伴天数和健康趋势。</DialogDescription></DialogHeader>
     <form onSubmit={handleSubmit(submit)} className="space-y-4">
-      <input type="hidden" {...register("id")} />
       <Field label="头像" hint="JPG、PNG 或 WebP，最大 10MB">
         <button type="button" onClick={() => fileRef.current?.click()} className="relative flex min-h-36 w-full flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed bg-white/45 px-4 text-center transition hover:border-orange-300 hover:bg-[var(--orange-soft)]/45 dark:bg-white/[.025]">
           {previewUrl ? <>
@@ -64,8 +58,7 @@ export function DogForm({ dog, onboarding = false }: { dog?: DogValue; onboardin
         </button>
         <Input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={(event) => setPreviewFile(event.target.files?.[0])} />
       </Field>
-      <div className="grid gap-4 sm:grid-cols-[0.8fr_1.2fr]"><Field label="种类"><select className={selectClass} {...register("species")}><option value="DOG">狗狗</option><option value="CAT">猫咪</option></select></Field><Field label="名字" error={errors.name?.message}><Input placeholder="例如：奶糖" {...register("name")} /></Field></div>
-      <Field label={`${speciesLabel(species)}品种`} error={errors.breed?.message}><Input placeholder={species === "CAT" ? "例如：英短 / 田园猫" : "例如：比熊 / 柴犬"} {...register("breed")} /></Field>
+      <div className="grid gap-4 sm:grid-cols-2"><Field label="名字" error={errors.name?.message}><Input placeholder="例如：奶糖" {...register("name")} /></Field><Field label="品种" error={errors.breed?.message}><Input placeholder="例如：比熊" {...register("breed")} /></Field></div>
       <div className="grid gap-4 sm:grid-cols-2"><Field label="性别"><select className={selectClass} {...register("sex")}><option>男孩</option><option>女孩</option><option>未知</option></select></Field><Field label="当前体重（kg）" error={errors.weightKg?.message as string}><Input type="number" step="0.01" placeholder="5.20" {...register("weightKg")} /></Field></div>
       <div className="grid gap-4 sm:grid-cols-2"><Field label="生日" error={errors.birthDate?.message}><DateInput {...register("birthDate")} /></Field><Field label="来到家的日子"><DateInput {...register("adoptionDate")} /></Field></div>
       <FormActions pending={pending} submitLabel={dog ? "保存修改" : "创建档案"} onCancel={() => setOpen(false)} />

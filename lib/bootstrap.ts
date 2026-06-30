@@ -15,7 +15,7 @@ const statements = [
   `CREATE TABLE IF NOT EXISTS "VerificationToken" ("identifier" TEXT NOT NULL, "token" TEXT NOT NULL, "expires" DATETIME NOT NULL)`,
   `CREATE UNIQUE INDEX IF NOT EXISTS "VerificationToken_token_key" ON "VerificationToken"("token")`,
   `CREATE UNIQUE INDEX IF NOT EXISTS "VerificationToken_identifier_token_key" ON "VerificationToken"("identifier", "token")`,
-  `CREATE TABLE IF NOT EXISTS "Dog" ("id" TEXT NOT NULL PRIMARY KEY, "species" TEXT NOT NULL DEFAULT 'DOG', "name" TEXT NOT NULL, "breed" TEXT, "sex" TEXT, "birthDate" DATETIME NOT NULL, "adoptionDate" DATETIME, "weightGrams" INTEGER, "avatarUrl" TEXT, "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, "updatedAt" DATETIME NOT NULL)`,
+  `CREATE TABLE IF NOT EXISTS "Dog" ("id" TEXT NOT NULL PRIMARY KEY, "name" TEXT NOT NULL, "breed" TEXT, "sex" TEXT, "birthDate" DATETIME NOT NULL, "adoptionDate" DATETIME, "weightGrams" INTEGER, "avatarUrl" TEXT, "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, "updatedAt" DATETIME NOT NULL)`,
   `CREATE TABLE IF NOT EXISTS "DogDocument" ("id" TEXT NOT NULL PRIMARY KEY, "dogId" TEXT NOT NULL, "type" TEXT NOT NULL, "title" TEXT, "identifier" TEXT, "issuer" TEXT, "issuedAt" DATETIME, "expiresAt" DATETIME, "frontImageUrl" TEXT, "backImageUrl" TEXT, "notes" TEXT, "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, "updatedAt" DATETIME NOT NULL, CONSTRAINT "DogDocument_dogId_fkey" FOREIGN KEY ("dogId") REFERENCES "Dog" ("id") ON DELETE CASCADE ON UPDATE CASCADE)`,
   `CREATE UNIQUE INDEX IF NOT EXISTS "DogDocument_dogId_type_key" ON "DogDocument"("dogId", "type")`,
   `CREATE INDEX IF NOT EXISTS "DogDocument_type_idx" ON "DogDocument"("type")`,
@@ -85,7 +85,6 @@ export async function ensureDatabase() {
       for (const statement of statements) await prisma.$executeRawUnsafe(statement);
       await ensureColumn("User", "role", `"role" TEXT NOT NULL DEFAULT 'OWNER'`);
       await ensureColumn("User", "disabledAt", `"disabledAt" DATETIME`);
-      await ensureColumn("Dog", "species", `"species" TEXT NOT NULL DEFAULT 'DOG'`);
       const count = await prisma.user.count();
       if (count === 0) {
         const config = z.object({
