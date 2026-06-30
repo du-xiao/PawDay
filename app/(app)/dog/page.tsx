@@ -6,7 +6,8 @@ import { auth } from "@/auth";
 import { ensureDatabase } from "@/lib/bootstrap";
 import { prisma } from "@/lib/db";
 import { isGuestRole } from "@/lib/roles";
-import { daysTogether, dogAge, formatDate, toDateInput } from "@/lib/utils";
+import { normalizeSpecies, primaryDocumentType, speciesLabel, speciesShortLabel, type PetDocumentType } from "@/lib/pets";
+import { daysTogether, formatDate, petAge, toDateInput } from "@/lib/utils";
 import { PageHeader } from "@/components/page-header";
 import { DogDocumentCard, type DogDocumentView } from "@/components/dog-document-card";
 import { DogHealthSummary, type DogHealthSummaryRecord } from "@/components/dog-health-summary";
@@ -15,9 +16,9 @@ import { DogDocumentForm, type DogDocumentFormValue } from "@/components/forms/d
 import { DogForm } from "@/components/forms/dog-form";
 import { Button } from "@/components/ui/button";
 
-export const metadata = { title: "小狗档案" };
+export const metadata = { title: "宠物档案" };
 
-type DocumentType = "狗证" | "免疫证";
+type DocumentType = PetDocumentType;
 
 type RawDogDocument = {
   id: string;
@@ -33,28 +34,34 @@ type RawDogDocument = {
   updatedAt: Date | string;
 };
 
-export default async function DogPage() {
+export default async function DogPage({ searchParams }: { searchParams: Promise<{ pet?: string }> }) {
   await ensureDatabase();
   const session = await auth();
   const canWrite = !isGuestRole(session?.user.role);
+  const params = await searchParams;
 
-  const dog = await prisma.dog.findFirst({
+  const pets = await prisma.dog.findMany({
+    orderBy: { createdAt: "asc" },
     include: {
       photos: { orderBy: { date: "desc" }, take: 5 },
       _count: { select: { dailyLogs: true, photos: true, health: true } },
     },
   });
 
-  if (!dog) {
+  if (!pets.length) {
     return (
       <>
-        <PageHeader eyebrow="DOG PROFILE" title="小狗档案" description="从名字开始，建立属于它的成长档案。" />
+        <PageHeader eyebrow="PET PROFILES" title="宠物档案" description="从名字开始，建立猫咪和狗狗的成长档案。" />
         <div className="soft-card rounded-3xl">
-          <EmptyState title="还没有小狗档案" description="先记录名字和生日，PawDay 才能开始计算你们的陪伴时光。" action={canWrite ? <DogForm onboarding /> : undefined} />
+          <EmptyState title="还没有宠物档案" description="先记录名字和生日，PawDay 才能开始计算你们的陪伴时光。" action={canWrite ? <DogForm onboarding /> : undefined} />
         </div>
       </>
     );
   }
+
+  const selectedPetId = pets.some((pet) => pet.id === params.pet) ? params.pet! : pets[0].id;
+  const dog = pets.find((pet) => pet.id === selectedPetId) || pets[0];
+  const selectedDocumentType = primaryDocumentType(dog.species);
 
   const [documentRows, careRecords] = await Promise.all([
     prisma.$queryRaw<RawDogDocument[]>`
@@ -72,18 +79,19 @@ export default async function DogPage() {
 
   const documents = documentRows.map(serializeDocument);
   const documentMap = new Map(documents.map((document) => [document.type, document]));
-  const dogLicense = documentMap.get("狗证") || null;
+  const primaryDocument = documentMap.get(selectedDocumentType) || null;
   const immunityCard = documentMap.get("免疫证") || null;
   const vaccines = careRecords.filter((record) => record.type === "疫苗").map(serializeHealthRecord);
   const deworming = careRecords.filter((record) => record.type === "驱虫").map(serializeHealthRecord);
   const together = daysTogether(dog.adoptionDate);
   const checklist = [
     { label: "头像", done: Boolean(dog.avatarUrl) },
+    { label: "种类", done: Boolean(dog.species) },
     { label: "品种", done: Boolean(dog.breed) },
     { label: "生日", done: Boolean(dog.birthDate) },
     { label: "到家日", done: Boolean(dog.adoptionDate) },
     { label: "体重", done: Boolean(dog.weightGrams) },
-    { label: "狗证", done: Boolean(dogLicense) },
+    { label: selectedDocumentType, done: Boolean(primaryDocument) },
     { label: "免疫证", done: Boolean(immunityCard) },
     { label: "疫苗记录", done: vaccines.length > 0 },
     { label: "驱虫记录", done: deworming.length > 0 },
@@ -92,19 +100,28 @@ export default async function DogPage() {
   return (
     <div className="page-enter">
       <PageHeader
-        eyebrow="DOG PROFILE"
+        eyebrow="PET PROFILES"
         title={`${dog.name} 的档案`}
-        description="关于它的基本信息、证件、健康护理，以及你们一起走过的时间。"
-        action={canWrite ? <DogForm dog={{
-          name: dog.name,
-          breed: dog.breed || "",
-          sex: (dog.sex || "未知") as "男孩" | "女孩" | "未知",
-          birthDate: toDateInput(dog.birthDate),
-          adoptionDate: toDateInput(dog.adoptionDate),
-          weightKg: dog.weightGrams ? dog.weightGrams / 1000 : "",
-          avatarUrl: dog.avatarUrl || "",
-        }} /> : undefined}
+        description="管理家里每一位小朋友的基本信息、证件、健康护理和成长照片。"
+        action={canWrite ? (
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <DogForm dog={{
+              id: dog.id,
+              species: normalizeSpecies(dog.species),
+              name: dog.name,
+              breed: dog.breed || "",
+              sex: (dog.sex || "未知") as "男孩" | "女孩" | "未知",
+              birthDate: toDateInput(dog.birthDate),
+              adoptionDate: toDateInput(dog.adoptionDate),
+              weightKg: dog.weightGrams ? dog.weightGrams / 1000 : "",
+              avatarUrl: dog.avatarUrl || "",
+            }} />
+            <DogForm />
+          </div>
+        ) : undefined}
       />
+
+      {pets.length > 1 && <PetSwitcher pets={pets.map((pet) => ({ id: pet.id, name: pet.name, species: pet.species, avatarUrl: pet.avatarUrl }))} activeId={dog.id} />}
 
       <section className="grid gap-5 xl:grid-cols-[0.86fr_1.14fr]">
         <div className="relative min-h-[440px] overflow-hidden rounded-[2rem] bg-gradient-to-br from-[#efd8c1] to-[#d8e3d5] dark:from-[#47362c] dark:to-[#27382b]">
@@ -115,15 +132,15 @@ export default async function DogPage() {
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/58 via-black/5 to-transparent" />
           <div className="absolute inset-x-0 bottom-0 p-7 text-white">
-            <p className="text-sm text-white/70">MY LITTLE FAMILY</p>
+            <p className="text-sm text-white/70">MY LITTLE FAMILY · {speciesLabel(dog.species)}</p>
             <h2 className="mt-1 text-4xl font-semibold tracking-[-.05em]">{dog.name}</h2>
-            <p className="mt-2 text-sm text-white/75">{dog.breed || "特别可爱的小狗"} · {dog.sex || "性别未记录"}</p>
+            <p className="mt-2 text-sm text-white/75">{dog.breed || `特别可爱的${speciesShortLabel(dog.species)}`} · {dog.sex || "性别未记录"}</p>
           </div>
         </div>
 
         <div className="space-y-5">
           <div className="grid grid-cols-2 gap-4">
-            <Info icon={CalendarDays} label="年龄" value={dogAge(dog.birthDate)} color="orange" />
+            <Info icon={CalendarDays} label="年龄" value={petAge(dog.birthDate)} color="orange" />
             <Info icon={Heart} label="陪伴天数" value={together ? `${together} 天` : "待记录"} color="sage" />
             <Info icon={Scale} label="当前体重" value={dog.weightGrams ? `${(dog.weightGrams / 1000).toFixed(2)} kg` : "待记录"} color="gold" />
             <Info icon={VenusAndMars} label="性别" value={dog.sex || "未知"} color="violet" />
@@ -133,6 +150,7 @@ export default async function DogPage() {
             <div className="soft-card rounded-3xl p-6">
               <h3 className="font-semibold">成长小档案</h3>
               <div className="mt-5 divide-y">
+                <Row label="种类" value={speciesLabel(dog.species)} />
                 <Row label="生日" value={formatDate(dog.birthDate)} />
                 <Row label="来到家的日子" value={dog.adoptionDate ? formatDate(dog.adoptionDate) : "还没有记录"} />
                 <Row label="日常记录" value={`${dog._count.dailyLogs} 条`} />
@@ -147,17 +165,17 @@ export default async function DogPage() {
 
       <section className="mt-8 grid gap-5 xl:grid-cols-[1.15fr_.85fr]">
         <div>
-          <SectionTitle title="证件信息" description="狗证和免疫证集中保存，正反面图片都能随时查看。" />
+          <SectionTitle title="证件信息" description={`${selectedDocumentType}和免疫证集中保存，正反面图片都能随时查看。`} />
           <div className="grid gap-4 md:grid-cols-2">
             <DogDocumentCard
-              type="狗证"
-              document={dogLicense}
-              action={canWrite ? <DogDocumentForm key={dogLicense?.updatedAt || "new-dog-license"} type="狗证" initial={documentFormValue("狗证", dogLicense)} triggerLabel={dogLicense ? "编辑" : "新增"} triggerVariant="ghost" /> : undefined}
+              type={selectedDocumentType}
+              document={primaryDocument}
+              action={canWrite ? <DogDocumentForm dogId={dog.id} key={primaryDocument?.updatedAt || `new-${selectedDocumentType}`} type={selectedDocumentType} initial={documentFormValue(selectedDocumentType, primaryDocument)} triggerLabel={primaryDocument ? "编辑" : "新增"} triggerVariant="ghost" /> : undefined}
             />
             <DogDocumentCard
               type="免疫证"
               document={immunityCard}
-              action={canWrite ? <DogDocumentForm key={immunityCard?.updatedAt || "new-immunity-card"} type="免疫证" initial={documentFormValue("免疫证", immunityCard)} triggerLabel={immunityCard ? "编辑" : "新增"} triggerVariant="ghost" /> : undefined}
+              action={canWrite ? <DogDocumentForm dogId={dog.id} key={immunityCard?.updatedAt || "new-immunity-card"} type="免疫证" initial={documentFormValue("免疫证", immunityCard)} triggerLabel={immunityCard ? "编辑" : "新增"} triggerVariant="ghost" /> : undefined}
             />
           </div>
         </div>
@@ -173,7 +191,7 @@ export default async function DogPage() {
       <section className="mt-8">
         <div className="mb-4 flex items-end justify-between">
           <SectionTitle title="最近的模样" description="成长总是在照片里最明显。" compact />
-          <Button asChild variant="ghost" size="sm"><Link href="/photos">打开相册</Link></Button>
+          <Button asChild variant="ghost" size="sm"><Link href={`/photos?pet=${dog.id}`}>打开相册</Link></Button>
         </div>
         {dog.photos.length ? (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
@@ -189,6 +207,27 @@ export default async function DogPage() {
           </div>
         )}
       </section>
+    </div>
+  );
+}
+
+function PetSwitcher({ pets, activeId }: { pets: { id: string; name: string; species: string; avatarUrl: string | null }[]; activeId: string }) {
+  return (
+    <div className="mb-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      {pets.map((pet) => {
+        const active = pet.id === activeId;
+        return (
+          <Link key={pet.id} href={`/dog?pet=${pet.id}`} className={`flex items-center gap-3 rounded-3xl border p-3 transition hover:-translate-y-0.5 hover:shadow-lg ${active ? "bg-[var(--orange-soft)] border-orange-200/60 shadow-sm shadow-orange-200/20" : "bg-[var(--card)]/60"}`}>
+            <span className="relative grid size-12 shrink-0 place-items-center overflow-hidden rounded-2xl bg-white/55 dark:bg-white/[.06]">
+              {pet.avatarUrl ? <Image src={pet.avatarUrl} alt={pet.name} fill unoptimized className="object-cover" sizes="48px" /> : <PawPrint className="size-5 text-[var(--orange)]" />}
+            </span>
+            <span className="min-w-0">
+              <span className="block truncate text-sm font-semibold">{pet.name}</span>
+              <span className="mt-0.5 block text-xs text-[var(--muted)]">{speciesLabel(pet.species)}</span>
+            </span>
+          </Link>
+        );
+      })}
     </div>
   );
 }
@@ -266,7 +305,7 @@ function SectionTitle({ title, description, compact = false }: { title: string; 
 function serializeDocument(row: RawDogDocument): DogDocumentView {
   return {
     id: row.id,
-    type: row.type === "免疫证" ? "免疫证" : "狗证",
+    type: row.type === "免疫证" ? "免疫证" : row.type === "登记证" ? "登记证" : "狗证",
     title: row.title,
     identifier: row.identifier,
     issuer: row.issuer,

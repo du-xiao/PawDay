@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { useTheme } from "next-themes";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { Bone, Camera, ChevronDown, CircleDollarSign, Dog, HeartPulse, Home, KeyRound, LogOut, Menu, Moon, Settings, Sun, NotebookPen } from "lucide-react";
+import { Bone, Camera, ChevronDown, CircleDollarSign, HeartPulse, Home, KeyRound, LogOut, Menu, Moon, PawPrint, Settings, Sun, NotebookPen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isGuestRole, roleLabel, type UserRole } from "@/lib/roles";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,7 @@ const nav = [
   { href: "/health", label: "健康", icon: HeartPulse },
   { href: "/expenses", label: "开销", icon: CircleDollarSign },
   { href: "/photos", label: "相册", icon: Camera },
-  { href: "/dog", label: "档案", icon: Dog },
+  { href: "/dog", label: "宠物", icon: PawPrint },
 ];
 
 export function AppShell({ email, role, children }: { email: string; role: UserRole; children: React.ReactNode }) {
@@ -51,6 +51,6 @@ export function AppShell({ email, role, children }: { email: string; role: UserR
       </header>
       <main className="mx-auto max-w-[1380px] p-4 sm:p-7 lg:p-10">{children}</main>
     </div>
-    <nav className="fixed inset-x-3 bottom-[calc(.75rem+env(safe-area-inset-bottom))] z-30 flex items-center justify-around rounded-3xl border bg-[var(--card)]/94 px-1 py-2 shadow-2xl shadow-stone-900/10 backdrop-blur-xl lg:hidden">{nav.slice(0,5).map((item) => { const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href); return <Link key={item.href} href={item.href} className={cn("flex min-w-14 flex-col items-center gap-1 rounded-2xl px-2 py-1.5 text-[10px] font-medium text-[var(--muted)] transition", active && "bg-[var(--orange-soft)] text-[#9a5838] shadow-sm shadow-orange-200/25 dark:text-[#ffc19d]")}><item.icon className="size-[19px]" />{item.label}</Link>; })}<Link href="/dog" aria-label="小狗档案" className={cn("grid size-11 place-items-center rounded-2xl text-[var(--muted)] transition", pathname.startsWith("/dog") && "bg-[var(--orange-soft)] text-[var(--orange)] shadow-sm shadow-orange-200/25")}><Menu className="size-5" /></Link></nav>
+    <nav className="fixed inset-x-3 bottom-[calc(.75rem+env(safe-area-inset-bottom))] z-30 flex items-center justify-around rounded-3xl border bg-[var(--card)]/94 px-1 py-2 shadow-2xl shadow-stone-900/10 backdrop-blur-xl lg:hidden">{nav.slice(0,5).map((item) => { const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href); return <Link key={item.href} href={item.href} className={cn("flex min-w-14 flex-col items-center gap-1 rounded-2xl px-2 py-1.5 text-[10px] font-medium text-[var(--muted)] transition", active && "bg-[var(--orange-soft)] text-[#9a5838] shadow-sm shadow-orange-200/25 dark:text-[#ffc19d]")}><item.icon className="size-[19px]" />{item.label}</Link>; })}<Link href="/dog" aria-label="宠物档案" className={cn("grid size-11 place-items-center rounded-2xl text-[var(--muted)] transition", pathname.startsWith("/dog") && "bg-[var(--orange-soft)] text-[var(--orange)] shadow-sm shadow-orange-200/25")}><Menu className="size-5" /></Link></nav>
   </div>;
 }

@@ -9,6 +9,7 @@ import { Pencil, Plus, ReceiptText } from "lucide-react";
 import { toast } from "sonner";
 import { expenseSchema } from "@/lib/schemas";
 import { cn, toDateInput } from "@/lib/utils";
+import type { PetOption } from "@/lib/pets";
 import { saveExpenseAction } from "@/actions/app";
 import { Button, type ButtonProps } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,10 +17,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { DateInput } from "@/components/ui/date-input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Field, selectClass } from "@/components/ui/form-field";
+import { PetSelectField } from "./pet-select";
 import { FormActions } from "./shared";
 
 type Values = z.infer<typeof expenseSchema>;
-const categories = ["狗粮", "零食", "医疗", "洗护", "玩具", "用品", "保险", "寄养", "其他"] as const;
+const categories = ["主粮", "狗粮", "猫粮", "零食", "医疗", "洗护", "玩具", "用品", "保险", "寄养", "其他"] as const;
 const compactControl = "h-10 rounded-xl";
 
 type TriggerOptions = {
@@ -29,13 +31,13 @@ type TriggerOptions = {
   triggerClassName?: string;
 };
 
-export function ExpenseForm({ initial, disabled = false, triggerLabel, triggerVariant, triggerSize, triggerClassName }: { initial?: Values; disabled?: boolean } & TriggerOptions) {
+export function ExpenseForm({ initial, pets = [], disabled = false, triggerLabel, triggerVariant, triggerSize, triggerClassName }: { initial?: Values; pets?: PetOption[]; disabled?: boolean } & TriggerOptions) {
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const router = useRouter();
   const { register, handleSubmit, formState: { errors } } = useForm<Values>({
     resolver: zodResolver(expenseSchema),
-    defaultValues: initial || { category: "狗粮", amount: "" as unknown as Values["amount"], date: toDateInput(new Date()), merchant: "", notes: "" },
+    defaultValues: initial || { dogId: pets[0]?.id || "", category: "主粮", amount: "" as unknown as Values["amount"], date: toDateInput(new Date()), merchant: "", notes: "" },
   });
 
   function submit(values: Values) {
@@ -56,7 +58,8 @@ export function ExpenseForm({ initial, disabled = false, triggerLabel, triggerVa
       <form onSubmit={handleSubmit(submit)} className="space-y-4">
         <section className="rounded-2xl border bg-black/[.018] p-4 dark:bg-white/[.025]">
           <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">开销信息</p>
-          <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.2fr)]">
+          <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.1fr)]">
+            {pets.length > 0 && <PetSelectField pets={pets} registration={register("dogId")} />}
             <Field label="分类"><select className={cn(selectClass, compactControl)} {...register("category")}>{categories.map((category) => <option key={category}>{category}</option>)}</select></Field>
             <Field label="金额（元）" error={errors.amount?.message}><Input className={compactControl} type="number" min="0.01" step="0.01" placeholder="128.00" {...register("amount")} /></Field>
             <Field label="日期"><DateInput className={compactControl} {...register("date")} /></Field>

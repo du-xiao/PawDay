@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,29 +10,37 @@ import { toast } from "sonner";
 import { photoSchema } from "@/lib/schemas";
 import { savePhotoAction } from "@/actions/app";
 import { cn, toDateInput } from "@/lib/utils";
+import type { PetOption } from "@/lib/pets";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { DateInput } from "@/components/ui/date-input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Field, selectClass } from "@/components/ui/form-field";
+import { PetSelectField } from "./pet-select";
 import { FormActions } from "./shared";
 import { useImagePreview } from "./use-image-preview";
 
 type Values = z.infer<typeof photoSchema>;
 const compactControl = "h-10 rounded-xl";
 
-export function PhotoForm({ logs, disabled = false }: { logs: { id: string; title: string }[]; disabled?: boolean }) {
+export function PhotoForm({ logs, pets = [], disabled = false }: { logs: { id: string; dogId: string; title: string }[]; pets?: PetOption[]; disabled?: boolean }) {
   const [open, setOpen] = useState(false);
   const [fileName, setFileName] = useState("");
   const [pending, startTransition] = useTransition();
   const fileRef = useRef<HTMLInputElement>(null);
   const { previewUrl, setPreviewFile, resetPreview } = useImagePreview();
   const router = useRouter();
-  const { register, handleSubmit, formState: { errors } } = useForm<Values>({
+  const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<Values>({
     resolver: zodResolver(photoSchema),
-    defaultValues: { title: "", notes: "", date: toDateInput(new Date()), dailyLogId: "" },
+    defaultValues: { dogId: pets[0]?.id || "", title: "", notes: "", date: toDateInput(new Date()), dailyLogId: "" },
   });
+  const selectedDogId = watch("dogId");
+  const visibleLogs = selectedDogId ? logs.filter((log) => log.dogId === selectedDogId) : logs;
+
+  useEffect(() => {
+    setValue("dailyLogId", "");
+  }, [selectedDogId, setValue]);
 
   function handleOpenChange(next: boolean) {
     setOpen(next);
@@ -84,7 +92,8 @@ export function PhotoForm({ logs, disabled = false }: { logs: { id: string; titl
             </>}
           </button>
           <Input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={(event) => { const file = event.target.files?.[0]; setFileName(file?.name || ""); setPreviewFile(file); }} />
-          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <div className="mt-3 grid gap-3 sm:grid-cols-3">
+            {pets.length > 0 && <PetSelectField pets={pets} registration={register("dogId")} />}
             <Field label="标题"><Input className={compactControl} placeholder="今天的好天气" {...register("title")} /></Field>
             <Field label="日期" error={errors.date?.message}><DateInput className={compactControl} {...register("date")} /></Field>
           </div>
@@ -94,7 +103,7 @@ export function PhotoForm({ logs, disabled = false }: { logs: { id: string; titl
           <Field label="备注"><Textarea className="min-h-28 rounded-2xl p-3.5" placeholder="这一刻为什么特别…" {...register("notes")} /></Field>
           <div className="rounded-2xl bg-[var(--orange-soft)]/55 p-4">
             <div className="mb-3 flex items-center gap-2 text-[var(--orange)]"><Link2 className="size-4" /><span className="text-xs font-semibold">关联记录</span></div>
-            <Field label="日常记录"><select className={cn(selectClass, compactControl)} {...register("dailyLogId")}><option value="">不关联</option>{logs.map((log) => <option key={log.id} value={log.id}>{log.title}</option>)}</select></Field>
+            <Field label="日常记录"><select className={cn(selectClass, compactControl)} {...register("dailyLogId")}><option value="">不关联</option>{visibleLogs.map((log) => <option key={log.id} value={log.id}>{log.title}</option>)}</select></Field>
           </div>
         </section>
         <FormActions pending={pending} className="mt-5 border-t pt-4" onCancel={() => setOpen(false)} />
