@@ -3,6 +3,7 @@
 import Image from "next/image";
 import type { ReactNode } from "react";
 import { ArrowUpRight, BadgeCheck, CalendarDays, FileText, ImageIcon, ShieldCheck } from "lucide-react";
+import { imageVariantUrl } from "@/lib/image-variants";
 import { formatDate } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -106,7 +107,7 @@ function HeaderIcon({ type }: { type: "狗证" | "免疫证" }) {
 function MiniImage({ src, label }: { src?: string | null; label: string }) {
   return (
     <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-black/[.035] dark:bg-white/[.045]">
-      {src ? <Image src={src} alt={label} fill unoptimized className="object-cover" sizes="160px" /> : <div className="grid h-full place-items-center text-[var(--muted)]"><ImageIcon className="size-5" /></div>}
+      {src ? <Image src={imageVariantUrl(src, "thumb")} alt={label} fill unoptimized className="object-cover" sizes="160px" /> : <div className="grid h-full place-items-center text-[var(--muted)]"><ImageIcon className="size-5" /></div>}
       <span className="absolute left-2 top-2 rounded-full bg-white/85 px-2 py-0.5 text-[10px] font-semibold text-[#2d2924] shadow-sm">{label}</span>
     </div>
   );
@@ -123,7 +124,7 @@ function DocumentImage({ src, label }: { src?: string | null; label: string }) {
 
   return (
     <a href={src} target="_blank" rel="noreferrer" className="group relative block min-h-48 overflow-hidden rounded-3xl border bg-black/[.035] dark:bg-white/[.045]">
-      <Image src={src} alt={label} fill unoptimized className="object-cover transition duration-300 group-hover:scale-[1.03]" sizes="(max-width: 768px) 100vw, 380px" />
+      <Image src={imageVariantUrl(src, "medium")} alt={label} fill unoptimized className="object-cover transition duration-300 group-hover:scale-[1.03]" sizes="(max-width: 768px) 100vw, 380px" />
       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/55 to-transparent p-3 text-sm font-semibold text-white">
         {label}
       </div>

@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { ensureDatabase } from "@/lib/bootstrap";
 import { prisma } from "@/lib/db";
-import { uploadDir } from "@/lib/upload";
+import { ensureImageVariant, uploadDir } from "@/lib/upload";
 
 const mime: Record<string, string> = {
   ".jpg": "image/jpeg",
@@ -25,13 +25,14 @@ export async function GET(_: Request, { params }: { params: Promise<{ path: stri
     const root = uploadDir();
     const file = path.resolve(root, ...parts);
     if (!file.startsWith(`${root}${path.sep}`)) return new NextResponse("Not found", { status: 404 });
-    const ext = path.extname(file).toLowerCase();
+    const resolvedFile = await ensureImageVariant(file);
+    const ext = path.extname(resolvedFile).toLowerCase();
     if (!mime[ext]) return new NextResponse("Not found", { status: 404 });
-    const data = await readFile(file);
+    const data = await readFile(resolvedFile);
     return new NextResponse(data, {
       headers: {
         "Content-Type": mime[ext],
-        "Cache-Control": "private, no-store",
+        "Cache-Control": `private, max-age=${process.env.UPLOAD_CACHE_SECONDS || 604800}, immutable`,
         "X-Content-Type-Options": "nosniff",
       },
     });

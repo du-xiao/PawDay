@@ -6,6 +6,7 @@ import { ArrowUpRight, CalendarHeart, CircleDollarSign, Clock3, HeartPulse, Note
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { isGuestRole } from "@/lib/roles";
+import { imageVariantUrl } from "@/lib/image-variants";
 import { cn, daysTogether, dogAge, formatDate, formatDateTime, money } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -71,7 +72,7 @@ export default async function DashboardPage() {
         <div className="relative z-10 sm:hidden">
           <div className="flex items-center gap-3.5">
             <div className="relative size-20 shrink-0 overflow-hidden rounded-[1.35rem] border border-white/75 bg-white/75 shadow-lg shadow-orange-200/25 ring-1 ring-black/[.03] dark:border-white/10 dark:bg-white/[.08] dark:shadow-black/20 dark:ring-white/[.06]">
-              {dog.avatarUrl ? <Image src={dog.avatarUrl} alt={dog.name} fill priority unoptimized className="object-cover" sizes="80px" /> : <div className="grid size-full place-items-center"><PawPrint className="size-10 text-[var(--orange)]" /></div>}
+              {dog.avatarUrl ? <Image src={imageVariantUrl(dog.avatarUrl, "thumb")} alt={dog.name} fill priority unoptimized className="object-cover" sizes="80px" /> : <div className="grid size-full place-items-center"><PawPrint className="size-10 text-[var(--orange)]" /></div>}
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-[10px] font-semibold uppercase tracking-[.22em] text-[var(--orange)]">MY BEST FRIEND</p>
@@ -96,7 +97,7 @@ export default async function DashboardPage() {
           <div className="flex items-center justify-between gap-5">
             <div className="flex min-w-0 items-center gap-5">
               <div className="relative size-28 shrink-0 overflow-hidden rounded-[1.65rem] border border-white/70 bg-white/70 shadow-xl shadow-orange-200/25 ring-1 ring-black/[.03] lg:size-32 dark:border-white/10 dark:bg-white/[.08] dark:shadow-black/20 dark:ring-white/[.06]">
-                {dog.avatarUrl ? <Image src={dog.avatarUrl} alt={dog.name} fill priority unoptimized className="object-cover" sizes="(max-width: 1024px) 112px, 128px" /> : <div className="grid size-full place-items-center"><PawPrint className="size-12 text-[var(--orange)]" /></div>}
+                {dog.avatarUrl ? <Image src={imageVariantUrl(dog.avatarUrl, "thumb")} alt={dog.name} fill priority unoptimized className="object-cover" sizes="(max-width: 1024px) 112px, 128px" /> : <div className="grid size-full place-items-center"><PawPrint className="size-12 text-[var(--orange)]" /></div>}
               </div>
               <div className="min-w-0">
                 <p className="text-xs font-semibold uppercase tracking-[.24em] text-[var(--orange)]">MY BEST FRIEND</p>

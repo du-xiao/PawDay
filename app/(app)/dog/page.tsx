@@ -6,6 +6,7 @@ import { auth } from "@/auth";
 import { ensureDatabase } from "@/lib/bootstrap";
 import { prisma } from "@/lib/db";
 import { isGuestRole } from "@/lib/roles";
+import { imageVariantUrl } from "@/lib/image-variants";
 import { daysTogether, dogAge, formatDate, toDateInput } from "@/lib/utils";
 import { PageHeader } from "@/components/page-header";
 import { DogDocumentCard, type DogDocumentView } from "@/components/dog-document-card";
@@ -109,7 +110,7 @@ export default async function DogPage() {
       <section className="grid gap-5 xl:grid-cols-[0.86fr_1.14fr]">
         <div className="relative min-h-[440px] overflow-hidden rounded-[2rem] bg-gradient-to-br from-[#efd8c1] to-[#d8e3d5] dark:from-[#47362c] dark:to-[#27382b]">
           {dog.avatarUrl ? (
-            <Image src={dog.avatarUrl} alt={dog.name} fill priority unoptimized className="object-cover" sizes="(max-width:1024px) 100vw, 42vw" />
+            <Image src={imageVariantUrl(dog.avatarUrl, "medium")} alt={dog.name} fill priority unoptimized className="object-cover" sizes="(max-width:1024px) 100vw, 42vw" />
           ) : (
             <div className="grid h-full place-items-center"><PawPrint className="size-32 text-white/70" /></div>
           )}
@@ -179,7 +180,7 @@ export default async function DogPage() {
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
             {dog.photos.map((photo, index) => (
               <div key={photo.id} className={`relative overflow-hidden rounded-3xl ${index === 0 ? "col-span-2 row-span-2 aspect-square" : "aspect-square"}`}>
-                <Image src={photo.url} alt={photo.title || dog.name} fill unoptimized className="object-cover" sizes="20vw" />
+                <Image src={imageVariantUrl(photo.url, "thumb")} alt={photo.title || dog.name} fill unoptimized className="object-cover" sizes="20vw" />
               </div>
             ))}
           </div>

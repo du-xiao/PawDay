@@ -40,6 +40,7 @@ RUN apk add --no-cache su-exec && addgroup --system --gid 1001 nodejs && adduser
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/scripts/generate-image-variants.mjs ./scripts/generate-image-variants.mjs
 COPY scripts/docker-entrypoint.sh /usr/local/bin/pawday-entrypoint
 RUN chmod +x /usr/local/bin/pawday-entrypoint
 EXPOSE 3000

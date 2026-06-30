@@ -152,6 +152,14 @@ docker compose -f docker-compose.nas.yml up -d
 
 升级只替换容器，原数据库和图片继续使用。应用启动时会自动补齐新增表或字段，因此在绿联云 NAS 上通常只需要导入新镜像、把 Compose 里的 `image` 改成新版本号，然后执行 `up -d`。需要回滚时，把 `image` 改回旧标签并再次执行 `up -d`。不要删除 `data`、`uploads`，也不要执行会删除这些宿主机目录的命令。
 
+如果升级版本包含图片加速能力，新上传的图片会自动生成 `*-thumb.webp` 和 `*-medium.webp` 两种派生图，列表和预览会优先读取这些小图。旧图片不需要迁移数据库，应用在第一次请求小图时会自动补生成；如果希望升级后第一次打开相册也尽量快，可以在新容器启动后执行一次预生成：
+
+```bash
+docker compose -f docker-compose.nas.yml exec pawday node scripts/generate-image-variants.mjs
+```
+
+派生图保存在同一个 `uploads` 持久化目录中，可以随原图一起备份。回滚旧镜像时这些 `*-thumb.webp`、`*-medium.webp` 文件不会影响旧版本运行；如果以后删除原图，新版本也会同步清理对应派生图。
+
 ## 公网访问
 
 应用除 `/login`、`/api/auth/*`、`/favicon.ico` 外均要求登录，上传图片也会校验会话。建议通过 NAS 自带反向代理或可信网关配置 HTTPS，不要直接把 3000 端口暴露到公网。
@@ -179,6 +187,7 @@ docker compose up -d
 - 单文件：最大 10MB
 - 文件名：服务端生成随机 UUID
 - 上传文件需要有效登录会话才能读取
+- 上传图片会生成 WebP 缩略图和中图，用于提升 Cloudflare Tunnel 等公网访问场景下的加载速度
 
 ## 常用命令
 
