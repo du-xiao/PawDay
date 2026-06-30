@@ -3,13 +3,14 @@
 import Image from "next/image";
 import type { ReactNode } from "react";
 import { ArrowUpRight, BadgeCheck, CalendarDays, FileText, ImageIcon, ShieldCheck } from "lucide-react";
+import type { PetDocumentType } from "@/lib/pets";
 import { formatDate } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 export type DogDocumentView = {
   id: string;
-  type: "狗证" | "免疫证";
+  type: PetDocumentType;
   title: string | null;
   identifier: string | null;
   issuer: string | null;
@@ -21,7 +22,7 @@ export type DogDocumentView = {
   updatedAt: string;
 };
 
-export function DogDocumentCard({ type, document, action }: { type: "狗证" | "免疫证"; document?: DogDocumentView | null; action?: ReactNode }) {
+export function DogDocumentCard({ type, document, action }: { type: PetDocumentType; document?: DogDocumentView | null; action?: ReactNode }) {
   const status = getStatus(document?.expiresAt || null);
 
   if (!document) {
@@ -91,8 +92,8 @@ export function DogDocumentCard({ type, document, action }: { type: "狗证" | "
   );
 }
 
-function HeaderIcon({ type }: { type: "狗证" | "免疫证" }) {
-  const Icon = type === "狗证" ? BadgeCheck : ShieldCheck;
+function HeaderIcon({ type }: { type: PetDocumentType }) {
+  const Icon = type === "免疫证" ? ShieldCheck : BadgeCheck;
   return (
     <div>
       <div className="grid size-11 place-items-center rounded-2xl bg-[var(--orange-soft)] text-[var(--orange)]">

@@ -11,6 +11,7 @@ import { dogDocumentSchema, dogSchema, expenseSchema, guestAccountSchema, health
 import { syncDailyLogImagePhoto } from "@/lib/photo-sync";
 import { USER_ROLES, normalizeRole } from "@/lib/roles";
 import { deleteImage, saveImage } from "@/lib/upload";
+import { normalizeSpecies } from "@/lib/pets";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -32,10 +33,15 @@ async function requireOwner() {
   return user.id;
 }
 
-async function dogId() {
-  const dog = await prisma.dog.findFirst({ select: { id: true } });
-  if (!dog) throw new Error("请先创建小狗档案");
-  return dog.id;
+async function petId(id?: string | null) {
+  if (id) {
+    const pet = await prisma.dog.findUnique({ where: { id }, select: { id: true } });
+    if (!pet) throw new Error("选择的宠物档案不存在");
+    return pet.id;
+  }
+  const pet = await prisma.dog.findFirst({ select: { id: true }, orderBy: { createdAt: "asc" } });
+  if (!pet) throw new Error("请先创建宠物档案");
+  return pet.id;
 }
 
 function fail(error: unknown): ActionResult {
@@ -72,17 +78,19 @@ type DogDocumentRow = {
 export async function saveDogAction(formData: FormData): Promise<ActionResult> {
   try {
     await requireOwner();
-    const current = await prisma.dog.findFirst();
     const data = dogSchema.parse({
+      id: formData.get("id") || undefined, species: formData.get("species") || "DOG",
       name: formData.get("name"), breed: formData.get("breed"), sex: formData.get("sex"),
       birthDate: formData.get("birthDate"), adoptionDate: formData.get("adoptionDate"),
-      weightKg: formData.get("weightKg") || undefined, avatarUrl: current?.avatarUrl || "",
+      weightKg: formData.get("weightKg") || undefined, avatarUrl: formData.get("avatarUrl") || "",
     });
+    const current = data.id ? await prisma.dog.findUnique({ where: { id: data.id } }) : null;
+    if (data.id && !current) throw new Error("要编辑的宠物档案不存在");
     const file = formData.get("avatar");
     const uploadedUrl = file instanceof File && file.size ? await saveImage(file) : null;
     const avatarUrl = uploadedUrl || current?.avatarUrl || null;
     const values = {
-      name: data.name, breed: data.breed || null, sex: data.sex,
+      species: normalizeSpecies(data.species), name: data.name, breed: data.breed || null, sex: data.sex,
       birthDate: inputDate(data.birthDate), adoptionDate: data.adoptionDate ? inputDate(data.adoptionDate) : null,
       weightGrams: data.weightKg ? Math.round(Number(data.weightKg) * 1000) : null, avatarUrl,
     };
@@ -105,8 +113,8 @@ export async function saveDogDocumentAction(formData: FormData): Promise<ActionR
 
   try {
     await requireOwner();
-    const currentDogId = await dogId();
     const data = dogDocumentSchema.parse({
+      dogId: formData.get("dogId") || undefined,
       type: formData.get("type"),
       title: formData.get("title"),
       identifier: formData.get("identifier"),
@@ -115,6 +123,7 @@ export async function saveDogDocumentAction(formData: FormData): Promise<ActionR
       expiresAt: formData.get("expiresAt"),
       notes: formData.get("notes"),
     });
+    const currentDogId = await petId(data.dogId);
     const [current] = await prisma.$queryRaw<DogDocumentRow[]>`
       SELECT * FROM "DogDocument" WHERE "dogId" = ${currentDogId} AND "type" = ${data.type} LIMIT 1
     `;
@@ -170,16 +179,16 @@ export async function saveLogAction(formData: FormData): Promise<ActionResult> {
     await requireOwner();
     const data = logSchema.parse(Object.fromEntries(formData));
     const current = data.id ? await prisma.dailyLog.findUnique({ where: { id: data.id } }) : null;
+    const currentDogId = await petId(data.dogId || current?.dogId);
     const file = formData.get("image");
     const uploadedUrl = file instanceof File && file.size ? await saveImage(file) : null;
     const imageUrl = uploadedUrl || current?.imageUrl || null;
-    const currentDogId = current?.dogId ?? await dogId();
-    const values = { type: data.type, title: data.title, notes: data.notes || null, occurredAt: inputDate(data.occurredAt), mood: data.mood === "未记录" ? null : data.mood, imageUrl };
+    const values = { dogId: currentDogId, type: data.type, title: data.title, notes: data.notes || null, occurredAt: inputDate(data.occurredAt), mood: data.mood === "未记录" ? null : data.mood, imageUrl };
     try {
       await prisma.$transaction(async (tx) => {
         const log = data.id
           ? await tx.dailyLog.update({ where: { id: data.id }, data: values })
-          : await tx.dailyLog.create({ data: { ...values, dogId: currentDogId } });
+          : await tx.dailyLog.create({ data: values });
         await syncDailyLogImagePhoto(tx, log, current?.imageUrl);
       });
     } catch (error) {
@@ -212,9 +221,10 @@ export async function saveExpenseAction(input: unknown): Promise<ActionResult> {
   try {
     await requireOwner();
     const data = expenseSchema.parse(input);
+    const currentDogId = await petId(data.dogId);
     const values = { category: data.category, amountCents: Math.round(data.amount * 100), date: inputDate(data.date), merchant: data.merchant || null, notes: data.notes || null };
-    if (data.id) await prisma.expense.update({ where: { id: data.id }, data: values });
-    else await prisma.expense.create({ data: { ...values, dogId: await dogId() } });
+    if (data.id) await prisma.expense.update({ where: { id: data.id }, data: { ...values, dogId: currentDogId } });
+    else await prisma.expense.create({ data: { ...values, dogId: currentDogId } });
     revalidatePath("/", "layout"); return { ok: true };
   } catch (error) { return fail(error); }
 }
@@ -232,18 +242,18 @@ export async function saveHealthAction(input: unknown): Promise<ActionResult> {
   try {
     await requireOwner();
     const data = healthSchema.parse(input);
-    const currentDogId = await dogId();
+    const currentDogId = await petId(data.dogId);
     const values = { type: data.type, title: data.title, date: inputDate(data.date), notes: data.notes || null, weightGrams: data.weightKg ? Math.round(Number(data.weightKg) * 1000) : null, nextReminderDate: data.nextReminderDate ? inputDate(data.nextReminderDate) : null };
     await prisma.$transaction(async (tx) => {
       const record = data.id
-        ? await tx.healthRecord.update({ where: { id: data.id }, data: values })
+        ? await tx.healthRecord.update({ where: { id: data.id }, data: { ...values, dogId: currentDogId } })
         : await tx.healthRecord.create({ data: { ...values, dogId: currentDogId } });
       const marker = `health:${record.id}`;
       const reminder = await tx.reminder.findFirst({ where: { notes: marker } });
       if (data.nextReminderDate) {
-        const reminderData = { title: `${data.title} · 下次提醒`, type: data.type, dueAt: inputDate(data.nextReminderDate), completed: false };
+        const reminderData = { dogId: currentDogId, title: `${data.title} · 下次提醒`, type: data.type, dueAt: inputDate(data.nextReminderDate), completed: false };
         if (reminder) await tx.reminder.update({ where: { id: reminder.id }, data: reminderData });
-        else await tx.reminder.create({ data: { ...reminderData, dogId: currentDogId, notes: marker } });
+        else await tx.reminder.create({ data: { ...reminderData, notes: marker } });
       } else if (reminder) {
         await tx.reminder.delete({ where: { id: reminder.id } });
       }
@@ -301,10 +311,12 @@ export async function savePhotoAction(formData: FormData): Promise<ActionResult>
     const file = formData.get("image");
     if (!(file instanceof File) || !file.size) throw new Error("请选择一张图片");
     const data = photoSchema.parse(Object.fromEntries(formData));
-    const currentDogId = await dogId();
+    let currentDogId = await petId(data.dogId);
     if (data.dailyLogId) {
-      const linkedLog = await prisma.dailyLog.findFirst({ where: { id: data.dailyLogId, dogId: currentDogId }, select: { id: true } });
+      const linkedLog = await prisma.dailyLog.findUnique({ where: { id: data.dailyLogId }, select: { id: true, dogId: true } });
       if (!linkedLog) throw new Error("关联的日常记录不存在");
+      if (data.dogId && linkedLog.dogId !== currentDogId) throw new Error("关联记录不属于当前宠物");
+      currentDogId = linkedLog.dogId;
     }
     const url = await saveImage(file);
     try {

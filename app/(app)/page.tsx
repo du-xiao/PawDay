@@ -6,7 +6,8 @@ import { ArrowUpRight, CalendarHeart, CircleDollarSign, Clock3, HeartPulse, Note
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { isGuestRole } from "@/lib/roles";
-import { cn, daysTogether, dogAge, formatDate, formatDateTime, money } from "@/lib/utils";
+import { speciesLabel } from "@/lib/pets";
+import { cn, daysTogether, petAge, formatDate, formatDateTime, money } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,7 +24,9 @@ const addButtonClass = "h-8 rounded-xl px-2.5 text-xs text-[var(--muted)] hover:
 export default async function DashboardPage() {
   const session = await auth();
   const canWrite = !isGuestRole(session?.user.role);
-  const dog = await prisma.dog.findFirst();
+  const pets = await prisma.dog.findMany({ orderBy: { createdAt: "asc" } });
+  const petOptions = pets.map((item) => ({ id: item.id, name: item.name, species: item.species }));
+  const dog = pets[0];
 
   if (!dog) {
     return (
@@ -32,11 +35,11 @@ export default async function DashboardPage() {
           <div className="relative z-10 max-w-xl">
             <Badge className="bg-[var(--sage-soft)] text-[#587158] dark:text-[#b9d6b8]">第一次来到 PawDay</Badge>
             <h1 className="mt-6 text-4xl font-semibold leading-[1.08] tracking-[-.055em] sm:text-6xl">先把它的名字，<br />写进这里。</h1>
-            <p className="mt-5 max-w-lg text-base leading-relaxed text-[var(--muted)] sm:text-lg">创建小狗档案后，就可以开始记录散步、健康、照片和每一件值得记住的小事。</p>
+            <p className="mt-5 max-w-lg text-base leading-relaxed text-[var(--muted)] sm:text-lg">创建猫咪或狗狗档案后，就可以开始记录日常、健康、照片和每一件值得记住的小事。</p>
             {canWrite && <div className="mt-8"><DogForm onboarding /></div>}
           </div>
           <div className="relative mt-10 h-72 overflow-hidden rounded-[2rem] lg:absolute lg:inset-y-8 lg:right-8 lg:mt-0 lg:h-auto lg:w-[43%]">
-            <Image src="/pawday-hero.png" alt="温暖的小狗插画" fill className="object-cover" sizes="50vw" />
+            <Image src="/pawday-hero.png" alt="温暖的宠物生活插画" fill className="object-cover" sizes="50vw" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
           </div>
         </div>
@@ -45,11 +48,12 @@ export default async function DashboardPage() {
   }
 
   const now = new Date();
+  const petIds = pets.map((item) => item.id);
   const [logs, health, expenses, reminder, weights] = await Promise.all([
-    prisma.dailyLog.findMany({ where: { dogId: dog.id }, orderBy: { occurredAt: "desc" }, take: 5 }),
-    prisma.healthRecord.findMany({ where: { dogId: dog.id }, orderBy: { date: "desc" }, take: 4 }),
-    prisma.expense.aggregate({ where: { dogId: dog.id, date: { gte: startOfMonth(now), lte: endOfMonth(now) } }, _sum: { amountCents: true } }),
-    prisma.reminder.findFirst({ where: { dogId: dog.id, completed: false }, orderBy: { dueAt: "asc" } }),
+    prisma.dailyLog.findMany({ where: { dogId: { in: petIds } }, include: { dog: { select: { name: true } } }, orderBy: { occurredAt: "desc" }, take: 5 }),
+    prisma.healthRecord.findMany({ where: { dogId: { in: petIds } }, include: { dog: { select: { name: true } } }, orderBy: { date: "desc" }, take: 4 }),
+    prisma.expense.aggregate({ where: { dogId: { in: petIds }, date: { gte: startOfMonth(now), lte: endOfMonth(now) } }, _sum: { amountCents: true } }),
+    prisma.reminder.findFirst({ where: { dogId: { in: petIds }, completed: false }, include: { dog: { select: { name: true } } }, orderBy: { dueAt: "asc" } }),
     prisma.healthRecord.findMany({ where: { dogId: dog.id, weightGrams: { not: null } }, orderBy: { date: "asc" }, take: 12 }),
   ]);
   const together = daysTogether(dog.adoptionDate);
@@ -61,7 +65,7 @@ export default async function DashboardPage() {
       <section>
         <p className="text-sm font-medium text-[var(--orange)]">{new Intl.DateTimeFormat("zh-CN", { month: "long", day: "numeric", weekday: "long" }).format(now)}</p>
         <h1 className="mt-2 text-3xl font-semibold tracking-[-.05em] sm:text-5xl">今天也要好好生活。</h1>
-        <p className="mt-3 text-[var(--muted)]">陪 {dog.name} 认真度过普通的一天。</p>
+        <p className="mt-3 text-[var(--muted)]">和 {pets.length} 位小朋友认真度过普通的一天。</p>
       </section>
 
       <section className="soft-card relative overflow-hidden rounded-[2.25rem] p-4 sm:p-5 lg:p-6">
@@ -74,21 +78,22 @@ export default async function DashboardPage() {
               {dog.avatarUrl ? <Image src={dog.avatarUrl} alt={dog.name} fill priority unoptimized className="object-cover" sizes="80px" /> : <div className="grid size-full place-items-center"><PawPrint className="size-10 text-[var(--orange)]" /></div>}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-semibold uppercase tracking-[.22em] text-[var(--orange)]">MY BEST FRIEND</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[.22em] text-[var(--orange)]">FEATURED PET</p>
               <h2 className="mt-1 truncate text-3xl font-semibold tracking-[-.055em]">{dog.name}</h2>
               <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-[var(--muted)]">今天也在认真长大，慢慢留下普通日子里的小事。</p>
             </div>
           </div>
 
           <div className="mt-4 grid grid-cols-2 gap-2.5">
-            <ProfileFact label="品种" value={dog.breed || "未记录"} tone="orange" />
+            <ProfileFact label="种类" value={speciesLabel(dog.species)} tone="orange" />
+            <ProfileFact label="品种" value={dog.breed || "未记录"} tone="sage" />
             <ProfileFact label="性别" value={dog.sex || "未知"} tone="sage" />
-            <ProfileFact label="年龄" value={dogAge(dog.birthDate)} tone="gold" />
+            <ProfileFact label="年龄" value={petAge(dog.birthDate)} tone="gold" />
             <ProfileFact label="陪伴" value={together ? `${together} 天` : "待记录"} tone="violet" />
           </div>
 
           <Button asChild variant="outline" className="mt-4 w-full border-orange-200/70 bg-white/70 text-[#8d4d2f] shadow-sm shadow-orange-200/20 hover:bg-white/85 dark:border-white/10 dark:bg-white/[.06] dark:text-[#ffc09b] dark:hover:bg-white/[.1]">
-            <Link href="/dog">查看档案<ArrowUpRight className="size-4" /></Link>
+            <Link href="/dog">查看宠物档案<ArrowUpRight className="size-4" /></Link>
           </Button>
         </div>
 
@@ -99,21 +104,22 @@ export default async function DashboardPage() {
                 {dog.avatarUrl ? <Image src={dog.avatarUrl} alt={dog.name} fill priority unoptimized className="object-cover" sizes="(max-width: 1024px) 112px, 128px" /> : <div className="grid size-full place-items-center"><PawPrint className="size-12 text-[var(--orange)]" /></div>}
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-semibold uppercase tracking-[.24em] text-[var(--orange)]">MY BEST FRIEND</p>
+                <p className="text-xs font-semibold uppercase tracking-[.24em] text-[var(--orange)]">FEATURED PET</p>
                 <h2 className="mt-2 text-5xl font-semibold tracking-[-.055em]">{dog.name}</h2>
-                <p className="mt-3 max-w-2xl text-base leading-relaxed text-[var(--muted)]">今天也在认真长大。把普通日子里的吃饭、散步、健康和小表情都慢慢留下来。</p>
+                <p className="mt-3 max-w-2xl text-base leading-relaxed text-[var(--muted)]">今天也在认真长大。把普通日子里的吃饭、外出、健康和小表情都慢慢留下来。</p>
               </div>
             </div>
 
             <Button asChild variant="outline" className="shrink-0 border-orange-200/70 bg-white/70 text-[#8d4d2f] shadow-sm shadow-orange-200/20 hover:bg-white/85 dark:border-white/10 dark:bg-white/[.06] dark:text-[#ffc09b] dark:hover:bg-white/[.1]">
-              <Link href="/dog">查看档案<ArrowUpRight className="size-4" /></Link>
+              <Link href="/dog">查看宠物档案<ArrowUpRight className="size-4" /></Link>
             </Button>
           </div>
 
-          <div className="mt-5 grid grid-cols-4 gap-3">
-            <ProfileFact label="品种" value={dog.breed || "未记录"} tone="orange" />
-            <ProfileFact label="性别" value={dog.sex || "未知"} tone="sage" />
-            <ProfileFact label="年龄" value={dogAge(dog.birthDate)} tone="gold" />
+          <div className="mt-5 grid grid-cols-5 gap-3">
+            <ProfileFact label="种类" value={speciesLabel(dog.species)} tone="orange" />
+            <ProfileFact label="品种" value={dog.breed || "未记录"} tone="sage" />
+            <ProfileFact label="性别" value={dog.sex || "未知"} tone="gold" />
+            <ProfileFact label="年龄" value={petAge(dog.birthDate)} tone="gold" />
             <ProfileFact label="陪伴" value={together ? `${together} 天` : "待记录"} tone="violet" />
           </div>
         </div>
@@ -125,17 +131,17 @@ export default async function DashboardPage() {
           icon={NotebookPen}
           label="最近记录"
           value={logs.length ? logs[0].title : "还没有记录"}
-          meta={logs.length ? formatDateTime(logs[0].occurredAt) : "从今天开始"}
+          meta={logs.length ? `${logs[0].dog.name} · ${formatDateTime(logs[0].occurredAt)}` : "从今天开始"}
           tone="orange"
-          action={canWrite ? <LogForm triggerLabel="新增" triggerVariant="ghost" triggerSize="sm" triggerClassName={addButtonClass} /> : undefined}
+          action={canWrite ? <LogForm pets={petOptions} triggerLabel="新增" triggerVariant="ghost" triggerSize="sm" triggerClassName={addButtonClass} /> : undefined}
         />
         <Stat
           icon={HeartPulse}
           label="最近健康"
           value={health.length ? health[0].title : "等待第一次记录"}
-          meta={health.length ? formatDate(health[0].date) : "体重、疫苗、驱虫"}
+          meta={health.length ? `${health[0].dog.name} · ${formatDate(health[0].date)}` : "体重、疫苗、驱虫"}
           tone="sage"
-          action={canWrite ? <HealthForm triggerLabel="新增" triggerVariant="ghost" triggerSize="sm" triggerClassName={addButtonClass} /> : undefined}
+          action={canWrite ? <HealthForm pets={petOptions} triggerLabel="新增" triggerVariant="ghost" triggerSize="sm" triggerClassName={addButtonClass} /> : undefined}
         />
         <Stat
           icon={CircleDollarSign}
@@ -143,12 +149,12 @@ export default async function DashboardPage() {
           value={money(expenses._sum.amountCents || 0)}
           meta="本月累计"
           tone="gold"
-          action={canWrite ? <ExpenseForm triggerLabel="新增" triggerVariant="ghost" triggerSize="sm" triggerClassName={addButtonClass} /> : undefined}
+          action={canWrite ? <ExpenseForm pets={petOptions} triggerLabel="新增" triggerVariant="ghost" triggerSize="sm" triggerClassName={addButtonClass} /> : undefined}
         />
         <Stat
           icon={CalendarHeart}
           label="下次提醒"
-          value={reminder ? reminder.title : "暂时没有提醒"}
+          value={reminder ? `${reminder.dog.name} · ${reminder.title}` : "暂时没有提醒"}
           meta={reminder ? reminderDetail(reminder.dueAt, now) : "可以在健康记录中设置"}
           tone={reminderOverdue ? "red" : "violet"}
           href="/health"
@@ -166,7 +172,7 @@ export default async function DashboardPage() {
             {logs.length ? <div className="space-y-1">
               {logs.map((log) => <Link href="/logs" key={log.id} className="flex items-center gap-3 rounded-2xl p-3 transition hover:bg-black/[.035] dark:hover:bg-white/[.04]">
                 <TypeIcon kind="log" type={log.type} size="sm" />
-                <div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{log.title}</p><p className="mt-0.5 text-xs text-[var(--muted)]">{log.type} · {formatDateTime(log.occurredAt)}</p></div>
+                <div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{log.title}</p><p className="mt-0.5 text-xs text-[var(--muted)]">{log.dog.name} · {log.type} · {formatDateTime(log.occurredAt)}</p></div>
                 {log.mood && <span className="text-xs text-[var(--muted)]">{log.mood}</span>}
               </Link>)}
             </div> : <EmptyState compact title="今天还没有记录" description="散步、吃饭、打盹，都值得被记下来。" />}

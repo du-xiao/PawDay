@@ -34,7 +34,7 @@ type TriggerOptions = {
   triggerClassName?: string;
 };
 
-export function DogDocumentForm({ type, initial, triggerLabel, triggerVariant, triggerSize, triggerClassName }: { type: DocumentType; initial?: DogDocumentFormValue } & TriggerOptions) {
+export function DogDocumentForm({ dogId, type, initial, triggerLabel, triggerVariant, triggerSize, triggerClassName }: { dogId: string; type: DocumentType; initial?: DogDocumentFormValue } & TriggerOptions) {
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const frontRef = useRef<HTMLInputElement>(null);
@@ -44,7 +44,7 @@ export function DogDocumentForm({ type, initial, triggerLabel, triggerVariant, t
   const router = useRouter();
   const { register, handleSubmit, formState: { errors } } = useForm<Values>({
     resolver: zodResolver(dogDocumentSchema),
-    defaultValues: initial || { type, title: type, identifier: "", issuer: "", issuedAt: "", expiresAt: "", notes: "" },
+    defaultValues: initial || { dogId, type, title: type, identifier: "", issuer: "", issuedAt: "", expiresAt: "", notes: "" },
   });
 
   function handleOpenChange(next: boolean) {
@@ -61,7 +61,7 @@ export function DogDocumentForm({ type, initial, triggerLabel, triggerVariant, t
 
   function submit(values: Values) {
     const formData = new FormData();
-    Object.entries({ ...values, type }).forEach(([key, value]) => formData.set(key, String(value ?? "")));
+    Object.entries({ ...values, dogId, type }).forEach(([key, value]) => formData.set(key, String(value ?? "")));
     const frontFile = frontRef.current?.files?.[0];
     const backFile = backRef.current?.files?.[0];
     if (frontFile) formData.set("frontImage", frontFile);
@@ -93,6 +93,7 @@ export function DogDocumentForm({ type, initial, triggerLabel, triggerVariant, t
         </DialogHeader>
         <form onSubmit={handleSubmit(submit)} className="space-y-4">
           <input type="hidden" value={type} {...register("type")} />
+          <input type="hidden" value={dogId} {...register("dogId")} />
           <section className="rounded-2xl border bg-black/[.018] p-4 dark:bg-white/[.025]">
             <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">证件信息</p>
             <div className="grid gap-3 sm:grid-cols-2">
