@@ -50,13 +50,16 @@ export async function deleteImage(url?: string | null) {
 }
 
 async function createImageVariants(data: Buffer, dir: string, base: string) {
-  await Promise.all(Object.entries(variantSettings).map(async ([variant, settings]) => {
+  const results = await Promise.allSettled(Object.entries(variantSettings).map(async ([variant, settings]) => {
     await sharp(data)
       .rotate()
       .resize({ width: settings.width, withoutEnlargement: true })
       .webp({ quality: settings.quality })
       .toFile(path.join(dir, `${base}-${IMAGE_VARIANTS[variant as ImageVariant].suffix}.webp`));
   }));
+  results.forEach((result) => {
+    if (result.status === "rejected") console.warn(`[pawday] 图片缩略图生成失败：${result.reason?.message || result.reason}`);
+  });
 }
 
 export async function ensureImageVariant(file: string) {
@@ -74,13 +77,18 @@ export async function ensureImageVariant(file: string) {
   const source = await findVariantSource(dir, parsed.base);
   if (!source) return file;
 
-  const data = await sharp(source)
-    .rotate()
-    .resize({ width: variantSettings[parsed.variant].width, withoutEnlargement: true })
-    .webp({ quality: variantSettings[parsed.variant].quality })
-    .toBuffer();
-  await writeFile(file, data);
-  return file;
+  try {
+    const data = await sharp(source)
+      .rotate()
+      .resize({ width: variantSettings[parsed.variant].width, withoutEnlargement: true })
+      .webp({ quality: variantSettings[parsed.variant].quality })
+      .toBuffer();
+    await writeFile(file, data);
+    return file;
+  } catch (error) {
+    console.warn(`[pawday] 图片派生图按需生成失败，回退原图：${(error as Error).message || error}`);
+    return source;
+  }
 }
 
 function parseVariantName(name: string): { base: string; variant: ImageVariant } | null {

@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
   experimental: {
     isrFlushToDisk: false,
     serverActions: {
-      bodySizeLimit: "12mb",
+      bodySizeLimit: "20mb",
     },
   },
 };

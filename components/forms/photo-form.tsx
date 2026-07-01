@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { photoSchema } from "@/lib/schemas";
 import { savePhotoAction } from "@/actions/app";
 import { cn, toDateInput } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { Button, type ButtonProps } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { DateInput } from "@/components/ui/date-input";
@@ -21,8 +21,17 @@ import { useImagePreview } from "./use-image-preview";
 
 type Values = z.infer<typeof photoSchema>;
 const compactControl = "h-10 rounded-xl";
+const allowedTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
+const maxImageSize = 10 * 1024 * 1024;
 
-export function PhotoForm({ logs, disabled = false }: { logs: { id: string; title: string }[]; disabled?: boolean }) {
+type TriggerOptions = {
+  triggerLabel?: string;
+  triggerVariant?: ButtonProps["variant"];
+  triggerSize?: ButtonProps["size"];
+  triggerClassName?: string;
+};
+
+export function PhotoForm({ logs, disabled = false, triggerLabel, triggerVariant, triggerSize, triggerClassName }: { logs: { id: string; title: string }[]; disabled?: boolean } & TriggerOptions) {
   const [open, setOpen] = useState(false);
   const [fileName, setFileName] = useState("");
   const [pending, startTransition] = useTransition();
@@ -49,6 +58,14 @@ export function PhotoForm({ logs, disabled = false }: { logs: { id: string; titl
       toast.error("请选择一张图片");
       return;
     }
+    if (!allowedTypes.has(file.type)) {
+      toast.error("仅支持 JPG、PNG、WebP 图片");
+      return;
+    }
+    if (file.size > maxImageSize) {
+      toast.error("图片不能超过 10MB");
+      return;
+    }
     const formData = new FormData();
     Object.entries(values).forEach(([key, value]) => formData.set(key, String(value ?? "")));
     formData.set("image", file);
@@ -66,7 +83,7 @@ export function PhotoForm({ logs, disabled = false }: { logs: { id: string; titl
   }
 
   return <Dialog open={open} onOpenChange={handleOpenChange}>
-    <DialogTrigger asChild><Button variant="warm" disabled={disabled}><ImagePlus className="size-4" />上传照片</Button></DialogTrigger>
+    <DialogTrigger asChild><Button variant={triggerVariant ?? "warm"} size={triggerSize} className={triggerClassName} disabled={disabled}><ImagePlus className="size-4" />{triggerLabel ?? "上传照片"}</Button></DialogTrigger>
     <DialogContent className="dialog-scrollbar-hidden max-w-2xl p-5 sm:p-6">
       <DialogHeader className="mb-5"><DialogTitle>收藏一个瞬间</DialogTitle><DialogDescription>支持 JPG、PNG、WebP，单张最大 10MB。</DialogDescription></DialogHeader>
       <form onSubmit={handleSubmit(submit)} className="space-y-4">

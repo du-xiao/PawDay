@@ -36,7 +36,8 @@ ENV PUID=1001
 ENV PGID=1001
 ENV DATABASE_URL="file:/data/pawday.db"
 ENV UPLOAD_DIR="/uploads"
-RUN apk add --no-cache su-exec && addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 nextjs && mkdir -p /data /uploads && chown -R nextjs:nodejs /data /uploads
+ENV TMPDIR="/tmp"
+RUN apk add --no-cache su-exec && addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 nextjs && mkdir -p /data /uploads /tmp && chmod 1777 /tmp && chown -R nextjs:nodejs /data /uploads
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static

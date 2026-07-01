@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
-import { CalendarDays, CheckCircle2, Heart, PawPrint, Scale, ShieldCheck, UserRound as VenusAndMars } from "lucide-react";
+import { CalendarDays, CheckCircle2, FileText, Heart, PawPrint, Scale, ShieldCheck, UserRound as VenusAndMars } from "lucide-react";
 import { auth } from "@/auth";
 import { ensureDatabase } from "@/lib/bootstrap";
 import { prisma } from "@/lib/db";
@@ -96,15 +96,18 @@ export default async function DogPage() {
         eyebrow="DOG PROFILE"
         title={`${dog.name} 的档案`}
         description="关于它的基本信息、证件、健康护理，以及你们一起走过的时间。"
-        action={canWrite ? <DogForm dog={{
-          name: dog.name,
-          breed: dog.breed || "",
-          sex: (dog.sex || "未知") as "男孩" | "女孩" | "未知",
-          birthDate: toDateInput(dog.birthDate),
-          adoptionDate: toDateInput(dog.adoptionDate),
-          weightKg: dog.weightGrams ? dog.weightGrams / 1000 : "",
-          avatarUrl: dog.avatarUrl || "",
-        }} /> : undefined}
+        action={<div className="flex flex-wrap gap-2">
+          <Button asChild variant="outline"><Link href="/dog/report"><FileText className="size-4" />健康档案</Link></Button>
+          {canWrite && <DogForm dog={{
+            name: dog.name,
+            breed: dog.breed || "",
+            sex: (dog.sex || "未知") as "男孩" | "女孩" | "未知",
+            birthDate: toDateInput(dog.birthDate),
+            adoptionDate: toDateInput(dog.adoptionDate),
+            weightKg: dog.weightGrams ? dog.weightGrams / 1000 : "",
+            avatarUrl: dog.avatarUrl || "",
+          }} />}
+        </div>}
       />
 
       <section className="grid gap-5 xl:grid-cols-[0.86fr_1.14fr]">

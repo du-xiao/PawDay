@@ -160,16 +160,19 @@ model Photo {
 }
 
 model Reminder {
-  id        String   @id @default(cuid())
-  dogId     String
-  type      String
-  title     String
-  dueAt     DateTime
-  completed Boolean  @default(false)
-  notes     String?
-  dog       Dog      @relation(fields: [dogId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id             String    @id @default(cuid())
+  dogId          String
+  type           String
+  title          String
+  dueAt          DateTime
+  completed      Boolean   @default(false)
+  completedAt    DateTime?
+  repeatInterval Int?
+  repeatUnit     String?
+  notes          String?
+  dog            Dog       @relation(fields: [dogId], references: [id], onDelete: Cascade)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   @@index([dueAt])
 }

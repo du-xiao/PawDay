@@ -152,7 +152,7 @@ export default async function DashboardPage() {
           value={reminder ? reminder.title : "暂时没有提醒"}
           meta={reminder ? reminderDetail(reminder.dueAt, now) : "可以在健康记录中设置"}
           tone={reminderOverdue ? "red" : "violet"}
-          href="/health"
+          href="/reminders"
           urgent={reminderOverdue}
         />
       </section>

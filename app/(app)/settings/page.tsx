@@ -5,6 +5,7 @@ import { isGuestRole, roleLabel, USER_ROLES } from "@/lib/roles";
 import { PageHeader } from "@/components/page-header";
 import { GuestAccountForm } from "@/components/forms/guest-account-form";
 import { PasswordForm } from "@/components/forms/password-form";
+import { Button } from "@/components/ui/button";
 
 export const metadata = { title: "设置" };
 
@@ -96,6 +97,9 @@ export default async function SettingsPage() {
             <p className="mt-4 text-sm leading-relaxed text-white/65 dark:text-black/60">
               定期备份宿主机的 <code className="rounded bg-white/10 px-1.5 py-0.5">./data</code> 和 <code className="rounded bg-white/10 px-1.5 py-0.5">./uploads</code> 两个目录。恢复时停止容器，替换目录内容后重新启动即可。
             </p>
+            {!isGuest && <Button asChild variant="secondary" className="mt-5 bg-white/12 text-white hover:bg-white/18 dark:bg-black/[.06] dark:text-[#28241f] dark:hover:bg-black/[.1]">
+              <a href="/api/export">导出备份包</a>
+            </Button>}
             <div className="mt-5 flex items-center gap-2 text-xs text-white/45 dark:text-black/45"><Server className="size-4" />数据完全保存在你的 NAS 上</div>
           </section>
         </div>

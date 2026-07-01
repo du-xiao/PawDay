@@ -27,7 +27,7 @@ const statements = [
   `CREATE INDEX IF NOT EXISTS "HealthRecord_date_idx" ON "HealthRecord"("date")`,
   `CREATE TABLE IF NOT EXISTS "Photo" ("id" TEXT NOT NULL PRIMARY KEY, "dogId" TEXT NOT NULL, "dailyLogId" TEXT, "url" TEXT NOT NULL, "title" TEXT, "notes" TEXT, "date" DATETIME NOT NULL, "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, "updatedAt" DATETIME NOT NULL, CONSTRAINT "Photo_dogId_fkey" FOREIGN KEY ("dogId") REFERENCES "Dog" ("id") ON DELETE CASCADE ON UPDATE CASCADE, CONSTRAINT "Photo_dailyLogId_fkey" FOREIGN KEY ("dailyLogId") REFERENCES "DailyLog" ("id") ON DELETE SET NULL ON UPDATE CASCADE)`,
   `CREATE INDEX IF NOT EXISTS "Photo_date_idx" ON "Photo"("date")`,
-  `CREATE TABLE IF NOT EXISTS "Reminder" ("id" TEXT NOT NULL PRIMARY KEY, "dogId" TEXT NOT NULL, "type" TEXT NOT NULL, "title" TEXT NOT NULL, "dueAt" DATETIME NOT NULL, "completed" BOOLEAN NOT NULL DEFAULT false, "notes" TEXT, "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, "updatedAt" DATETIME NOT NULL, CONSTRAINT "Reminder_dogId_fkey" FOREIGN KEY ("dogId") REFERENCES "Dog" ("id") ON DELETE CASCADE ON UPDATE CASCADE)`,
+  `CREATE TABLE IF NOT EXISTS "Reminder" ("id" TEXT NOT NULL PRIMARY KEY, "dogId" TEXT NOT NULL, "type" TEXT NOT NULL, "title" TEXT NOT NULL, "dueAt" DATETIME NOT NULL, "completed" BOOLEAN NOT NULL DEFAULT false, "completedAt" DATETIME, "repeatInterval" INTEGER, "repeatUnit" TEXT, "notes" TEXT, "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, "updatedAt" DATETIME NOT NULL, CONSTRAINT "Reminder_dogId_fkey" FOREIGN KEY ("dogId") REFERENCES "Dog" ("id") ON DELETE CASCADE ON UPDATE CASCADE)`,
   `CREATE INDEX IF NOT EXISTS "Reminder_dueAt_idx" ON "Reminder"("dueAt")`,
 ];
 
@@ -85,6 +85,9 @@ export async function ensureDatabase() {
       for (const statement of statements) await prisma.$executeRawUnsafe(statement);
       await ensureColumn("User", "role", `"role" TEXT NOT NULL DEFAULT 'OWNER'`);
       await ensureColumn("User", "disabledAt", `"disabledAt" DATETIME`);
+      await ensureColumn("Reminder", "completedAt", `"completedAt" DATETIME`);
+      await ensureColumn("Reminder", "repeatInterval", `"repeatInterval" INTEGER`);
+      await ensureColumn("Reminder", "repeatUnit", `"repeatUnit" TEXT`);
       const count = await prisma.user.count();
       if (count === 0) {
         const config = z.object({

@@ -74,6 +74,20 @@ export const healthSchema = z.object({
   nextReminderDate: z.string().optional().or(z.literal("")),
 });
 
+export const reminderSchema = z.object({
+  id: z.string().cuid().optional(),
+  type: z.enum(["疫苗", "驱虫", "体检", "用药", "洗澡", "买粮", "美容", "保险", "证件", "其他"]),
+  title: z.string().trim().min(1, "请填写提醒标题").max(80),
+  dueAt: z.string().min(1, "请选择提醒日期"),
+  repeatUnit: z.enum(["不重复", "天", "周", "月", "年"]),
+  repeatInterval: z.coerce.number().int("重复间隔必须是整数").positive("重复间隔必须大于 0").max(365).optional().or(z.literal("")),
+  notes: optionalText,
+}).superRefine((data, ctx) => {
+  if (data.repeatUnit !== "不重复" && !data.repeatInterval) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "请填写重复间隔", path: ["repeatInterval"] });
+  }
+});
+
 export const photoSchema = z.object({
   title: z.string().trim().max(80).optional().or(z.literal("")),
   notes: optionalText,

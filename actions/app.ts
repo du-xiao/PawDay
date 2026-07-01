@@ -2,12 +2,13 @@
 
 import crypto from "node:crypto";
 import bcrypt from "bcrypt";
+import { addDays, addMonths, addWeeks, addYears } from "date-fns";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { ensureDatabase } from "@/lib/bootstrap";
-import { dogDocumentSchema, dogSchema, expenseSchema, guestAccountSchema, healthSchema, logSchema, passwordSchema, photoSchema } from "@/lib/schemas";
+import { dogDocumentSchema, dogSchema, expenseSchema, guestAccountSchema, healthSchema, logSchema, passwordSchema, photoSchema, reminderSchema } from "@/lib/schemas";
 import { syncDailyLogImagePhoto } from "@/lib/photo-sync";
 import { USER_ROLES, normalizeRole } from "@/lib/roles";
 import { deleteImage, saveImage } from "@/lib/upload";
@@ -51,6 +52,20 @@ function inputDate(value: string) {
 
 function optionalInputDate(value?: string) {
   return value ? inputDate(value) : null;
+}
+
+function nextReminderDate(dueAt: Date, repeatInterval?: number | null, repeatUnit?: string | null) {
+  if (!repeatInterval || !repeatUnit) return null;
+  const add = repeatUnit === "天" ? addDays : repeatUnit === "周" ? addWeeks : repeatUnit === "月" ? addMonths : repeatUnit === "年" ? addYears : null;
+  if (!add) return null;
+  let next = add(dueAt, repeatInterval);
+  const now = new Date();
+  let guard = 0;
+  while (next <= now && guard < 100) {
+    next = add(next, repeatInterval);
+    guard += 1;
+  }
+  return next;
 }
 
 type DogDocumentRow = {
@@ -241,7 +256,7 @@ export async function saveHealthAction(input: unknown): Promise<ActionResult> {
       const marker = `health:${record.id}`;
       const reminder = await tx.reminder.findFirst({ where: { notes: marker } });
       if (data.nextReminderDate) {
-        const reminderData = { title: `${data.title} · 下次提醒`, type: data.type, dueAt: inputDate(data.nextReminderDate), completed: false };
+        const reminderData = { title: `${data.title} · 下次提醒`, type: data.type, dueAt: inputDate(data.nextReminderDate), completed: false, completedAt: null };
         if (reminder) await tx.reminder.update({ where: { id: reminder.id }, data: reminderData });
         else await tx.reminder.create({ data: { ...reminderData, dogId: currentDogId, notes: marker } });
       } else if (reminder) {
@@ -270,8 +285,58 @@ export async function completeReminderAction(id: string): Promise<ActionResult> 
     await requireOwner();
     const reminderId = z.string().cuid().parse(id);
     await prisma.$transaction(async (tx) => {
+      const reminder = await tx.reminder.findUniqueOrThrow({
+        where: { id: reminderId },
+        select: { notes: true, dueAt: true, repeatInterval: true, repeatUnit: true },
+      });
+      const nextDueAt = nextReminderDate(reminder.dueAt, reminder.repeatInterval, reminder.repeatUnit);
+      if (nextDueAt) {
+        await tx.reminder.update({ where: { id: reminderId }, data: { dueAt: nextDueAt, completed: false, completedAt: null } });
+      } else {
+        await tx.reminder.update({ where: { id: reminderId }, data: { completed: true, completedAt: new Date() } });
+      }
+      const linkedHealthId = linkedHealthRecordId(reminder.notes);
+      if (linkedHealthId) await tx.healthRecord.updateMany({ where: { id: linkedHealthId }, data: { nextReminderDate: nextDueAt } });
+    });
+    revalidatePath("/", "layout");
+    return { ok: true };
+  } catch (error) { return fail(error); }
+}
+
+export async function saveReminderAction(input: unknown): Promise<ActionResult> {
+  try {
+    await requireOwner();
+    const data = reminderSchema.parse(input);
+    const currentDogId = await dogId();
+    const values = {
+      type: data.type,
+      title: data.title,
+      dueAt: inputDate(data.dueAt),
+      completed: false,
+      completedAt: null,
+      repeatInterval: data.repeatUnit === "不重复" ? null : Number(data.repeatInterval),
+      repeatUnit: data.repeatUnit === "不重复" ? null : data.repeatUnit,
+      notes: data.notes || null,
+    };
+    await prisma.$transaction(async (tx) => {
+      const reminder = data.id
+        ? await tx.reminder.update({ where: { id: data.id }, data: values })
+        : await tx.reminder.create({ data: { ...values, dogId: currentDogId } });
+      const linkedHealthId = linkedHealthRecordId(reminder.notes);
+      if (linkedHealthId) await tx.healthRecord.updateMany({ where: { id: linkedHealthId }, data: { nextReminderDate: values.dueAt } });
+    });
+    revalidatePath("/", "layout");
+    return { ok: true };
+  } catch (error) { return fail(error); }
+}
+
+export async function deleteReminderAction(id: string): Promise<ActionResult> {
+  try {
+    await requireOwner();
+    const reminderId = z.string().cuid().parse(id);
+    await prisma.$transaction(async (tx) => {
       const reminder = await tx.reminder.findUniqueOrThrow({ where: { id: reminderId }, select: { notes: true } });
-      await tx.reminder.update({ where: { id: reminderId }, data: { completed: true } });
+      await tx.reminder.delete({ where: { id: reminderId } });
       const linkedHealthId = linkedHealthRecordId(reminder.notes);
       if (linkedHealthId) await tx.healthRecord.updateMany({ where: { id: linkedHealthId }, data: { nextReminderDate: null } });
     });
