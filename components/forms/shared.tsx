@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import type { ActionResult } from "@/actions/app";
 
 export function FormActions({ pending, submitLabel = "保存记录", onCancel, className }: { pending: boolean; submitLabel?: string; onCancel?: () => void; className?: string }) {
-  return <div className={cn("mt-7 flex gap-3 sm:justify-end [&>button]:flex-1 sm:[&>button]:flex-none", className)}>
+  return <div className={cn("mt-7 flex flex-col-reverse gap-2.5 sm:flex-row sm:justify-end sm:gap-3 [&>button]:w-full sm:[&>button]:w-auto", className)}>
     {onCancel && <Button type="button" variant="ghost" onClick={onCancel}>取消</Button>}
     <Button type="submit" variant="warm" disabled={pending}>{pending && <LoaderCircle className="size-4 animate-spin" />}{submitLabel}</Button>
   </div>;

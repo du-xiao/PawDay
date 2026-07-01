@@ -20,7 +20,7 @@ import { useImagePreview } from "./use-image-preview";
 type Values = z.infer<typeof dogSchema>;
 type DogValue = { name: string; breed: string; sex: "男孩" | "女孩" | "未知"; birthDate: string; adoptionDate: string; weightKg: number | ""; avatarUrl: string };
 
-export function DogForm({ dog, onboarding = false }: { dog?: DogValue; onboarding?: boolean }) {
+export function DogForm({ dog, onboarding = false, triggerClassName }: { dog?: DogValue; onboarding?: boolean; triggerClassName?: string }) {
   const [open, setOpen] = useState(onboarding);
   const [pending, startTransition] = useTransition();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -42,7 +42,7 @@ export function DogForm({ dog, onboarding = false }: { dog?: DogValue; onboardin
     startTransition(async () => { const result = await saveDogAction(fd); if (result.ok) { toast.success(dog ? "档案已更新" : "欢迎加入 PawDay"); resetPreview(dog?.avatarUrl || ""); if (fileRef.current) fileRef.current.value = ""; setOpen(false); router.refresh(); } else toast.error(result.error); });
   }
 
-  return <Dialog open={open} onOpenChange={handleOpenChange}><DialogTrigger asChild><Button variant={onboarding ? "warm" : "outline"}><Camera className="size-4" />{dog ? "编辑档案" : "创建小狗档案"}</Button></DialogTrigger><DialogContent>
+  return <Dialog open={open} onOpenChange={handleOpenChange}><DialogTrigger asChild><Button variant={onboarding ? "warm" : "outline"} className={triggerClassName}><Camera className="size-4" />{dog ? "编辑档案" : "创建小狗档案"}</Button></DialogTrigger><DialogContent>
     <DialogHeader><DialogTitle>{dog ? "编辑小狗档案" : "先认识一下新朋友"}</DialogTitle><DialogDescription>这些信息会用来计算年龄、陪伴天数和健康趋势。</DialogDescription></DialogHeader>
     <form onSubmit={handleSubmit(submit)} className="space-y-4">
       <Field label="头像" hint="JPG、PNG 或 WebP，最大 10MB">

@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 export const metadata = { title: "小狗档案" };
 
 type DocumentType = "狗证" | "免疫证";
+const profileActionClass = "h-10 w-full rounded-xl px-2 text-xs sm:h-11 sm:w-auto sm:px-5 sm:text-sm";
 
 type RawDogDocument = {
   id: string;
@@ -96,8 +97,8 @@ export default async function DogPage() {
         eyebrow="DOG PROFILE"
         title={`${dog.name} 的档案`}
         description="关于它的基本信息、证件、健康护理，以及你们一起走过的时间。"
-        action={<div className="flex flex-wrap gap-2">
-          <Button asChild variant="outline"><Link href="/dog/report"><FileText className="size-4" />健康档案</Link></Button>
+        action={<div className={`grid min-w-0 gap-2 sm:flex sm:flex-wrap sm:justify-end ${canWrite ? "grid-cols-2" : "grid-cols-1"}`}>
+          <Button asChild variant="outline" className={profileActionClass}><Link href="/dog/report"><FileText className="size-4" />健康档案</Link></Button>
           {canWrite && <DogForm dog={{
             name: dog.name,
             breed: dog.breed || "",
@@ -106,7 +107,7 @@ export default async function DogPage() {
             adoptionDate: toDateInput(dog.adoptionDate),
             weightKg: dog.weightGrams ? dog.weightGrams / 1000 : "",
             avatarUrl: dog.avatarUrl || "",
-          }} />}
+          }} triggerClassName={profileActionClass} />}
         </div>}
       />
 

@@ -1,6 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import type { ReactNode } from "react";
 import { differenceInCalendarDays, endOfMonth, startOfMonth } from "date-fns";
 import { ArrowUpRight, CalendarHeart, CircleDollarSign, Clock3, HeartPulse, NotebookPen, PawPrint } from "lucide-react";
 import { auth } from "@/auth";
@@ -13,13 +12,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/empty-state";
 import { DogForm } from "@/components/forms/dog-form";
-import { ExpenseForm } from "@/components/forms/expense-form";
-import { HealthForm } from "@/components/forms/health-form";
-import { LogForm } from "@/components/forms/log-form";
 import { WeightChart } from "@/components/charts/weight-chart";
 import { TypeIcon } from "@/components/type-icon";
-
-const addButtonClass = "h-8 rounded-xl px-2.5 text-xs text-[var(--muted)] hover:text-[var(--foreground)]";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -128,7 +122,7 @@ export default async function DashboardPage() {
           value={logs.length ? logs[0].title : "还没有记录"}
           meta={logs.length ? formatDateTime(logs[0].occurredAt) : "从今天开始"}
           tone="orange"
-          action={canWrite ? <LogForm triggerLabel="新增" triggerVariant="ghost" triggerSize="sm" triggerClassName={addButtonClass} /> : undefined}
+          href="/logs"
         />
         <Stat
           icon={HeartPulse}
@@ -136,7 +130,7 @@ export default async function DashboardPage() {
           value={health.length ? health[0].title : "等待第一次记录"}
           meta={health.length ? formatDate(health[0].date) : "体重、疫苗、驱虫"}
           tone="sage"
-          action={canWrite ? <HealthForm triggerLabel="新增" triggerVariant="ghost" triggerSize="sm" triggerClassName={addButtonClass} /> : undefined}
+          href="/health"
         />
         <Stat
           icon={CircleDollarSign}
@@ -144,7 +138,7 @@ export default async function DashboardPage() {
           value={money(expenses._sum.amountCents || 0)}
           meta="本月累计"
           tone="gold"
-          action={canWrite ? <ExpenseForm triggerLabel="新增" triggerVariant="ghost" triggerSize="sm" triggerClassName={addButtonClass} /> : undefined}
+          href="/expenses"
         />
         <Stat
           icon={CalendarHeart}
@@ -193,7 +187,7 @@ function reminderDetail(dueAt: Date, now: Date) {
   return `${days} 天后 · ${formatDate(dueAt)}`;
 }
 
-function Stat({ icon: Icon, label, value, meta, tone, action, href, urgent }: { icon: typeof Clock3; label: string; value: string; meta: string; tone: string; action?: ReactNode; href?: string; urgent?: boolean }) {
+function Stat({ icon: Icon, label, value, meta, tone, href, urgent }: { icon: typeof Clock3; label: string; value: string; meta: string; tone: string; href?: string; urgent?: boolean }) {
   const tones: Record<string, string> = {
     orange: "bg-[var(--orange-soft)] text-[var(--orange)]",
     sage: "bg-[var(--sage-soft)] text-[var(--sage)]",
@@ -205,7 +199,7 @@ function Stat({ icon: Icon, label, value, meta, tone, action, href, urgent }: { 
     <>
       <div className="flex items-start justify-between gap-3">
         <div className={`grid size-10 place-items-center rounded-2xl ${tones[tone]}`}><Icon className="size-5" /></div>
-        {action || (href ? <ArrowUpRight className="size-4 text-[var(--muted)]" /> : null)}
+        {href ? <ArrowUpRight className="size-4 text-[var(--muted)]" /> : null}
       </div>
       <p className="mt-5 text-xs font-medium text-[var(--muted)]">{label}</p>
       <p className="mt-1 truncate text-lg font-semibold tracking-tight">{value}</p>

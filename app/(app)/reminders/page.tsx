@@ -63,7 +63,7 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
     <div className="page-enter">
       <PageHeader eyebrow="REMINDERS" title="提醒中心" description="把固定节奏交给提醒，驱虫、洗澡、买粮就不容易漏掉。" action={canWrite ? <ReminderForm disabled={!dog} /> : undefined} />
 
-      <section className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         <Metric icon={BellRing} label="待处理" value={`${active.length} 项`} tone="orange" />
         <Metric icon={Clock3} label="已逾期" value={`${overdueCount} 项`} tone="red" />
         <Metric icon={CalendarClock} label="今天到期" value={`${todayCount} 项`} tone="sage" />
@@ -71,7 +71,7 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
       </section>
 
       <section id="reminder-list" className="soft-card scroll-mt-24 rounded-3xl">
-        <div className="flex flex-col gap-4 border-b p-5 sm:flex-row sm:items-end sm:justify-between sm:p-6">
+        <div className="flex flex-col gap-4 border-b p-4 sm:flex-row sm:items-end sm:justify-between sm:p-6">
           <div>
             <h2 className="font-semibold">提醒列表</h2>
             <p className="mt-1 text-xs text-[var(--muted)]">待处理优先按到期日期排序，完成重复提醒会自动滚到下一次。</p>
@@ -85,20 +85,20 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
         {!dog ? (
           <EmptyState title="先创建小狗档案" description="有了档案后，才能开始设置提醒。" />
         ) : reminders.length ? (
-          <div className="divide-y">
+          <div className="space-y-3 p-3 sm:space-y-0 sm:divide-y sm:p-0">
             {reminders.map((reminder) => {
               const overdue = !reminder.completed && differenceInCalendarDays(reminder.dueAt, now) < 0;
               return (
-                <article key={reminder.id} className={cn("p-4 sm:p-5", overdue && "bg-red-500/[.035]")}>
+                <article key={reminder.id} className={cn("rounded-3xl border bg-[var(--card)]/72 p-4 shadow-sm shadow-stone-900/[.025] sm:rounded-none sm:border-0 sm:bg-transparent sm:p-5 sm:shadow-none", overdue && "border-red-500/15 bg-red-500/[.06] sm:bg-red-500/[.035]")}>
                   <div className="flex gap-3 sm:gap-4">
-                    <span className={cn("mt-0.5 grid size-11 shrink-0 place-items-center rounded-2xl bg-[var(--orange-soft)] text-[var(--orange)] ring-1 ring-inset ring-black/5 dark:ring-white/10", reminder.completed && "bg-[var(--sage-soft)] text-[var(--sage)]", overdue && "bg-red-500/10 text-red-600 dark:text-red-300")}>
+                    <span className={cn("mt-0.5 grid size-10 shrink-0 place-items-center rounded-2xl bg-[var(--orange-soft)] text-[var(--orange)] ring-1 ring-inset ring-black/5 sm:size-11 dark:ring-white/10", reminder.completed && "bg-[var(--sage-soft)] text-[var(--sage)]", overdue && "bg-red-500/10 text-red-600 dark:text-red-300")}>
                       {reminder.completed ? <CheckCircle2 className="size-5" /> : <CalendarClock className="size-5" />}
                     </span>
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-start justify-between gap-3">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div className="min-w-0">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <h3 className="font-medium">{reminder.title}</h3>
+                          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                            <h3 className="min-w-0 break-words text-base font-semibold leading-snug sm:text-sm sm:font-medium">{reminder.title}</h3>
                             <Badge className={overdue ? "bg-red-500/10 text-red-600 dark:text-red-300" : undefined}>{reminder.type}</Badge>
                             {reminder.repeatInterval && reminder.repeatUnit && <Badge className="bg-violet-500/10 text-violet-700 dark:text-violet-300">每 {reminder.repeatInterval} {reminder.repeatUnit}</Badge>}
                           </div>
@@ -106,7 +106,7 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
                             {reminder.completed ? `已完成 · ${formatDate(reminder.completedAt || reminder.updatedAt)}` : reminderDetail(reminder.dueAt, now)}
                           </p>
                         </div>
-                        {canWrite && <RecordActions>
+                        {canWrite && <RecordActions className="self-end sm:self-auto">
                           {!reminder.completed && <ReminderForm initial={{
                             id: reminder.id,
                             type: reminder.type as never,
@@ -119,8 +119,8 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
                           <DeleteButton action={deleteReminderAction.bind(null, reminder.id)} />
                         </RecordActions>}
                       </div>
-                      {reminder.notes && !reminder.notes.startsWith("health:") && <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-[var(--muted)]">{reminder.notes}</p>}
-                      {canWrite && !reminder.completed && <ReminderActions id={reminder.id} className="mt-4 max-w-sm" />}
+                      {reminder.notes && !reminder.notes.startsWith("health:") && <p className="mt-3 whitespace-pre-wrap rounded-2xl bg-black/[.025] p-3 text-sm leading-relaxed text-[var(--muted)] sm:bg-transparent sm:p-0 dark:bg-white/[.035] sm:dark:bg-transparent">{reminder.notes}</p>}
+                      {canWrite && !reminder.completed && <ReminderActions id={reminder.id} className="mt-4 w-full sm:max-w-sm" />}
                     </div>
                   </div>
                 </article>
@@ -135,16 +135,22 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
   );
 }
 
-function StatusTabs({ status, type }: { status: string; type: string }) {
+function StatusTabs({ status, type }: { status: typeof statuses[number]["value"]; type: string }) {
   return (
-    <div className="grid grid-cols-3 rounded-2xl bg-black/[.035] p-1 text-xs font-semibold dark:bg-white/[.055]">
+    <nav aria-label="提醒状态" className="grid w-full shrink-0 grid-cols-3 rounded-2xl bg-black/[.035] p-1 text-xs font-semibold dark:bg-white/[.055] sm:w-auto sm:min-w-52">
       {statuses.map((item) => {
-        const href = `/reminders?status=${item.value}${type ? `&type=${encodeURIComponent(type)}` : ""}#reminder-list`;
+        const href = reminderStatusHref(item.value, type);
         const active = status === item.value;
-        return <Link key={item.value} href={href} className={cn("rounded-xl px-3 py-2 text-center text-[var(--muted)] transition hover:text-[var(--foreground)]", active && "bg-[var(--card)] text-[var(--foreground)] shadow-sm")}>{item.label}</Link>;
+        return <Link key={item.value} href={href} aria-current={active ? "page" : undefined} className={cn("rounded-xl px-3 py-2 text-center text-[var(--muted)] transition hover:text-[var(--foreground)]", active && "bg-[var(--card)] text-[var(--foreground)] shadow-sm")}>{item.label}</Link>;
       })}
-    </div>
+    </nav>
   );
+}
+
+function reminderStatusHref(status: typeof statuses[number]["value"], type: string) {
+  const search = new URLSearchParams({ status });
+  if (type) search.set("type", type);
+  return `/reminders?${search.toString()}#reminder-list`;
 }
 
 function Metric({ icon: Icon, label, value, tone }: { icon: typeof BellRing; label: string; value: string; tone: "orange" | "red" | "sage" | "violet" }) {
@@ -154,7 +160,7 @@ function Metric({ icon: Icon, label, value, tone }: { icon: typeof BellRing; lab
     sage: "bg-[var(--sage-soft)] text-[var(--sage)]",
     violet: "bg-violet-500/10 text-violet-600 dark:text-violet-300",
   };
-  return <div className="soft-card rounded-3xl p-5"><div className={`grid size-10 place-items-center rounded-2xl ${tones[tone]}`}><Icon className="size-5" /></div><p className="mt-5 text-xs text-[var(--muted)]">{label}</p><p className="mt-1 text-2xl font-semibold tracking-tight">{value}</p></div>;
+  return <div className="soft-card rounded-3xl p-4 sm:p-5"><div className={`grid size-9 place-items-center rounded-2xl sm:size-10 ${tones[tone]}`}><Icon className="size-4 sm:size-5" /></div><p className="mt-4 text-xs text-[var(--muted)] sm:mt-5">{label}</p><p className="mt-1 text-xl font-semibold tracking-tight sm:text-2xl">{value}</p></div>;
 }
 
 function reminderDetail(dueAt: Date, now: Date) {

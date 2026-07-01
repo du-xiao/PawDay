@@ -25,9 +25,9 @@ export function TypeFilterForm({
   const formRef = useRef<HTMLFormElement>(null);
 
   return (
-    <form action={action} className="flex min-w-0" ref={formRef}>
+    <form action={action} className="flex w-full min-w-0 sm:w-44" ref={formRef}>
       {hidden && Object.entries(hidden).map(([key, item]) => item ? <input key={key} type="hidden" name={key} value={item} /> : null)}
-      <div className="relative min-w-0 flex-1 sm:w-44">
+      <div className="relative min-w-0 flex-1">
         <Filter className="pointer-events-none absolute left-3.5 top-1/2 z-10 size-4 -translate-y-1/2 text-[var(--muted)]" />
         <select
           name={name}

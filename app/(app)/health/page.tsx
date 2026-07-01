@@ -1,5 +1,5 @@
-import { differenceInCalendarDays } from "date-fns";
-import { Activity, CalendarClock, Scale, ShieldPlus } from "lucide-react";
+import { startOfMonth } from "date-fns";
+import { Activity, ClipboardList, Scale } from "lucide-react";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { deleteHealthAction } from "@/actions/app";
@@ -11,7 +11,6 @@ import { DeleteButton, RecordActions } from "@/components/forms/shared";
 import { EmptyState } from "@/components/empty-state";
 import { WeightChart } from "@/components/charts/weight-chart";
 import { Pagination } from "@/components/pagination";
-import { ReminderCard } from "@/components/reminder-card";
 import { TypeFilterForm } from "@/components/type-filter-form";
 import { TypeIcon } from "@/components/type-icon";
 import { Badge } from "@/components/ui/badge";
@@ -33,15 +32,13 @@ export default async function HealthPage({ searchParams }: { searchParams: Promi
   const selectedType = healthTypes.includes(params.type as typeof healthTypes[number]) ? params.type || "" : "";
   const requestedPage = parsePage(params.page);
   const dog = await prisma.dog.findFirst();
+  const monthStart = startOfMonth(new Date());
 
   const where = dog ? { dogId: dog.id, ...(selectedType ? { type: selectedType } : {}) } : null;
-  const [recordCount, reminders, weights, latestWeightRecord] = dog ? await Promise.all([
+  const [recordCount, totalRecordCount, monthRecordCount, weights, latestWeightRecord] = dog ? await Promise.all([
     prisma.healthRecord.count({ where: where! }),
-    prisma.reminder.findMany({
-      where: { dogId: dog.id, completed: false },
-      orderBy: { dueAt: "asc" },
-      take: 6,
-    }),
+    prisma.healthRecord.count({ where: { dogId: dog.id } }),
+    prisma.healthRecord.count({ where: { dogId: dog.id, date: { gte: monthStart } } }),
     prisma.healthRecord.findMany({
       where: { dogId: dog.id, weightGrams: { not: null } },
       orderBy: { date: "asc" },
@@ -52,7 +49,7 @@ export default async function HealthPage({ searchParams }: { searchParams: Promi
       orderBy: { date: "desc" },
       select: { weightGrams: true },
     }),
-  ]) : [0, [], [], null];
+  ]) : [0, 0, 0, [], null];
 
   const totalPages = Math.max(1, Math.ceil(recordCount / PAGE_SIZE));
   const page = Math.min(requestedPage, totalPages);
@@ -68,21 +65,16 @@ export default async function HealthPage({ searchParams }: { searchParams: Promi
   return <div className="page-enter">
     <PageHeader eyebrow="HEALTH" title="健康与关怀" description="把疫苗、驱虫、用药和体重放在一起，照顾就会更有把握。" action={canWrite ? <HealthForm disabled={!dog} /> : undefined} />
 
-    <section className="mb-6 grid gap-4 lg:grid-cols-[1fr_2fr]">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
-        <div className="soft-card rounded-3xl p-5"><div className="grid size-10 place-items-center rounded-2xl bg-[var(--sage-soft)] text-[var(--sage)]"><Scale className="size-5" /></div><p className="mt-5 text-xs text-[var(--muted)]">最近体重</p><p className="mt-1 text-2xl font-semibold">{latestWeight ? `${(latestWeight / 1000).toFixed(2)} kg` : "等待记录"}</p></div>
-        <div className="soft-card rounded-3xl p-5"><div className="grid size-10 place-items-center rounded-2xl bg-[var(--orange-soft)] text-[var(--orange)]"><CalendarClock className="size-5" /></div><p className="mt-5 text-xs text-[var(--muted)]">待处理提醒</p><p className="mt-1 truncate text-lg font-semibold">{reminders[0]?.title || "暂无提醒"}</p><p className="mt-1 text-xs text-[var(--muted)]">{reminders[0] ? reminderDetail(reminders[0].dueAt) : "新增健康记录时可以设置"}</p></div>
+    <section className="mb-6 grid gap-4 xl:grid-cols-[minmax(0,0.82fr)_minmax(0,2fr)]">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
+        <HealthMetric icon={Scale} label="最近体重" value={latestWeight ? `${(latestWeight / 1000).toFixed(2)} kg` : "等待记录"} meta={latestWeight ? "体重趋势会持续记录变化" : "新增体重记录后会显示这里"} tone="sage" />
+        <HealthMetric icon={ClipboardList} label="本月记录" value={`${monthRecordCount} 条`} meta={totalRecordCount ? `累计 ${totalRecordCount} 条健康记录` : "从最近一次护理开始补记"} tone="violet" />
       </div>
       <Card><CardHeader><div><CardTitle>体重趋势</CardTitle><p className="mt-1 text-xs text-[var(--muted)]">长期趋势比单次数字更重要</p></div><Activity className="size-5 text-[var(--sage)]" /></CardHeader><CardContent><WeightChart data={weightData} compact /></CardContent></Card>
     </section>
 
-    {reminders.length > 0 && <section className="mb-6 rounded-3xl bg-[var(--orange-soft)] p-5 sm:p-6"><div className="flex items-center gap-3"><ShieldPlus className="size-5 text-[var(--orange)]" /><div><h2 className="font-semibold">待处理提醒</h2><p className="mt-1 text-xs text-[var(--muted)]">到期时间越近越靠前，逾期会保持标红。</p></div></div><div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">{reminders.map((item) => {
-      const overdue = differenceInCalendarDays(item.dueAt, new Date()) < 0;
-      return <ReminderCard key={item.id} id={item.id} title={item.title} type={item.type} detail={reminderDetail(item.dueAt)} overdue={overdue} canWrite={canWrite} />;
-    })}</div></section>}
-
     <section id="health-records" className="soft-card scroll-mt-24 rounded-3xl">
-      <div className="flex flex-col gap-4 border-b p-5 sm:flex-row sm:items-end sm:justify-between sm:p-6">
+      <div className="flex flex-col gap-4 border-b p-5 lg:flex-row lg:items-end lg:justify-between sm:p-6">
         <div><h2 className="font-semibold">健康时间线</h2><p className="mt-1 text-xs text-[var(--muted)]">最近记录优先 · 每页 10 条</p></div>
         <TypeFilterForm action="/health#health-records" name="type" value={selectedType} options={healthTypes} allLabel="全部类型" ariaLabel="健康类型" />
       </div>
@@ -98,9 +90,10 @@ export default async function HealthPage({ searchParams }: { searchParams: Promi
   </div>;
 }
 
-function reminderDetail(dueAt: Date) {
-  const days = differenceInCalendarDays(dueAt, new Date());
-  if (days === 0) return `今天到期 · ${formatDate(dueAt)}`;
-  if (days < 0) return `已逾期 ${Math.abs(days)} 天 · ${formatDate(dueAt)}`;
-  return `${days} 天后 · ${formatDate(dueAt)}`;
+function HealthMetric({ icon: Icon, label, value, meta, tone }: { icon: typeof Scale; label: string; value: string; meta: string; tone: "sage" | "violet" }) {
+  const tones = {
+    sage: "bg-[var(--sage-soft)] text-[var(--sage)]",
+    violet: "bg-violet-500/10 text-violet-600 dark:text-violet-300",
+  };
+  return <div className="soft-card min-w-0 rounded-3xl p-5"><div className={`grid size-10 place-items-center rounded-2xl ${tones[tone]}`}><Icon className="size-5" /></div><p className="mt-5 text-xs text-[var(--muted)]">{label}</p><p className="mt-1 truncate text-xl font-semibold">{value}</p><p className="mt-1 text-xs text-[var(--muted)]">{meta}</p></div>;
 }

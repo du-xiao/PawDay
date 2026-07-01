@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { useTheme } from "next-themes";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { BellRing, Bone, Camera, ChevronDown, CircleDollarSign, Dog, HeartPulse, Home, KeyRound, LogOut, Menu, Moon, Settings, Sun, NotebookPen, Sparkles } from "lucide-react";
+import { BellRing, Bone, Camera, ChevronDown, CircleDollarSign, Dog, HeartPulse, Home, KeyRound, LogOut, Moon, MoreHorizontal, Settings, Sun, NotebookPen, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isGuestRole, roleLabel, type UserRole } from "@/lib/roles";
 import { Button } from "@/components/ui/button";
@@ -23,13 +23,16 @@ const nav = [
   { href: "/dog", label: "档案", icon: Dog },
 ];
 
-const mobileNav = [nav[0], nav[1], nav[3], nav[4], nav[5]];
+const mobilePrimaryNav = [{ ...nav[0], label: "首页" }, nav[2], nav[3], nav[6]];
+const mobileMoreNav = [nav[1], nav[4], nav[5], nav[7]];
 
 export function AppShell({ email, role, dogExists, quickLogs, children }: { email: string; role: UserRole; dogExists: boolean; quickLogs: { id: string; title: string }[]; children: React.ReactNode }) {
   const pathname = usePathname();
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const isGuest = isGuestRole(role);
+  const isActive = (href: string) => href === "/" ? pathname === "/" : pathname.startsWith(href);
+  const moreActive = mobileMoreNav.some((item) => isActive(item.href));
   useEffect(() => setMounted(true), []);
   return <div className="min-h-dvh">
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-[248px] border-r bg-[var(--card)]/82 p-4 shadow-xl shadow-stone-900/[.035] backdrop-blur-xl lg:flex lg:flex-col">
@@ -57,6 +60,24 @@ export function AppShell({ email, role, dogExists, quickLogs, children }: { emai
       <main className="mx-auto max-w-[1380px] p-4 sm:p-7 lg:p-10">{children}</main>
     </div>
     <QuickCreate canWrite={!isGuest} dogExists={dogExists} logs={quickLogs} />
-    <nav className="fixed inset-x-3 bottom-[calc(.75rem+env(safe-area-inset-bottom))] z-30 flex items-center justify-around rounded-3xl border bg-[var(--card)]/94 px-1 py-2 shadow-2xl shadow-stone-900/10 backdrop-blur-xl lg:hidden">{mobileNav.map((item) => { const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href); return <Link key={item.href} href={item.href} className={cn("flex min-w-14 flex-col items-center gap-1 rounded-2xl px-2 py-1.5 text-[10px] font-medium text-[var(--muted)] transition", active && "bg-[var(--orange-soft)] text-[#9a5838] shadow-sm shadow-orange-200/25 dark:text-[#ffc19d]")}><item.icon className="size-[19px]" />{item.label}</Link>; })}<Link href="/dog" aria-label="小狗档案" className={cn("grid size-11 place-items-center rounded-2xl text-[var(--muted)] transition", pathname.startsWith("/dog") && "bg-[var(--orange-soft)] text-[var(--orange)] shadow-sm shadow-orange-200/25")}><Menu className="size-5" /></Link></nav>
+    <nav className="fixed inset-x-3 bottom-[calc(.75rem+env(safe-area-inset-bottom))] z-30 grid grid-cols-5 items-center gap-0.5 rounded-3xl border bg-[var(--card)]/94 px-1.5 py-2 shadow-2xl shadow-stone-900/10 backdrop-blur-xl lg:hidden">
+      {mobilePrimaryNav.map((item) => { const active = isActive(item.href); return <Link key={item.href} href={item.href} className={cn("flex min-w-0 flex-col items-center gap-1 rounded-2xl px-1 py-1.5 text-[10px] font-medium text-[var(--muted)] transition", active && "bg-[var(--orange-soft)] text-[#9a5838] shadow-sm shadow-orange-200/25 dark:text-[#ffc19d]")}><item.icon className="size-[19px]" /><span className="w-full truncate text-center">{item.label}</span></Link>; })}
+      <DropdownMenu.Root>
+        <DropdownMenu.Trigger asChild>
+          <button type="button" className={cn("flex min-w-0 flex-col items-center gap-1 rounded-2xl px-1 py-1.5 text-[10px] font-medium text-[var(--muted)] transition outline-none focus-visible:ring-4 focus-visible:ring-orange-200/45", moreActive && "bg-[var(--orange-soft)] text-[#9a5838] shadow-sm shadow-orange-200/25 dark:text-[#ffc19d]")}>
+            <MoreHorizontal className="size-[19px]" />
+            <span className="w-full truncate text-center">更多</span>
+          </button>
+        </DropdownMenu.Trigger>
+        <DropdownMenu.Portal>
+          <DropdownMenu.Content align="end" side="top" sideOffset={10} className="z-50 w-44 rounded-2xl border bg-[var(--background)] p-2 shadow-2xl shadow-stone-950/12">
+            {mobileMoreNav.map((item) => {
+              const active = isActive(item.href);
+              return <DropdownMenu.Item key={item.href} asChild><Link href={item.href} className={cn("flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm outline-none hover:bg-black/[.04] dark:hover:bg-white/[.05]", active && "bg-[var(--orange-soft)] text-[#9a5838] dark:text-[#ffc19d]")}><item.icon className="size-4" />{item.label}</Link></DropdownMenu.Item>;
+            })}
+          </DropdownMenu.Content>
+        </DropdownMenu.Portal>
+      </DropdownMenu.Root>
+    </nav>
   </div>;
 }
