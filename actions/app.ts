@@ -227,7 +227,7 @@ export async function saveExpenseAction(input: unknown): Promise<ActionResult> {
   try {
     await requireOwner();
     const data = expenseSchema.parse(input);
-    const values = { category: data.category, amountCents: Math.round(data.amount * 100), date: inputDate(data.date), merchant: data.merchant || null, notes: data.notes || null };
+    const values = { category: data.category, itemName: data.itemName || null, amountCents: Math.round(data.amount * 100), date: inputDate(data.date), merchant: data.merchant || null, notes: data.notes || null };
     if (data.id) await prisma.expense.update({ where: { id: data.id }, data: values });
     else await prisma.expense.create({ data: { ...values, dogId: await dogId() } });
     revalidatePath("/", "layout"); return { ok: true };

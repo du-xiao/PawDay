@@ -35,7 +35,7 @@ export function ExpenseForm({ initial, disabled = false, triggerLabel, triggerVa
   const router = useRouter();
   const { register, handleSubmit, formState: { errors } } = useForm<Values>({
     resolver: zodResolver(expenseSchema),
-    defaultValues: initial || { category: "狗粮", amount: "" as unknown as Values["amount"], date: toDateInput(new Date()), merchant: "", notes: "" },
+    defaultValues: initial || { category: "狗粮", itemName: "", amount: "" as unknown as Values["amount"], date: toDateInput(new Date()), merchant: "", notes: "" },
   });
 
   function submit(values: Values) {
@@ -61,13 +61,14 @@ export function ExpenseForm({ initial, disabled = false, triggerLabel, triggerVa
             <Field label="金额（元）" error={errors.amount?.message}><Input className={compactControl} type="number" min="0.01" step="0.01" placeholder="128.00" {...register("amount")} /></Field>
             <Field label="日期"><DateInput className={compactControl} {...register("date")} /></Field>
           </div>
+          <Field label="商品 / 项目" hint="可选，作为列表和日历里的标题" className="mt-3"><Input className={compactControl} placeholder="犬粮 10kg / 鸡肉冻干 / 体检套餐" {...register("itemName")} /></Field>
         </section>
 
         <section className="grid gap-4 sm:grid-cols-[1fr_220px]">
-          <Field label="备注"><Textarea className="min-h-28 rounded-2xl p-3.5" placeholder="买了什么，为什么买…" {...register("notes")} /></Field>
+          <Field label="备注"><Textarea className="min-h-28 rounded-2xl p-3.5" placeholder="规格、用量、优惠、下次回购提醒…" {...register("notes")} /></Field>
           <div className="rounded-2xl bg-[var(--sage-soft)]/70 p-4">
             <div className="mb-3 flex items-center gap-2 text-[var(--sage)]"><ReceiptText className="size-4" /><span className="text-xs font-semibold">补充信息</span></div>
-            <Field label="商家" hint="可选"><Input className={compactControl} placeholder="宠物店 / 医院" {...register("merchant")} /></Field>
+            <Field label="商家 / 渠道" hint="可选"><Input className={compactControl} placeholder="宠物店 / 医院 / 电商平台" {...register("merchant")} /></Field>
           </div>
         </section>
         <FormActions pending={pending} className="mt-5 border-t pt-4" onCancel={() => setOpen(false)} />

@@ -116,6 +116,7 @@ model Expense {
   id          String   @id @default(cuid())
   dogId       String
   category    String
+  itemName    String?
   amountCents Int
   date        DateTime
   merchant    String?

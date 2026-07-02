@@ -58,6 +58,7 @@ export const logSchema = z.object({
 export const expenseSchema = z.object({
   id: z.string().cuid().optional(),
   category: z.enum(["狗粮", "零食", "医疗", "洗护", "玩具", "用品", "保险", "寄养", "其他"]),
+  itemName: z.string().trim().max(80).optional().or(z.literal("")),
   amount: z.coerce.number().positive("金额必须大于 0").max(999999),
   date: z.string().min(1, "请选择日期"),
   merchant: z.string().trim().max(80).optional().or(z.literal("")),

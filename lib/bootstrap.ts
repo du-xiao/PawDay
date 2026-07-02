@@ -21,7 +21,7 @@ const statements = [
   `CREATE INDEX IF NOT EXISTS "DogDocument_type_idx" ON "DogDocument"("type")`,
   `CREATE TABLE IF NOT EXISTS "DailyLog" ("id" TEXT NOT NULL PRIMARY KEY, "dogId" TEXT NOT NULL, "type" TEXT NOT NULL, "title" TEXT NOT NULL, "notes" TEXT, "occurredAt" DATETIME NOT NULL, "mood" TEXT, "imageUrl" TEXT, "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, "updatedAt" DATETIME NOT NULL, CONSTRAINT "DailyLog_dogId_fkey" FOREIGN KEY ("dogId") REFERENCES "Dog" ("id") ON DELETE CASCADE ON UPDATE CASCADE)`,
   `CREATE INDEX IF NOT EXISTS "DailyLog_occurredAt_idx" ON "DailyLog"("occurredAt")`,
-  `CREATE TABLE IF NOT EXISTS "Expense" ("id" TEXT NOT NULL PRIMARY KEY, "dogId" TEXT NOT NULL, "category" TEXT NOT NULL, "amountCents" INTEGER NOT NULL, "date" DATETIME NOT NULL, "merchant" TEXT, "notes" TEXT, "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, "updatedAt" DATETIME NOT NULL, CONSTRAINT "Expense_dogId_fkey" FOREIGN KEY ("dogId") REFERENCES "Dog" ("id") ON DELETE CASCADE ON UPDATE CASCADE)`,
+  `CREATE TABLE IF NOT EXISTS "Expense" ("id" TEXT NOT NULL PRIMARY KEY, "dogId" TEXT NOT NULL, "category" TEXT NOT NULL, "itemName" TEXT, "amountCents" INTEGER NOT NULL, "date" DATETIME NOT NULL, "merchant" TEXT, "notes" TEXT, "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, "updatedAt" DATETIME NOT NULL, CONSTRAINT "Expense_dogId_fkey" FOREIGN KEY ("dogId") REFERENCES "Dog" ("id") ON DELETE CASCADE ON UPDATE CASCADE)`,
   `CREATE INDEX IF NOT EXISTS "Expense_date_idx" ON "Expense"("date")`,
   `CREATE TABLE IF NOT EXISTS "HealthRecord" ("id" TEXT NOT NULL PRIMARY KEY, "dogId" TEXT NOT NULL, "type" TEXT NOT NULL, "title" TEXT NOT NULL, "date" DATETIME NOT NULL, "notes" TEXT, "weightGrams" INTEGER, "nextReminderDate" DATETIME, "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, "updatedAt" DATETIME NOT NULL, CONSTRAINT "HealthRecord_dogId_fkey" FOREIGN KEY ("dogId") REFERENCES "Dog" ("id") ON DELETE CASCADE ON UPDATE CASCADE)`,
   `CREATE INDEX IF NOT EXISTS "HealthRecord_date_idx" ON "HealthRecord"("date")`,
@@ -85,6 +85,8 @@ export async function ensureDatabase() {
       for (const statement of statements) await prisma.$executeRawUnsafe(statement);
       await ensureColumn("User", "role", `"role" TEXT NOT NULL DEFAULT 'OWNER'`);
       await ensureColumn("User", "disabledAt", `"disabledAt" DATETIME`);
+      await ensureColumn("Expense", "itemName", `"itemName" TEXT`);
+      await prisma.$executeRawUnsafe(`UPDATE "Expense" SET "itemName" = SUBSTR(TRIM("notes"), 1, 40) WHERE "notes" IS NOT NULL AND TRIM("notes") <> '' AND (("itemName" IS NULL OR TRIM("itemName") = '') OR ("merchant" IS NOT NULL AND TRIM("itemName") = TRIM("merchant")) OR TRIM("itemName") = TRIM("notes") OR TRIM("itemName") = SUBSTR(TRIM("notes"), 1, 80))`);
       await ensureColumn("Reminder", "completedAt", `"completedAt" DATETIME`);
       await ensureColumn("Reminder", "repeatInterval", `"repeatInterval" INTEGER`);
       await ensureColumn("Reminder", "repeatUnit", `"repeatUnit" TEXT`);

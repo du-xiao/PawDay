@@ -1,6 +1,6 @@
 services:
   pawday:
-    # 升级时只修改镜像版本，下面的数据目录保持不变。
+    # 升级时只修改镜像版本，下面的数据目录保持不变；数据库补字段由应用启动时自动处理。
     image: pawday:1.0.0
     container_name: pawday
     restart: unless-stopped

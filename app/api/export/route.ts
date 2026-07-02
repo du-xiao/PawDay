@@ -55,8 +55,8 @@ export async function GET() {
     ...(dog?.health || []).map((item) => [item.id, item.type, item.title, item.date.toISOString(), item.weightGrams ? String(item.weightGrams / 1000) : "", item.nextReminderDate?.toISOString() || "", item.notes || ""]),
   ])));
   entries.push(textEntry("csv/expenses.csv", csv([
-    ["id", "category", "amountCents", "date", "merchant", "notes"],
-    ...(dog?.expenses || []).map((item) => [item.id, item.category, String(item.amountCents), item.date.toISOString(), item.merchant || "", item.notes || ""]),
+    ["id", "category", "itemName", "amountCents", "date", "merchant", "notes"],
+    ...(dog?.expenses || []).map((item) => [item.id, item.category, item.itemName || "", String(item.amountCents), item.date.toISOString(), item.merchant || "", item.notes || ""]),
   ])));
   entries.push(textEntry("csv/photos.csv", csv([
     ["id", "url", "title", "date", "dailyLogId", "notes"],

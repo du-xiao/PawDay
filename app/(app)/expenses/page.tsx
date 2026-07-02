@@ -84,9 +84,17 @@ export default async function ExpensesPage({ searchParams }: { searchParams: Pro
       {!dog ? <EmptyState title="先创建小狗档案" description="有了档案后，才能开始记录养宠开销。" /> : expenses.length ? <>
         <div className="divide-y">{expenses.map((expense) => <div key={expense.id} className="relative flex gap-3 p-4 sm:items-center sm:gap-4 sm:p-5">
           <TypeIcon kind="expense" type={expense.category} />
-          <div className={`min-w-0 flex-1 ${canWrite ? "pr-16 sm:pr-0" : ""}`}><div className="flex flex-wrap items-center gap-2"><h3 className="font-medium">{expense.merchant || expense.category}</h3><Badge>{expense.category}</Badge></div><p className="mt-1 truncate text-xs text-[var(--muted)]">{formatDate(expense.date)}{expense.notes ? ` · ${expense.notes}` : ""}</p><p className="mt-2 text-lg font-semibold tabular-nums sm:hidden">{money(expense.amountCents)}</p></div>
+          <div className={`min-w-0 flex-1 ${canWrite ? "pr-16 sm:pr-0" : ""}`}>
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="min-w-0 max-w-full truncate font-medium sm:max-w-[28rem]">{expenseTitle(expense)}</h3>
+              <Badge>{expense.category}</Badge>
+              {expense.merchant && <Badge className="bg-[var(--sage-soft)] text-[#5f775f] dark:text-[#bdd8bb]">{expense.merchant}</Badge>}
+            </div>
+            <p className="mt-1 truncate text-xs text-[var(--muted)]">{expenseMeta(expense)}</p>
+            <p className="mt-2 text-lg font-semibold tabular-nums sm:hidden">{money(expense.amountCents)}</p>
+          </div>
           <p className="hidden text-lg font-semibold tabular-nums sm:block">{money(expense.amountCents)}</p>
-          {canWrite && <RecordActions className="absolute right-3 top-3 sm:static"><ExpenseForm initial={{ id: expense.id, category: expense.category as never, amount: expense.amountCents / 100, date: toDateInput(expense.date), merchant: expense.merchant || "", notes: expense.notes || "" }} /><DeleteButton action={deleteExpenseAction.bind(null, expense.id)} /></RecordActions>}
+          {canWrite && <RecordActions className="absolute right-3 top-3 sm:static"><ExpenseForm initial={{ id: expense.id, category: expense.category as never, itemName: expense.itemName || "", amount: expense.amountCents / 100, date: toDateInput(expense.date), merchant: expense.merchant || "", notes: expense.notes || "" }} /><DeleteButton action={deleteExpenseAction.bind(null, expense.id)} /></RecordActions>}
         </div>)}</div>
         <Pagination pathname="/expenses" page={page} totalPages={totalPages} params={listParams} anchor="expense-records" />
       </> : <EmptyState title={selectedCategory ? `没有${selectedCategory}开销` : "还没有开销记录"} description={selectedCategory ? "换一个分类或选择全部分类后再看看。" : "从下一袋狗粮或下一次洗护开始，慢慢了解每月花费。"} action={canWrite && !selectedCategory ? <ExpenseForm disabled={!dog} /> : undefined} />}
@@ -97,4 +105,15 @@ export default async function ExpensesPage({ searchParams }: { searchParams: Pro
 function Metric({ icon: Icon, label, value, tone }: { icon: typeof WalletCards; label: string; value: string; tone: string }) {
   const colors: Record<string, string> = { orange: "bg-[var(--orange-soft)] text-[var(--orange)]", sage: "bg-[var(--sage-soft)] text-[var(--sage)]", violet: "bg-violet-500/10 text-violet-600" };
   return <div className="soft-card rounded-3xl p-5"><div className={`grid size-10 place-items-center rounded-2xl ${colors[tone]}`}><Icon className="size-5" /></div><p className="mt-5 text-xs text-[var(--muted)]">{label}</p><p className="mt-1 text-2xl font-semibold tracking-tight">{value}</p></div>;
+}
+
+function expenseTitle(expense: { itemName: string | null; notes: string | null; category: string }) {
+  return expense.itemName || expense.notes || expense.category;
+}
+
+function expenseMeta(expense: { date: Date; itemName: string | null; notes: string | null }) {
+  return [
+    formatDate(expense.date),
+    expense.notes && expense.notes !== expense.itemName ? expense.notes : "",
+  ].filter(Boolean).join(" · ");
 }

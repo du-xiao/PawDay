@@ -55,6 +55,17 @@ uname -m
 
 ### 2. 在 Mac 构建并导出镜像
 
+构建镜像前建议先在本地跑一遍数据库与生产构建检查，尤其当版本包含 Prisma schema 或启动补库逻辑变更时：
+
+```bash
+pnpm prisma generate
+pnpm prisma validate
+pnpm lint
+pnpm build
+```
+
+`pnpm prisma generate` 会更新 Prisma Client，`pnpm prisma validate` 会确认 `prisma/schema.prisma` 合法；Docker 构建阶段也会通过 `pnpm install` 的 `postinstall` 再生成一次 Prisma Client。PawDay 不在镜像构建时连接 NAS 数据库，真实 SQLite 数据库只在容器启动后通过 `/data/pawday.db` 挂载使用。
+
 当前 Intel N100 绿联 NAS 使用下面的命令。即使 Mac 是 Apple 芯片，也必须指定目标平台为 `linux/amd64`：
 
 ```bash
@@ -151,6 +162,15 @@ docker compose -f docker-compose.nas.yml up -d
 ```
 
 升级只替换容器，原数据库和图片继续使用。应用启动时会自动补齐新增表或字段，因此在绿联云 NAS 上通常只需要导入新镜像、把 Compose 里的 `image` 改成新版本号，然后执行 `up -d`。需要回滚时，把 `image` 改回旧标签并再次执行 `up -d`。不要删除 `data`、`uploads`，也不要执行会删除这些宿主机目录的命令。
+
+包含数据库结构变更的版本也按同一流程升级，但发布前要确认代码里的 `ensureDatabase()` 已包含对应补库逻辑。当前开销明细升级会自动为 `Expense` 表补充 `itemName` 字段，并用旧开销备注的前 40 个字符回填商品 / 项目名；如果某条旧数据曾被误用商家回填，且 `itemName` 与 `merchant` 相同，启动新镜像时也会用备注重新修正。这个数据库操作在容器启动后的首次请求中执行，不需要在 NAS 上手动运行 `prisma migrate`。
+
+导入新镜像并修改版本号后，可用下面的命令启动并查看日志，确认没有数据库或权限错误：
+
+```bash
+docker compose -f docker-compose.nas.yml up -d
+docker compose -f docker-compose.nas.yml logs -f --tail=100 pawday
+```
 
 如果升级版本包含图片加速能力，新上传的图片会自动生成 `*-thumb.webp` 和 `*-medium.webp` 两种派生图，列表和预览会优先读取这些小图。旧图片不需要迁移数据库，应用在第一次请求小图时会自动补生成；如果希望升级后第一次打开相册也尽量快，可以在新容器启动后执行一次预生成：
 
