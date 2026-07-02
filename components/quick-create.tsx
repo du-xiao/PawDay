@@ -17,10 +17,10 @@ export function QuickCreate({ canWrite, dogExists, logs }: { canWrite: boolean; 
   const disabled = !dogExists;
 
   return (
-    <div className="no-print fixed bottom-[calc(5.95rem+env(safe-area-inset-bottom))] right-4 z-40 lg:bottom-7 lg:right-7">
+    <div className="no-print pointer-events-none fixed bottom-[calc(5.95rem+env(safe-area-inset-bottom))] right-4 z-40 lg:bottom-7 lg:right-7">
       <div className={cn(
         "mb-3 w-[min(18rem,calc(100vw-2rem))] origin-bottom-right rounded-3xl border bg-[var(--card)]/96 p-2 shadow-2xl shadow-stone-950/12 backdrop-blur-xl transition",
-        open ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-2 opacity-0",
+        open ? "pointer-events-auto translate-y-0 opacity-100" : "pointer-events-none translate-y-2 opacity-0",
       )}>
         <div className="grid gap-1.5">
           <LogForm disabled={disabled} triggerLabel="日常记录" triggerVariant="ghost" triggerClassName={quickButtonClass} />
@@ -36,7 +36,7 @@ export function QuickCreate({ canWrite, dogExists, logs }: { canWrite: boolean; 
         onClick={() => setOpen((value) => !value)}
         aria-label={open ? "关闭快速记录" : "打开快速记录"}
         aria-expanded={open}
-        className="ml-auto grid size-14 place-items-center rounded-3xl bg-gradient-to-br from-[var(--orange)] to-[#d87755] text-white shadow-2xl shadow-orange-300/35 transition hover:brightness-105 active:scale-95 dark:shadow-black/35"
+        className="pointer-events-auto ml-auto grid size-14 place-items-center rounded-3xl bg-gradient-to-br from-[var(--orange)] to-[#d87755] text-white shadow-2xl shadow-orange-300/35 transition hover:brightness-105 active:scale-95 dark:shadow-black/35"
       >
         {open ? <X className="size-5" /> : <Plus className="size-6" />}
       </button>
