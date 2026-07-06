@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ExpenseForm } from "@/components/forms/expense-form";
@@ -12,12 +12,30 @@ const quickButtonClass = "h-10 w-full justify-start rounded-xl px-3 text-sm shad
 
 export function QuickCreate({ canWrite, dogExists, logs }: { canWrite: boolean; dogExists: boolean; logs: { id: string; title: string }[] }) {
   const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function handlePointerDown(event: PointerEvent) {
+      if (!containerRef.current?.contains(event.target as Node)) setOpen(false);
+    }
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open]);
+
   if (!canWrite) return null;
 
   const disabled = !dogExists;
 
   return (
-    <div className="no-print pointer-events-none fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] right-3 z-40 sm:right-4 lg:bottom-7 lg:right-7">
+    <div ref={containerRef} className="no-print pointer-events-none fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] right-3 z-40 sm:right-4 lg:bottom-7 lg:right-7">
       <div className={cn(
         "mb-2 w-[min(17rem,calc(100vw-1.5rem))] origin-bottom-right rounded-2xl border bg-[var(--card)]/96 p-2 shadow-2xl shadow-stone-950/12 backdrop-blur-xl transition sm:mb-3 sm:w-[min(18rem,calc(100vw-2rem))] sm:rounded-3xl",
         open ? "pointer-events-auto translate-y-0 opacity-100" : "pointer-events-none translate-y-2 opacity-0",

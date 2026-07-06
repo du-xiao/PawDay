@@ -11,7 +11,7 @@ import { DeleteButton, RecordActions } from "@/components/forms/shared";
 import { EmptyState } from "@/components/empty-state";
 import { WeightChart } from "@/components/charts/weight-chart";
 import { Pagination } from "@/components/pagination";
-import { TypeFilterForm } from "@/components/type-filter-form";
+import { TypeTabs } from "@/components/type-tabs";
 import { TypeIcon } from "@/components/type-icon";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -76,13 +76,13 @@ export default async function HealthPage({ searchParams }: { searchParams: Promi
     <section id="health-records" className="soft-card scroll-mt-24 rounded-2xl sm:rounded-3xl">
       <div className="flex flex-col gap-4 border-b p-4 sm:p-6 lg:flex-row lg:items-end lg:justify-between">
         <div><h2 className="font-semibold">健康时间线</h2><p className="mt-1 text-xs text-[var(--muted)]">最近记录优先 · 每页 10 条</p></div>
-        <TypeFilterForm action="/health#health-records" name="type" value={selectedType} options={healthTypes} allLabel="全部类型" ariaLabel="健康类型" />
+        <TypeTabs pathname="/health" anchor="health-records" name="type" value={selectedType} options={healthTypes} allLabel="全部" ariaLabel="健康类型" />
       </div>
 
       {!dog ? <EmptyState title="先创建小狗档案" description="有了档案后，才能开始记录健康信息。" /> : records.length ? <>
         <div className="space-y-3 p-3 sm:space-y-0 sm:divide-y sm:p-0">{records.map((record) => <article key={record.id} className="flex gap-3 rounded-2xl border bg-[var(--card)]/72 p-3.5 shadow-sm shadow-stone-900/[.025] sm:gap-4 sm:rounded-none sm:border-0 sm:bg-transparent sm:p-5 sm:shadow-none">
           <TypeIcon kind="health" type={record.type} className="size-10 rounded-2xl sm:size-11" />
-          <div className="min-w-0 flex-1"><div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div className="min-w-0"><div className="flex flex-wrap items-center gap-1.5 sm:gap-2"><h3 className="min-w-0 break-words text-base font-semibold leading-snug sm:text-sm sm:font-medium">{record.title}</h3><Badge>{record.type}</Badge>{record.weightGrams && <Badge className="bg-[var(--sage-soft)] text-[#5f775f] dark:text-[#bdd8bb]">{(record.weightGrams / 1000).toFixed(2)} kg</Badge>}</div><p className="mt-1 text-xs text-[var(--muted)]">{formatDate(record.date)}{record.nextReminderDate ? ` · 下次 ${formatDate(record.nextReminderDate)}` : ""}</p></div>{canWrite && <RecordActions className="self-end sm:self-auto"><HealthForm initial={{ id: record.id, type: record.type as never, title: record.title, date: toDateInput(record.date), notes: record.notes || "", weightKg: record.weightGrams ? record.weightGrams / 1000 : "", nextReminderDate: toDateInput(record.nextReminderDate) }} /><DeleteButton action={deleteHealthAction.bind(null, record.id)} /></RecordActions>}</div>{record.notes && <p className="mt-3 rounded-2xl bg-black/[.025] p-3 text-sm leading-relaxed text-[var(--muted)] sm:bg-transparent sm:p-0 dark:bg-white/[.035] sm:dark:bg-transparent">{record.notes}</p>}</div>
+          <div className="min-w-0 flex-1"><div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div className="min-w-0"><div className="flex flex-wrap items-center gap-1.5 sm:gap-2"><h3 className="min-w-0 break-words text-base font-semibold leading-snug sm:text-sm sm:font-medium">{record.title}</h3><Badge>{record.type}</Badge>{record.weightGrams && <Badge className="bg-[var(--sage-soft)] text-[#5f775f] dark:text-[#bdd8bb]">{(record.weightGrams / 1000).toFixed(2)} kg</Badge>}</div><p className="mt-1 text-xs text-[var(--muted)]">{formatDate(record.date)}{record.nextReminderDate ? ` · 下次 ${formatDate(record.nextReminderDate)}` : ""}</p></div>{canWrite && <RecordActions className="self-end sm:self-auto"><HealthForm initial={{ id: record.id, type: record.type as never, title: record.title, date: toDateInput(record.date), notes: record.notes || "", weightKg: record.weightGrams ? record.weightGrams / 1000 : "", nextReminderDate: toDateInput(record.nextReminderDate) }} /><DeleteButton action={deleteHealthAction.bind(null, record.id)} /></RecordActions>}</div>{record.notes && <p className="mt-3 text-sm leading-relaxed text-[var(--muted)]">{record.notes}</p>}</div>
         </article>)}</div>
         <Pagination pathname="/health" page={page} totalPages={totalPages} params={{ type: selectedType }} anchor="health-records" />
       </> : <EmptyState title={selectedType ? `没有${selectedType}记录` : "还没有健康记录"} description={selectedType ? "换一个类型或选择全部类型后再看看。" : "从最近一次体重、驱虫或疫苗开始补记就好。"} action={canWrite && !selectedType ? <HealthForm disabled={!dog} /> : undefined} />}

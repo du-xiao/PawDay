@@ -46,14 +46,14 @@ export default async function LogsPage({ searchParams }: { searchParams: Promise
     {!dog ? <div className="soft-card rounded-2xl sm:rounded-3xl">
       <EmptyState title="先创建小狗档案" description="有了档案后，才能开始记录它的每一天。" />
     </div> : logs.length ? <div className="space-y-5 sm:space-y-8">
-      {Object.entries(groups).map(([day, items]) => <section key={day} className="soft-card overflow-hidden rounded-2xl sm:rounded-3xl">
-        <div className="flex items-center gap-3 border-b px-4 py-3 sm:border-0 sm:px-0 sm:py-0">
-          <span className="min-w-0 truncate text-sm font-semibold sm:px-0">{format(new Date(`${day}T00:00:00`), "M月d日 EEEE", { locale: zhCN })}</span>
+      {Object.entries(groups).map(([day, items]) => <section key={day} className="overflow-hidden rounded-2xl border bg-[var(--card)]/92 shadow-[inset_0_1px_0_var(--card-highlight),var(--shadow-soft)] sm:overflow-visible sm:rounded-none sm:border-0 sm:bg-transparent sm:shadow-none">
+        <div className="flex items-center gap-3 border-b px-4 py-3 sm:mb-3 sm:border-0 sm:px-0 sm:py-0">
+          <span className="min-w-0 truncate text-sm font-semibold">{format(new Date(`${day}T00:00:00`), "M月d日 EEEE", { locale: zhCN })}</span>
           <span className="hidden h-px flex-1 bg-[var(--line)] sm:block" />
           <span className="shrink-0 text-xs text-[var(--muted)]">{items.length} 条</span>
         </div>
-        <div className="space-y-3 p-3 sm:space-y-0 sm:divide-y sm:p-0">
-          {items.map((log) => <article key={log.id} className="group rounded-2xl border bg-[var(--card)]/72 p-3.5 shadow-sm shadow-stone-900/[.025] sm:rounded-none sm:border-0 sm:bg-transparent sm:p-5 sm:shadow-none">
+        <div className="space-y-3 p-3 sm:p-0">
+          {items.map((log) => <article key={log.id} className="group rounded-2xl border bg-[var(--card)]/72 p-3.5 shadow-sm shadow-stone-900/[.025] sm:rounded-3xl sm:border sm:bg-[var(--card)] sm:p-5 sm:[box-shadow:inset_0_1px_0_var(--card-highlight),var(--shadow-soft)]">
             <div className="flex gap-3 sm:gap-4">
               <TypeIcon kind="log" type={log.type} className="size-10 rounded-2xl sm:size-11" />
               <div className="min-w-0 flex-1">
@@ -71,7 +71,7 @@ export default async function LogsPage({ searchParams }: { searchParams: Promise
                     <DeleteButton action={deleteLogAction.bind(null, log.id)} />
                   </RecordActions>}
                 </div>
-                {log.notes && <p className="mt-3 whitespace-pre-wrap rounded-2xl bg-black/[.025] p-3 text-sm leading-relaxed text-[var(--muted)] sm:mt-4 sm:bg-transparent sm:p-0 dark:bg-white/[.035] sm:dark:bg-transparent">{log.notes}</p>}
+                {log.notes && <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-[var(--muted)]">{log.notes}</p>}
                 {log.imageUrl && <LogImageViewer src={log.imageUrl} alt={log.title} />}
               </div>
             </div>

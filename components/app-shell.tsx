@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { useTheme } from "next-themes";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { BellRing, Bone, Camera, ChevronDown, CircleDollarSign, Dog, HeartPulse, Home, KeyRound, LogOut, Moon, MoreHorizontal, Settings, Sun, NotebookPen, Sparkles } from "lucide-react";
+import { BellRing, Bone, Camera, ChevronDown, CircleDollarSign, Dog, HeartPulse, Home, KeyRound, LibraryBig, LogOut, Moon, Settings, Sun, NotebookPen, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isGuestRole, roleLabel, type UserRole } from "@/lib/roles";
 import { Button } from "@/components/ui/button";
@@ -15,16 +15,16 @@ import { QuickCreate } from "@/components/quick-create";
 const nav = [
   { href: "/", label: "今天", icon: Home },
   { href: "/logs", label: "日常", icon: NotebookPen },
-  { href: "/timeline", label: "时间线", icon: Sparkles },
-  { href: "/reminders", label: "提醒", icon: BellRing },
   { href: "/health", label: "健康", icon: HeartPulse },
   { href: "/expenses", label: "开销", icon: CircleDollarSign },
-  { href: "/photos", label: "相册", icon: Camera },
+  { href: "/reminders", label: "提醒中心", icon: BellRing },
   { href: "/dog", label: "档案", icon: Dog },
+  { href: "/photos", label: "相册", icon: Camera },
+  { href: "/timeline", label: "时间线", icon: Sparkles },
 ];
 
-const mobilePrimaryNav = [{ ...nav[0], label: "首页" }, nav[2], nav[3], nav[6]];
-const mobileMoreNav = [nav[1], nav[4], nav[5], nav[7]];
+const mobilePrimaryNav = [nav[0], nav[1], nav[2], nav[3]];
+const mobileLibraryNav = [nav[5], nav[6], nav[7], nav[4]];
 
 export function AppShell({ email, role, dogExists, quickLogs, children }: { email: string; role: UserRole; dogExists: boolean; quickLogs: { id: string; title: string }[]; children: React.ReactNode }) {
   const pathname = usePathname();
@@ -32,7 +32,7 @@ export function AppShell({ email, role, dogExists, quickLogs, children }: { emai
   const [mounted, setMounted] = useState(false);
   const isGuest = isGuestRole(role);
   const isActive = (href: string) => href === "/" ? pathname === "/" : pathname.startsWith(href);
-  const moreActive = mobileMoreNav.some((item) => isActive(item.href));
+  const libraryActive = mobileLibraryNav.some((item) => isActive(item.href));
   useEffect(() => setMounted(true), []);
 
   async function handleSignOut() {
@@ -70,14 +70,14 @@ export function AppShell({ email, role, dogExists, quickLogs, children }: { emai
       {mobilePrimaryNav.map((item) => { const active = isActive(item.href); return <Link key={item.href} href={item.href} className={cn("flex min-w-0 flex-col items-center gap-1 rounded-2xl px-1 py-1.5 text-[10px] font-medium text-[var(--muted)] transition", active && "bg-[var(--orange-soft)] text-[#9a5838] shadow-sm shadow-orange-200/25 dark:text-[#ffc19d]")}><item.icon className="size-[19px]" /><span className="w-full truncate text-center">{item.label}</span></Link>; })}
       <DropdownMenu.Root>
         <DropdownMenu.Trigger asChild>
-          <button type="button" className={cn("flex min-w-0 flex-col items-center gap-1 rounded-2xl px-1 py-1.5 text-[10px] font-medium text-[var(--muted)] transition outline-none focus-visible:ring-4 focus-visible:ring-orange-200/45", moreActive && "bg-[var(--orange-soft)] text-[#9a5838] shadow-sm shadow-orange-200/25 dark:text-[#ffc19d]")}>
-            <MoreHorizontal className="size-[19px]" />
-            <span className="w-full truncate text-center">更多</span>
+          <button type="button" className={cn("flex min-w-0 flex-col items-center gap-1 rounded-2xl px-1 py-1.5 text-[10px] font-medium text-[var(--muted)] transition outline-none focus-visible:ring-4 focus-visible:ring-orange-200/45", libraryActive && "bg-[var(--orange-soft)] text-[#9a5838] shadow-sm shadow-orange-200/25 dark:text-[#ffc19d]")}>
+            <LibraryBig className="size-[19px]" />
+            <span className="w-full truncate text-center">资料库</span>
           </button>
         </DropdownMenu.Trigger>
         <DropdownMenu.Portal>
-          <DropdownMenu.Content align="end" side="top" sideOffset={10} className="z-50 w-44 rounded-2xl border bg-[var(--background)] p-2 shadow-2xl shadow-stone-950/12">
-            {mobileMoreNav.map((item) => {
+          <DropdownMenu.Content align="end" side="top" sideOffset={10} className="z-50 w-48 rounded-2xl border bg-[var(--background)] p-2 shadow-2xl shadow-stone-950/12">
+            {mobileLibraryNav.map((item) => {
               const active = isActive(item.href);
               return <DropdownMenu.Item key={item.href} asChild><Link href={item.href} className={cn("flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm outline-none hover:bg-black/[.04] dark:hover:bg-white/[.05]", active && "bg-[var(--orange-soft)] text-[#9a5838] dark:text-[#ffc19d]")}><item.icon className="size-4" />{item.label}</Link></DropdownMenu.Item>;
             })}

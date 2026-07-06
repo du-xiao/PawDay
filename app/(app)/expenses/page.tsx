@@ -1,5 +1,5 @@
 import { endOfYear, startOfMonth, startOfYear, subMonths } from "date-fns";
-import { Landmark, ReceiptText, WalletCards } from "lucide-react";
+import { CircleDollarSign, Landmark, ReceiptText, WalletCards, type LucideIcon } from "lucide-react";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { deleteExpenseAction } from "@/actions/app";
@@ -11,7 +11,7 @@ import { DeleteButton, RecordActions } from "@/components/forms/shared";
 import { ExpenseCharts } from "@/components/charts/expense-charts";
 import { EmptyState } from "@/components/empty-state";
 import { Pagination } from "@/components/pagination";
-import { TypeFilterForm } from "@/components/type-filter-form";
+import { TypeTabs } from "@/components/type-tabs";
 import { TypeIcon } from "@/components/type-icon";
 import { Badge } from "@/components/ui/badge";
 
@@ -42,7 +42,7 @@ export default async function ExpensesPage({ searchParams }: { searchParams: Pro
   const detailWhere = dog ? { dogId: dog.id, ...(selectedCategory ? { category: selectedCategory } : {}) } : null;
 
   const [summaryExpenses, expenseCount] = dog ? await Promise.all([
-    prisma.expense.findMany({ where: { dogId: dog.id }, orderBy: { date: "desc" }, select: { date: true, amountCents: true, category: true } }),
+    prisma.expense.findMany({ where: { dogId: dog.id }, orderBy: { date: "desc" }, select: { date: true, amountCents: true, category: true, itemName: true, merchant: true, notes: true } }),
     prisma.expense.count({ where: detailWhere! }),
   ]) : [[], 0];
   const totalPages = Math.max(1, Math.ceil(expenseCount / PAGE_SIZE));
@@ -54,8 +54,10 @@ export default async function ExpensesPage({ searchParams }: { searchParams: Pro
     take: PAGE_SIZE,
   }) : [];
 
-  const monthTotal = summaryExpenses.filter((item) => item.date >= startOfMonth(now)).reduce((sum, item) => sum + item.amountCents, 0);
+  const monthExpenses = summaryExpenses.filter((item) => item.date >= startOfMonth(now));
+  const monthTotal = monthExpenses.reduce((sum, item) => sum + item.amountCents, 0);
   const yearTotal = summaryExpenses.filter((item) => item.date >= startOfYear(now) && item.date <= endOfYear(now)).reduce((sum, item) => sum + item.amountCents, 0);
+  const maxMonthExpense = [...monthExpenses].sort((a, b) => b.amountCents - a.amountCents)[0];
   const periodExpenses = summaryExpenses.filter((item) => item.date.getFullYear() === selectedYear && (scope === "year" || item.date.getMonth() === selectedMonth - 1));
   const categoryMap = new Map<string, number>();
   periodExpenses.forEach((item) => categoryMap.set(item.category, (categoryMap.get(item.category) || 0) + item.amountCents));
@@ -72,13 +74,13 @@ export default async function ExpensesPage({ searchParams }: { searchParams: Pro
 
   return <div className="page-enter">
     <PageHeader eyebrow="EXPENSES" title="养狗开销" description="看见钱都花去了哪里，也更从容地照顾好每一个需要。" action={canWrite ? <ExpenseForm disabled={!dog} /> : undefined} />
-    <section className="mb-5 grid grid-cols-2 gap-3 sm:mb-6 sm:grid-cols-3 sm:gap-4"><Metric icon={WalletCards} label="本月总开销" value={money(monthTotal)} tone="orange" /><Metric icon={Landmark} label="本年度总开销" value={money(yearTotal)} tone="sage" /><Metric icon={ReceiptText} label="累计记录" value={`${summaryExpenses.length} 笔`} tone="violet" /></section>
+    <section className="mb-5 grid grid-cols-2 gap-3 sm:mb-6 sm:gap-4 xl:grid-cols-4"><Metric icon={WalletCards} label="本月总开销" value={money(monthTotal)} meta={`${monthExpenses.length} 笔本月记录`} tone="orange" /><Metric icon={Landmark} label="本年度总开销" value={money(yearTotal)} meta={`${currentYear} 年累计`} tone="sage" /><Metric icon={CircleDollarSign} label="本月最大单笔" value={maxMonthExpense ? money(maxMonthExpense.amountCents) : "暂无"} meta={maxMonthExpense ? expenseTitle(maxMonthExpense) : "本月还没有开销"} tone="gold" /><Metric icon={ReceiptText} label="累计记录" value={`${summaryExpenses.length} 笔`} meta="全部开销明细" tone="violet" /></section>
     <ExpenseCharts key={`${scope}-${selectedYear}-${selectedMonth}`} categories={categories} months={months} scope={scope} selectedYear={selectedYear} selectedMonth={selectedMonth} years={years} />
 
     <section id="expense-records" className="mt-5 scroll-mt-24 soft-card rounded-2xl sm:mt-6 sm:rounded-3xl">
       <div className="flex flex-col gap-4 border-b p-4 sm:flex-row sm:items-end sm:justify-between sm:p-6">
         <div><h2 className="font-semibold">开销明细</h2><p className="mt-1 text-xs text-[var(--muted)]">最近记录优先 · 每页 10 条</p></div>
-        <TypeFilterForm action="/expenses#expense-records" name="category" value={selectedCategory} options={expenseCategories} allLabel="全部分类" ariaLabel="开销分类" hidden={{ scope, year: selectedYear, month: selectedMonth }} />
+        <TypeTabs pathname="/expenses" anchor="expense-records" name="category" value={selectedCategory} options={expenseCategories} allLabel="全部" ariaLabel="开销分类" hidden={{ scope, year: selectedYear, month: selectedMonth }} />
       </div>
 
       {!dog ? <EmptyState title="先创建小狗档案" description="有了档案后，才能开始记录养宠开销。" /> : expenses.length ? <>
@@ -102,9 +104,9 @@ export default async function ExpensesPage({ searchParams }: { searchParams: Pro
   </div>;
 }
 
-function Metric({ icon: Icon, label, value, tone }: { icon: typeof WalletCards; label: string; value: string; tone: string }) {
-  const colors: Record<string, string> = { orange: "bg-[var(--orange-soft)] text-[var(--orange)]", sage: "bg-[var(--sage-soft)] text-[var(--sage)]", violet: "bg-violet-500/10 text-violet-600" };
-  return <div className="soft-card min-w-0 rounded-2xl p-4 sm:rounded-3xl sm:p-5"><div className={`grid size-9 place-items-center rounded-xl sm:size-10 sm:rounded-2xl ${colors[tone]}`}><Icon className="size-4 sm:size-5" /></div><p className="mt-4 text-xs text-[var(--muted)] sm:mt-5">{label}</p><p className="mt-1 truncate text-lg font-semibold tracking-tight sm:text-2xl">{value}</p></div>;
+function Metric({ icon: Icon, label, value, meta, tone }: { icon: LucideIcon; label: string; value: string; meta: string; tone: string }) {
+  const colors: Record<string, string> = { orange: "bg-[var(--orange-soft)] text-[var(--orange)]", sage: "bg-[var(--sage-soft)] text-[var(--sage)]", gold: "bg-amber-500/10 text-amber-600", violet: "bg-violet-500/10 text-violet-600" };
+  return <div className="soft-card min-w-0 rounded-2xl p-4 sm:rounded-3xl sm:p-5"><div className={`grid size-9 place-items-center rounded-xl sm:size-10 sm:rounded-2xl ${colors[tone]}`}><Icon className="size-4 sm:size-5" /></div><p className="mt-4 text-xs text-[var(--muted)] sm:mt-5">{label}</p><p className="mt-1 truncate text-lg font-semibold tracking-tight sm:text-2xl">{value}</p><p className="mt-1 truncate text-xs text-[var(--muted)]">{meta}</p></div>;
 }
 
 function expenseTitle(expense: { itemName: string | null; notes: string | null; category: string }) {
