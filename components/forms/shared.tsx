@@ -44,9 +44,13 @@ export function DeleteButton({ action, label = "删除", onDeleted }: { action: 
 
 export function RecordActions({ children, className }: { children: ReactNode; className?: string }) {
   return <div className={cn(
-    "flex shrink-0 items-center gap-0.5 rounded-xl bg-black/[.035] p-0.5 dark:bg-white/[.05]",
-    "[&>button]:size-8 [&>button]:gap-0 [&>button]:rounded-lg [&>button]:px-0 [&>button]:text-[0px] [&>button>svg]:size-3.5",
-    "sm:gap-0 sm:bg-transparent sm:p-0 sm:[&>button]:h-9 sm:[&>button]:w-auto sm:[&>button]:gap-2 sm:[&>button]:rounded-xl sm:[&>button]:px-3.5 sm:[&>button]:text-sm",
+    "flex shrink-0 items-center gap-1 rounded-full border border-black/[.06] bg-[var(--card)]/95 p-1 shadow-sm shadow-stone-900/[.06] backdrop-blur-md dark:border-white/[.08] dark:bg-[var(--card)]/85",
+    "[&>button]:size-8 [&>button]:gap-0 [&>button]:rounded-full [&>button]:border-0 [&>button]:bg-transparent [&>button]:px-0 [&>button]:text-[0px] [&>button]:shadow-none [&>button>svg]:size-3.5",
+    "[&>button:hover]:bg-black/[.045] [&>button:last-child]:text-red-500 [&>button:last-child:hover]:bg-red-500/10 dark:[&>button:hover]:bg-white/[.06]",
+    "sm:gap-1 sm:rounded-2xl sm:border sm:border-black/[.055] sm:bg-[var(--card)]/82 sm:p-1 sm:shadow-sm sm:shadow-stone-900/[.04] sm:backdrop-blur-sm dark:sm:border-white/[.08] dark:sm:bg-white/[.035]",
+    "sm:[&>button]:h-8 sm:[&>button]:w-auto sm:[&>button]:gap-1.5 sm:[&>button]:rounded-xl sm:[&>button]:px-3 sm:[&>button]:text-xs sm:[&>button]:font-semibold",
+    "sm:[&>button:first-child]:text-[var(--muted)] sm:[&>button:first-child:hover]:bg-black/[.04] sm:[&>button:first-child:hover]:text-[var(--foreground)] dark:sm:[&>button:first-child:hover]:bg-white/[.06]",
+    "sm:[&>button:last-child]:bg-red-500/10 sm:[&>button:last-child]:shadow-none sm:[&>button:last-child:hover]:bg-red-500/15",
     className,
   )}>{children}</div>;
 }

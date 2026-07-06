@@ -56,9 +56,9 @@ export default async function LogsPage({ searchParams }: { searchParams: Promise
           {items.map((log) => <article key={log.id} className="group relative rounded-2xl border bg-[var(--card)]/72 p-3.5 shadow-sm shadow-stone-900/[.025] sm:rounded-3xl sm:border sm:bg-[var(--card)] sm:p-5 sm:[box-shadow:inset_0_1px_0_var(--card-highlight),var(--shadow-soft)]">
             <div className="flex gap-3 sm:gap-4">
               <TypeIcon kind="log" type={log.type} className="size-10 rounded-2xl sm:size-11" />
-              <div className={`min-w-0 flex-1 ${canWrite ? "pr-20 sm:pr-0" : ""}`}>
+              <div className="min-w-0 flex-1">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="min-w-0">
+                  <div className={`min-w-0 ${canWrite ? "pr-20 sm:pr-0" : ""}`}>
                     <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                       <h3 className="min-w-0 break-words text-base font-semibold leading-snug sm:text-sm sm:font-medium">{log.title}</h3>
                       <Badge>{log.type}</Badge>
@@ -71,7 +71,7 @@ export default async function LogsPage({ searchParams }: { searchParams: Promise
                     <DeleteButton action={deleteLogAction.bind(null, log.id)} />
                   </RecordActions>}
                 </div>
-                {log.notes && <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-[var(--muted)]">{log.notes}</p>}
+                {log.notes && <p className="mt-3 whitespace-pre-wrap border-l-2 border-[var(--orange)]/30 pl-3 text-sm leading-relaxed text-[var(--muted)] sm:mt-4">{log.notes}</p>}
                 {log.imageUrl && <LogImageViewer src={log.imageUrl} alt={log.title} />}
               </div>
             </div>

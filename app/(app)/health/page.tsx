@@ -80,9 +80,25 @@ export default async function HealthPage({ searchParams }: { searchParams: Promi
       </div>
 
       {!dog ? <EmptyState title="先创建小狗档案" description="有了档案后，才能开始记录健康信息。" /> : records.length ? <>
-        <div className="space-y-3 p-3 sm:space-y-0 sm:divide-y sm:p-0">{records.map((record) => <article key={record.id} className="flex gap-3 rounded-2xl border bg-[var(--card)]/72 p-3.5 shadow-sm shadow-stone-900/[.025] sm:gap-4 sm:rounded-none sm:border-0 sm:bg-transparent sm:p-5 sm:shadow-none">
+        <div className="space-y-3 p-3 sm:space-y-0 sm:divide-y sm:p-0">{records.map((record) => <article key={record.id} className="relative flex gap-3 rounded-2xl border bg-[var(--card)]/72 p-3.5 shadow-sm shadow-stone-900/[.025] sm:gap-4 sm:rounded-none sm:border-0 sm:bg-transparent sm:p-5 sm:shadow-none">
           <TypeIcon kind="health" type={record.type} className="size-10 rounded-2xl sm:size-11" />
-          <div className="min-w-0 flex-1"><div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div className="min-w-0"><div className="flex flex-wrap items-center gap-1.5 sm:gap-2"><h3 className="min-w-0 break-words text-base font-semibold leading-snug sm:text-sm sm:font-medium">{record.title}</h3><Badge>{record.type}</Badge>{record.weightGrams && <Badge className="bg-[var(--sage-soft)] text-[#5f775f] dark:text-[#bdd8bb]">{(record.weightGrams / 1000).toFixed(2)} kg</Badge>}</div><p className="mt-1 text-xs text-[var(--muted)]">{formatDate(record.date)}{record.nextReminderDate ? ` · 下次 ${formatDate(record.nextReminderDate)}` : ""}</p></div>{canWrite && <RecordActions className="self-end sm:self-auto"><HealthForm initial={{ id: record.id, type: record.type as never, title: record.title, date: toDateInput(record.date), notes: record.notes || "", weightKg: record.weightGrams ? record.weightGrams / 1000 : "", nextReminderDate: toDateInput(record.nextReminderDate) }} /><DeleteButton action={deleteHealthAction.bind(null, record.id)} /></RecordActions>}</div>{record.notes && <p className="mt-3 text-sm leading-relaxed text-[var(--muted)]">{record.notes}</p>}</div>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className={`min-w-0 ${canWrite ? "pr-20 sm:pr-0" : ""}`}>
+                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                  <h3 className="min-w-0 break-words text-base font-semibold leading-snug sm:text-sm sm:font-medium">{record.title}</h3>
+                  <Badge>{record.type}</Badge>
+                  {record.weightGrams && <Badge className="bg-[var(--sage-soft)] text-[#5f775f] dark:text-[#bdd8bb]">{(record.weightGrams / 1000).toFixed(2)} kg</Badge>}
+                </div>
+                <p className="mt-1 text-xs text-[var(--muted)]">{formatDate(record.date)}{record.nextReminderDate ? ` · 下次 ${formatDate(record.nextReminderDate)}` : ""}</p>
+              </div>
+              {canWrite && <RecordActions className="absolute right-3 top-3 sm:static">
+                <HealthForm initial={{ id: record.id, type: record.type as never, title: record.title, date: toDateInput(record.date), notes: record.notes || "", weightKg: record.weightGrams ? record.weightGrams / 1000 : "", nextReminderDate: toDateInput(record.nextReminderDate) }} />
+                <DeleteButton action={deleteHealthAction.bind(null, record.id)} />
+              </RecordActions>}
+            </div>
+            {record.notes && <p className="mt-3 whitespace-pre-wrap border-l-2 border-[var(--sage)]/35 pl-3 text-sm leading-relaxed text-[var(--muted)]">{record.notes}</p>}
+          </div>
         </article>)}</div>
         <Pagination pathname="/health" page={page} totalPages={totalPages} params={{ type: selectedType }} anchor="health-records" />
       </> : <EmptyState title={selectedType ? `没有${selectedType}记录` : "还没有健康记录"} description={selectedType ? "换一个类型或选择全部类型后再看看。" : "从最近一次体重、驱虫或疫苗开始补记就好。"} action={canWrite && !selectedType ? <HealthForm disabled={!dog} /> : undefined} />}

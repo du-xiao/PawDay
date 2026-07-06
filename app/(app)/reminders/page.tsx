@@ -89,14 +89,14 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
             {reminders.map((reminder) => {
               const overdue = !reminder.completed && differenceInCalendarDays(reminder.dueAt, now) < 0;
               return (
-                <article key={reminder.id} className={cn("rounded-2xl border bg-[var(--card)]/72 p-3.5 shadow-sm shadow-stone-900/[.025] sm:rounded-none sm:border-0 sm:bg-transparent sm:p-5 sm:shadow-none", overdue && "border-red-500/15 bg-red-500/[.06] sm:bg-red-500/[.035]")}>
+                <article key={reminder.id} className={cn("relative rounded-2xl border bg-[var(--card)]/72 p-3.5 shadow-sm shadow-stone-900/[.025] sm:rounded-none sm:border-0 sm:bg-transparent sm:p-5 sm:shadow-none", overdue && "border-red-500/15 bg-red-500/[.06] sm:bg-red-500/[.035]")}>
                   <div className="flex gap-3 sm:gap-4">
                     <span className={cn("mt-0.5 grid size-10 shrink-0 place-items-center rounded-2xl bg-[var(--orange-soft)] text-[var(--orange)] ring-1 ring-inset ring-black/5 sm:size-11 dark:ring-white/10", reminder.completed && "bg-[var(--sage-soft)] text-[var(--sage)]", overdue && "bg-red-500/10 text-red-600 dark:text-red-300")}>
                       {reminder.completed ? <CheckCircle2 className="size-5" /> : <CalendarClock className="size-5" />}
                     </span>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                        <div className="min-w-0">
+                        <div className={`min-w-0 ${canWrite ? "pr-20 sm:pr-0" : ""}`}>
                           <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                             <h3 className="min-w-0 break-words text-base font-semibold leading-snug sm:text-sm sm:font-medium">{reminder.title}</h3>
                             <Badge className={overdue ? "bg-red-500/10 text-red-600 dark:text-red-300" : undefined}>{reminder.type}</Badge>
@@ -106,7 +106,7 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
                             {reminder.completed ? `已完成 · ${formatDate(reminder.completedAt || reminder.updatedAt)}` : reminderDetail(reminder.dueAt, now)}
                           </p>
                         </div>
-                        {canWrite && <RecordActions className="self-end sm:self-auto">
+                        {canWrite && <RecordActions className="absolute right-3 top-3 sm:static">
                           {!reminder.completed && <ReminderForm initial={{
                             id: reminder.id,
                             type: reminder.type as never,
@@ -119,7 +119,7 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
                           <DeleteButton action={deleteReminderAction.bind(null, reminder.id)} />
                         </RecordActions>}
                       </div>
-                      {reminder.notes && !reminder.notes.startsWith("health:") && <p className="mt-3 whitespace-pre-wrap rounded-2xl bg-black/[.025] p-3 text-sm leading-relaxed text-[var(--muted)] sm:bg-transparent sm:p-0 dark:bg-white/[.035] sm:dark:bg-transparent">{reminder.notes}</p>}
+                      {reminder.notes && !reminder.notes.startsWith("health:") && <p className={cn("mt-3 whitespace-pre-wrap border-l-2 pl-3 text-sm leading-relaxed text-[var(--muted)]", overdue ? "border-red-500/30" : "border-[var(--orange)]/30")}>{reminder.notes}</p>}
                       {canWrite && !reminder.completed && <ReminderActions id={reminder.id} className="mt-4 w-full sm:max-w-sm" />}
                     </div>
                   </div>
