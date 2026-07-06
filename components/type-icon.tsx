@@ -5,7 +5,6 @@ import {
   CircleDollarSign,
   Cookie,
   Dumbbell,
-  Ellipsis,
   Footprints,
   Home,
   Moon,
@@ -16,6 +15,7 @@ import {
   SmilePlus,
   Stethoscope,
   Syringe,
+  Tag,
   Thermometer,
   Toilet,
   ToyBrick,
@@ -29,7 +29,7 @@ type IconComponent = ComponentType<SVGProps<SVGSVGElement>>;
 type TypeKind = "log" | "health" | "expense";
 type TypeMeta = { icon: IconComponent; className: string };
 
-const fallback: TypeMeta = { icon: Ellipsis, className: "bg-stone-500/10 text-stone-600 ring-stone-500/10 dark:text-stone-300" };
+const fallback: TypeMeta = { icon: Tag, className: "bg-stone-500/10 text-stone-600 ring-stone-500/10 dark:text-stone-300" };
 
 const typeIcons: Record<TypeKind, Record<string, TypeMeta>> = {
   log: {

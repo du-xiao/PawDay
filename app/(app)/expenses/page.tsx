@@ -86,7 +86,7 @@ export default async function ExpensesPage({ searchParams }: { searchParams: Pro
       {!dog ? <EmptyState title="先创建小狗档案" description="有了档案后，才能开始记录养宠开销。" /> : expenses.length ? <>
         <div className="space-y-3 p-3 sm:space-y-0 sm:divide-y sm:p-0">{expenses.map((expense) => <div key={expense.id} className="relative flex gap-3 rounded-2xl border bg-[var(--card)]/72 p-3.5 shadow-sm shadow-stone-900/[.025] sm:items-center sm:gap-4 sm:rounded-none sm:border-0 sm:bg-transparent sm:p-5 sm:shadow-none">
           <TypeIcon kind="expense" type={expense.category} className="size-10 rounded-2xl sm:size-11" />
-          <div className={`min-w-0 flex-1 ${canWrite ? "pr-16 sm:pr-0" : ""}`}>
+          <div className={`min-w-0 flex-1 ${canWrite ? "pr-20 sm:pr-0" : ""}`}>
             <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
               <h3 className="min-w-0 max-w-full break-words text-base font-semibold leading-snug sm:max-w-[28rem] sm:truncate sm:text-sm sm:font-medium">{expenseTitle(expense)}</h3>
               <Badge>{expense.category}</Badge>
@@ -94,6 +94,7 @@ export default async function ExpensesPage({ searchParams }: { searchParams: Pro
             </div>
             <p className="mt-1 truncate text-xs text-[var(--muted)]">{expenseMeta(expense)}</p>
             <p className="mt-2 text-lg font-semibold tabular-nums sm:hidden">{money(expense.amountCents)}</p>
+            {expenseNote(expense) && <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-[var(--muted)]">{expenseNote(expense)}</p>}
           </div>
           <p className="hidden text-lg font-semibold tabular-nums sm:block">{money(expense.amountCents)}</p>
           {canWrite && <RecordActions className="absolute right-3 top-3 sm:static"><ExpenseForm initial={{ id: expense.id, category: expense.category as never, itemName: expense.itemName || "", amount: expense.amountCents / 100, date: toDateInput(expense.date), merchant: expense.merchant || "", notes: expense.notes || "" }} /><DeleteButton action={deleteExpenseAction.bind(null, expense.id)} /></RecordActions>}
@@ -113,9 +114,11 @@ function expenseTitle(expense: { itemName: string | null; notes: string | null; 
   return expense.itemName || expense.notes || expense.category;
 }
 
-function expenseMeta(expense: { date: Date; itemName: string | null; notes: string | null }) {
-  return [
-    formatDate(expense.date),
-    expense.notes && expense.notes !== expense.itemName ? expense.notes : "",
-  ].filter(Boolean).join(" · ");
+function expenseMeta(expense: { date: Date }) {
+  return formatDate(expense.date);
+}
+
+function expenseNote(expense: { itemName: string | null; notes: string | null; category: string }) {
+  const title = expenseTitle(expense);
+  return expense.notes && expense.notes !== title ? expense.notes : "";
 }

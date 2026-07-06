@@ -53,10 +53,10 @@ export default async function LogsPage({ searchParams }: { searchParams: Promise
           <span className="shrink-0 text-xs text-[var(--muted)]">{items.length} 条</span>
         </div>
         <div className="space-y-3 p-3 sm:p-0">
-          {items.map((log) => <article key={log.id} className="group rounded-2xl border bg-[var(--card)]/72 p-3.5 shadow-sm shadow-stone-900/[.025] sm:rounded-3xl sm:border sm:bg-[var(--card)] sm:p-5 sm:[box-shadow:inset_0_1px_0_var(--card-highlight),var(--shadow-soft)]">
+          {items.map((log) => <article key={log.id} className="group relative rounded-2xl border bg-[var(--card)]/72 p-3.5 shadow-sm shadow-stone-900/[.025] sm:rounded-3xl sm:border sm:bg-[var(--card)] sm:p-5 sm:[box-shadow:inset_0_1px_0_var(--card-highlight),var(--shadow-soft)]">
             <div className="flex gap-3 sm:gap-4">
               <TypeIcon kind="log" type={log.type} className="size-10 rounded-2xl sm:size-11" />
-              <div className="min-w-0 flex-1">
+              <div className={`min-w-0 flex-1 ${canWrite ? "pr-20 sm:pr-0" : ""}`}>
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
@@ -66,7 +66,7 @@ export default async function LogsPage({ searchParams }: { searchParams: Promise
                     </div>
                     <p className="mt-1 text-xs text-[var(--muted)]">{formatDateTime(log.occurredAt)}</p>
                   </div>
-                  {canWrite && <RecordActions className="self-end sm:self-auto">
+                  {canWrite && <RecordActions className="absolute right-3 top-3 sm:static">
                     <LogForm initial={{ id: log.id, type: log.type as never, title: log.title, notes: log.notes || "", occurredAt: toDateTimeInput(log.occurredAt), mood: (log.mood || "未记录") as never, imageUrl: log.imageUrl || "" }} />
                     <DeleteButton action={deleteLogAction.bind(null, log.id)} />
                   </RecordActions>}

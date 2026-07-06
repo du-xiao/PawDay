@@ -23,8 +23,8 @@ export function TypeTabs({
   const items = [{ value: "", label: allLabel }, ...options.map((option) => ({ value: option, label: option }))];
 
   return (
-    <nav aria-label={ariaLabel} className="w-full overflow-x-auto [scrollbar-width:none] sm:max-w-2xl sm:overflow-visible [&::-webkit-scrollbar]:hidden">
-      <div className="flex min-w-max gap-1.5 rounded-2xl bg-black/[.03] p-1 dark:bg-white/[.045] sm:min-w-0 sm:flex-wrap">
+    <nav aria-label={ariaLabel} className="-mx-1 max-w-full overflow-x-auto px-1 [scrollbar-width:none] sm:mx-0 sm:w-auto sm:overflow-visible sm:px-0 [&::-webkit-scrollbar]:hidden">
+      <div className="inline-flex min-w-max gap-1.5 rounded-2xl bg-black/[.03] p-1 dark:bg-white/[.045] sm:min-w-0 sm:flex-wrap">
         {items.map((item) => {
           const active = value === item.value;
           return (
