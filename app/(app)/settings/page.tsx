@@ -27,38 +27,38 @@ export default async function SettingsPage() {
     <div className="page-enter">
       <PageHeader eyebrow="SETTINGS" title="设置" description="管理账号安全、访客只读账号，以及了解数据保存在哪里。" />
 
-      <section className="grid gap-5 xl:grid-cols-[.82fr_1.18fr]">
-        <div className="space-y-5">
-          <div className="soft-card rounded-3xl p-6">
+      <section className="grid gap-4 sm:gap-5 xl:grid-cols-[.82fr_1.18fr]">
+        <div className="space-y-4 sm:space-y-5">
+          <div className="soft-card rounded-2xl p-4 sm:rounded-3xl sm:p-6">
             <div className="flex items-center gap-4">
-              <div className="grid size-12 place-items-center rounded-2xl bg-[var(--orange-soft)] text-[var(--orange)]"><LockKeyhole className="size-5" /></div>
+              <div className="grid size-10 place-items-center rounded-xl bg-[var(--orange-soft)] text-[var(--orange)] sm:size-12 sm:rounded-2xl"><LockKeyhole className="size-4 sm:size-5" /></div>
               <div className="min-w-0">
                 <p className="font-semibold">{roleLabel(session?.user.role)}账号</p>
                 <p className="mt-1 truncate text-sm text-[var(--muted)]">{session?.user?.email}</p>
               </div>
             </div>
-            <div className="mt-6 rounded-2xl bg-black/[.035] p-4 text-xs leading-relaxed text-[var(--muted)] dark:bg-white/[.04]">
+            <div className="mt-4 rounded-xl bg-black/[.035] p-3 text-xs leading-relaxed text-[var(--muted)] sm:mt-6 sm:rounded-2xl sm:p-4 dark:bg-white/[.04]">
               {isGuest
                 ? "当前是访客只读模式，可以查看数据，但不能新增、编辑、删除或修改账号。"
                 : "主人账号拥有全部写入权限，可以修改密码并管理访客只读账号。Docker Compose 中的管理员变量只在空数据库首次启动时创建账号。"}
             </div>
           </div>
 
-          <div className="soft-card rounded-3xl p-6">
+          <div className="soft-card rounded-2xl p-4 sm:rounded-3xl sm:p-6">
             <h2 className="font-semibold">存储位置</h2>
-            <div className="mt-5 space-y-4">
+            <div className="mt-4 space-y-4 sm:mt-5">
               <Storage icon={Database} label="SQLite 数据库" value={process.env.DATABASE_URL || "file:./data/pawday.db"} />
               <Storage icon={FolderOpen} label="图片目录" value={process.env.UPLOAD_DIR || "./uploads"} />
             </div>
           </div>
         </div>
 
-        <div className="space-y-5">
+        <div className="space-y-4 sm:space-y-5">
           {!isGuest && (
             <>
-              <section id="guest" className="soft-card scroll-mt-28 rounded-3xl p-6 sm:p-7">
-                <div className="mb-6 flex items-center gap-4">
-                  <div className="grid size-11 place-items-center rounded-2xl bg-[var(--orange-soft)] text-[var(--orange)]"><UserCog className="size-5" /></div>
+              <section id="guest" className="soft-card scroll-mt-28 rounded-2xl p-4 sm:rounded-3xl sm:p-7">
+                <div className="mb-5 flex items-center gap-3 sm:mb-6 sm:gap-4">
+                  <div className="grid size-10 place-items-center rounded-xl bg-[var(--orange-soft)] text-[var(--orange)] sm:size-11 sm:rounded-2xl"><UserCog className="size-4 sm:size-5" /></div>
                   <div>
                     <h2 className="font-semibold">访客账号</h2>
                     <p className="mt-1 text-xs text-[var(--muted)]">访客账号只能查看信息，所有写操作都会被服务端拦截。</p>
@@ -67,9 +67,9 @@ export default async function SettingsPage() {
                 <GuestAccountForm guest={guestValue} />
               </section>
 
-              <section id="password" className="soft-card scroll-mt-28 rounded-3xl p-6 sm:p-7">
-                <div className="mb-6 flex items-center gap-4">
-                  <div className="grid size-11 place-items-center rounded-2xl bg-[var(--sage-soft)] text-[var(--sage)]"><KeyRound className="size-5" /></div>
+              <section id="password" className="soft-card scroll-mt-28 rounded-2xl p-4 sm:rounded-3xl sm:p-7">
+                <div className="mb-5 flex items-center gap-3 sm:mb-6 sm:gap-4">
+                  <div className="grid size-10 place-items-center rounded-xl bg-[var(--sage-soft)] text-[var(--sage)] sm:size-11 sm:rounded-2xl"><KeyRound className="size-4 sm:size-5" /></div>
                   <div>
                     <h2 className="font-semibold">修改主人密码</h2>
                     <p className="mt-1 text-xs text-[var(--muted)]">修改后，现有登录会话仍保持有效。</p>
@@ -81,9 +81,9 @@ export default async function SettingsPage() {
           )}
 
           {isGuest && (
-            <section className="soft-card rounded-3xl p-6 sm:p-7">
+            <section className="soft-card rounded-2xl p-4 sm:rounded-3xl sm:p-7">
               <div className="flex items-center gap-4">
-                <div className="grid size-11 place-items-center rounded-2xl bg-[var(--sage-soft)] text-[var(--sage)]"><Eye className="size-5" /></div>
+                <div className="grid size-10 place-items-center rounded-xl bg-[var(--sage-soft)] text-[var(--sage)] sm:size-11 sm:rounded-2xl"><Eye className="size-4 sm:size-5" /></div>
                 <div>
                   <h2 className="font-semibold">只读访问</h2>
                   <p className="mt-1 text-xs text-[var(--muted)]">如需新增或修改记录，请使用主人账号登录。</p>
@@ -92,15 +92,15 @@ export default async function SettingsPage() {
             </section>
           )}
 
-          <section className="rounded-3xl bg-[#2c2924] p-6 text-white dark:bg-[#ebe4da] dark:text-[#28241f]">
+          <section className="rounded-2xl bg-[#2c2924] p-4 text-white sm:rounded-3xl sm:p-6 dark:bg-[#ebe4da] dark:text-[#28241f]">
             <div className="flex items-center gap-3"><HardDriveDownload className="size-5" /><h2 className="font-semibold">备份建议</h2></div>
             <p className="mt-4 text-sm leading-relaxed text-white/65 dark:text-black/60">
               定期备份宿主机的 <code className="rounded bg-white/10 px-1.5 py-0.5">./data</code> 和 <code className="rounded bg-white/10 px-1.5 py-0.5">./uploads</code> 两个目录。恢复时停止容器，替换目录内容后重新启动即可。
             </p>
-            {!isGuest && <Button asChild variant="secondary" className="mt-5 bg-white/12 text-white hover:bg-white/18 dark:bg-black/[.06] dark:text-[#28241f] dark:hover:bg-black/[.1]">
+            {!isGuest && <Button asChild variant="secondary" className="mt-4 w-full bg-white/12 text-white hover:bg-white/18 sm:mt-5 sm:w-auto dark:bg-black/[.06] dark:text-[#28241f] dark:hover:bg-black/[.1]">
               <a href="/api/export">导出备份包</a>
             </Button>}
-            <div className="mt-5 flex items-center gap-2 text-xs text-white/45 dark:text-black/45"><Server className="size-4" />数据完全保存在你的 NAS 上</div>
+            <div className="mt-4 flex items-center gap-2 text-xs text-white/45 sm:mt-5 dark:text-black/45"><Server className="size-4" />数据完全保存在你的 NAS 上</div>
           </section>
         </div>
       </section>

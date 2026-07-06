@@ -72,21 +72,21 @@ export default async function ExpensesPage({ searchParams }: { searchParams: Pro
 
   return <div className="page-enter">
     <PageHeader eyebrow="EXPENSES" title="养狗开销" description="看见钱都花去了哪里，也更从容地照顾好每一个需要。" action={canWrite ? <ExpenseForm disabled={!dog} /> : undefined} />
-    <section className="mb-6 grid gap-4 sm:grid-cols-3"><Metric icon={WalletCards} label="本月总开销" value={money(monthTotal)} tone="orange" /><Metric icon={Landmark} label="本年度总开销" value={money(yearTotal)} tone="sage" /><Metric icon={ReceiptText} label="累计记录" value={`${summaryExpenses.length} 笔`} tone="violet" /></section>
+    <section className="mb-5 grid grid-cols-2 gap-3 sm:mb-6 sm:grid-cols-3 sm:gap-4"><Metric icon={WalletCards} label="本月总开销" value={money(monthTotal)} tone="orange" /><Metric icon={Landmark} label="本年度总开销" value={money(yearTotal)} tone="sage" /><Metric icon={ReceiptText} label="累计记录" value={`${summaryExpenses.length} 笔`} tone="violet" /></section>
     <ExpenseCharts key={`${scope}-${selectedYear}-${selectedMonth}`} categories={categories} months={months} scope={scope} selectedYear={selectedYear} selectedMonth={selectedMonth} years={years} />
 
-    <section id="expense-records" className="mt-6 scroll-mt-24 soft-card rounded-3xl">
-      <div className="flex flex-col gap-4 border-b p-5 sm:flex-row sm:items-end sm:justify-between sm:p-6">
+    <section id="expense-records" className="mt-5 scroll-mt-24 soft-card rounded-2xl sm:mt-6 sm:rounded-3xl">
+      <div className="flex flex-col gap-4 border-b p-4 sm:flex-row sm:items-end sm:justify-between sm:p-6">
         <div><h2 className="font-semibold">开销明细</h2><p className="mt-1 text-xs text-[var(--muted)]">最近记录优先 · 每页 10 条</p></div>
         <TypeFilterForm action="/expenses#expense-records" name="category" value={selectedCategory} options={expenseCategories} allLabel="全部分类" ariaLabel="开销分类" hidden={{ scope, year: selectedYear, month: selectedMonth }} />
       </div>
 
       {!dog ? <EmptyState title="先创建小狗档案" description="有了档案后，才能开始记录养宠开销。" /> : expenses.length ? <>
-        <div className="divide-y">{expenses.map((expense) => <div key={expense.id} className="relative flex gap-3 p-4 sm:items-center sm:gap-4 sm:p-5">
-          <TypeIcon kind="expense" type={expense.category} />
+        <div className="space-y-3 p-3 sm:space-y-0 sm:divide-y sm:p-0">{expenses.map((expense) => <div key={expense.id} className="relative flex gap-3 rounded-2xl border bg-[var(--card)]/72 p-3.5 shadow-sm shadow-stone-900/[.025] sm:items-center sm:gap-4 sm:rounded-none sm:border-0 sm:bg-transparent sm:p-5 sm:shadow-none">
+          <TypeIcon kind="expense" type={expense.category} className="size-10 rounded-2xl sm:size-11" />
           <div className={`min-w-0 flex-1 ${canWrite ? "pr-16 sm:pr-0" : ""}`}>
-            <div className="flex flex-wrap items-center gap-2">
-              <h3 className="min-w-0 max-w-full truncate font-medium sm:max-w-[28rem]">{expenseTitle(expense)}</h3>
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+              <h3 className="min-w-0 max-w-full break-words text-base font-semibold leading-snug sm:max-w-[28rem] sm:truncate sm:text-sm sm:font-medium">{expenseTitle(expense)}</h3>
               <Badge>{expense.category}</Badge>
               {expense.merchant && <Badge className="bg-[var(--sage-soft)] text-[#5f775f] dark:text-[#bdd8bb]">{expense.merchant}</Badge>}
             </div>
@@ -104,7 +104,7 @@ export default async function ExpensesPage({ searchParams }: { searchParams: Pro
 
 function Metric({ icon: Icon, label, value, tone }: { icon: typeof WalletCards; label: string; value: string; tone: string }) {
   const colors: Record<string, string> = { orange: "bg-[var(--orange-soft)] text-[var(--orange)]", sage: "bg-[var(--sage-soft)] text-[var(--sage)]", violet: "bg-violet-500/10 text-violet-600" };
-  return <div className="soft-card rounded-3xl p-5"><div className={`grid size-10 place-items-center rounded-2xl ${colors[tone]}`}><Icon className="size-5" /></div><p className="mt-5 text-xs text-[var(--muted)]">{label}</p><p className="mt-1 text-2xl font-semibold tracking-tight">{value}</p></div>;
+  return <div className="soft-card min-w-0 rounded-2xl p-4 sm:rounded-3xl sm:p-5"><div className={`grid size-9 place-items-center rounded-xl sm:size-10 sm:rounded-2xl ${colors[tone]}`}><Icon className="size-4 sm:size-5" /></div><p className="mt-4 text-xs text-[var(--muted)] sm:mt-5">{label}</p><p className="mt-1 truncate text-lg font-semibold tracking-tight sm:text-2xl">{value}</p></div>;
 }
 
 function expenseTitle(expense: { itemName: string | null; notes: string | null; category: string }) {

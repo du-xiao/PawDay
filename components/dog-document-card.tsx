@@ -27,12 +27,12 @@ export function DogDocumentCard({ type, document, action }: { type: "狗证" | "
 
   if (!document) {
     return (
-      <div className="soft-card rounded-3xl p-5">
+      <div className="soft-card rounded-2xl p-4 sm:rounded-3xl sm:p-5">
         <div className="flex items-start justify-between gap-3">
           <HeaderIcon type={type} />
           {action}
         </div>
-        <div className="mt-5 rounded-2xl border border-dashed bg-white/35 p-5 text-center dark:bg-white/[.025]">
+        <div className="mt-4 rounded-xl border border-dashed bg-white/35 p-4 text-center sm:mt-5 sm:rounded-2xl sm:p-5 dark:bg-white/[.025]">
           <p className="text-sm font-semibold">{type}还没有记录</p>
           <p className="mt-1 text-xs leading-relaxed text-[var(--muted)]">补充证件编号和正反面图片，以后需要时就不用临时翻相册。</p>
         </div>
@@ -41,12 +41,12 @@ export function DogDocumentCard({ type, document, action }: { type: "狗证" | "
   }
 
   return (
-    <div className="soft-card rounded-3xl p-5">
+    <div className="soft-card rounded-2xl p-4 sm:rounded-3xl sm:p-5">
       <div className="flex items-start justify-between gap-3">
         <HeaderIcon type={type} />
         {action}
       </div>
-      <div className="mt-5">
+      <div className="mt-4 sm:mt-5">
         <p className="text-lg font-semibold tracking-tight">{document.title || type}</p>
         <p className="mt-1 text-sm text-[var(--muted)]">{document.identifier || "未填写证件编号"}</p>
         <div className="mt-3 flex flex-wrap gap-2 text-xs">
@@ -54,13 +54,13 @@ export function DogDocumentCard({ type, document, action }: { type: "狗证" | "
           {document.issuer && <span className="rounded-full bg-black/[.04] px-2.5 py-1 text-[var(--muted)] dark:bg-white/[.055]">{document.issuer}</span>}
         </div>
       </div>
-      <div className="mt-5 grid grid-cols-2 gap-2">
+      <div className="mt-4 grid grid-cols-2 gap-2 sm:mt-5">
         <MiniImage src={document.frontImageUrl} label="正面" />
         <MiniImage src={document.backImageUrl} label="反面" />
       </div>
       <Dialog>
         <DialogTrigger asChild>
-          <Button variant="outline" className="mt-5 w-full bg-white/55 dark:bg-white/[.035]">
+          <Button variant="outline" className="mt-4 w-full bg-white/55 sm:mt-5 dark:bg-white/[.035]">
             查看详情
             <ArrowUpRight className="size-4" />
           </Button>
@@ -71,7 +71,7 @@ export function DogDocumentCard({ type, document, action }: { type: "狗证" | "
             <DialogDescription>证件信息和正反面图片会保存在上传目录里，随档案一起迁移。</DialogDescription>
           </DialogHeader>
           <div className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
-            <div className="rounded-3xl border bg-black/[.018] p-4 dark:bg-white/[.025]">
+            <div className="rounded-2xl border bg-black/[.018] p-4 sm:rounded-3xl dark:bg-white/[.025]">
               <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">证件资料</p>
               <DetailRow label="证件类型" value={type} />
               <DetailRow label="证件编号" value={document.identifier || "未填写"} />
@@ -96,17 +96,17 @@ function HeaderIcon({ type }: { type: "狗证" | "免疫证" }) {
   const Icon = type === "狗证" ? BadgeCheck : ShieldCheck;
   return (
     <div>
-      <div className="grid size-11 place-items-center rounded-2xl bg-[var(--orange-soft)] text-[var(--orange)]">
+      <div className="grid size-10 place-items-center rounded-xl bg-[var(--orange-soft)] text-[var(--orange)] sm:size-11 sm:rounded-2xl">
         <Icon className="size-5" />
       </div>
-      <p className="mt-3 text-xs font-semibold uppercase tracking-[.18em] text-[var(--muted)]">{type}</p>
+      <p className="mt-2.5 text-xs font-semibold uppercase tracking-[.18em] text-[var(--muted)] sm:mt-3">{type}</p>
     </div>
   );
 }
 
 function MiniImage({ src, label }: { src?: string | null; label: string }) {
   return (
-    <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-black/[.035] dark:bg-white/[.045]">
+    <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-black/[.035] sm:rounded-2xl dark:bg-white/[.045]">
       {src ? <Image src={imageVariantUrl(src, "thumb")} alt={label} fill unoptimized className="object-cover" sizes="160px" /> : <div className="grid h-full place-items-center text-[var(--muted)]"><ImageIcon className="size-5" /></div>}
       <span className="absolute left-2 top-2 rounded-full bg-white/85 px-2 py-0.5 text-[10px] font-semibold text-[#2d2924] shadow-sm">{label}</span>
     </div>
@@ -116,14 +116,14 @@ function MiniImage({ src, label }: { src?: string | null; label: string }) {
 function DocumentImage({ src, label }: { src?: string | null; label: string }) {
   if (!src) {
     return (
-      <div className="grid min-h-48 place-items-center rounded-3xl border border-dashed bg-white/35 text-sm text-[var(--muted)] dark:bg-white/[.025]">
+      <div className="grid min-h-40 place-items-center rounded-2xl border border-dashed bg-white/35 text-sm text-[var(--muted)] sm:min-h-48 sm:rounded-3xl dark:bg-white/[.025]">
         暂未上传{label}
       </div>
     );
   }
 
   return (
-    <a href={src} target="_blank" rel="noreferrer" className="group relative block min-h-48 overflow-hidden rounded-3xl border bg-black/[.035] dark:bg-white/[.045]">
+    <a href={src} target="_blank" rel="noreferrer" className="group relative block min-h-40 overflow-hidden rounded-2xl border bg-black/[.035] sm:min-h-48 sm:rounded-3xl dark:bg-white/[.045]">
       <Image src={imageVariantUrl(src, "medium")} alt={label} fill unoptimized className="object-cover transition duration-300 group-hover:scale-[1.03]" sizes="(max-width: 768px) 100vw, 380px" />
       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/55 to-transparent p-3 text-sm font-semibold text-white">
         {label}

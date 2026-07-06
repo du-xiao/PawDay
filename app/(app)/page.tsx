@@ -23,14 +23,14 @@ export default async function DashboardPage() {
   if (!dog) {
     return (
       <div className="page-enter">
-        <div className="relative overflow-hidden rounded-[2rem] border bg-[var(--card)] p-6 sm:p-10 lg:min-h-[620px] lg:p-14">
+        <div className="relative overflow-hidden rounded-[1.5rem] border bg-[var(--card)] p-5 sm:rounded-[2rem] sm:p-10 lg:min-h-[620px] lg:p-14">
           <div className="relative z-10 max-w-xl">
             <Badge className="bg-[var(--sage-soft)] text-[#587158] dark:text-[#b9d6b8]">第一次来到 PawDay</Badge>
-            <h1 className="mt-6 text-4xl font-semibold leading-[1.08] tracking-[-.055em] sm:text-6xl">先把它的名字，<br />写进这里。</h1>
+            <h1 className="mt-5 text-3xl font-semibold leading-[1.08] tracking-[-.045em] sm:mt-6 sm:text-6xl sm:tracking-[-.055em]">先把它的名字，<br />写进这里。</h1>
             <p className="mt-5 max-w-lg text-base leading-relaxed text-[var(--muted)] sm:text-lg">创建小狗档案后，就可以开始记录散步、健康、照片和每一件值得记住的小事。</p>
             {canWrite && <div className="mt-8"><DogForm onboarding /></div>}
           </div>
-          <div className="relative mt-10 h-72 overflow-hidden rounded-[2rem] lg:absolute lg:inset-y-8 lg:right-8 lg:mt-0 lg:h-auto lg:w-[43%]">
+          <div className="relative mt-8 h-56 overflow-hidden rounded-[1.5rem] sm:mt-10 sm:h-72 sm:rounded-[2rem] lg:absolute lg:inset-y-8 lg:right-8 lg:mt-0 lg:h-auto lg:w-[43%]">
             <Image src="/pawday-hero.png" alt="温暖的小狗插画" fill className="object-cover" sizes="50vw" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
           </div>
@@ -52,37 +52,37 @@ export default async function DashboardPage() {
   const reminderOverdue = reminder ? differenceInCalendarDays(reminder.dueAt, now) < 0 : false;
 
   return (
-    <div className="page-enter space-y-6 sm:space-y-8">
+    <div className="page-enter space-y-5 sm:space-y-8">
       <section>
         <p className="text-sm font-medium text-[var(--orange)]">{new Intl.DateTimeFormat("zh-CN", { month: "long", day: "numeric", weekday: "long" }).format(now)}</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-[-.05em] sm:text-5xl">今天也要好好生活。</h1>
+        <h1 className="mt-2 text-2xl font-semibold tracking-[-.035em] sm:text-5xl sm:tracking-[-.05em]">今天也要好好生活。</h1>
         <p className="mt-3 text-[var(--muted)]">陪 {dog.name} 认真度过普通的一天。</p>
       </section>
 
-      <section className="soft-card relative overflow-hidden rounded-[2.25rem] p-4 sm:p-5 lg:p-6">
+      <section className="soft-card relative overflow-hidden rounded-2xl p-3.5 sm:rounded-[2.25rem] sm:p-5 lg:p-6">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_8%_0%,rgba(232,137,95,.22),transparent_34%),linear-gradient(135deg,rgba(255,246,235,.92),rgba(255,255,255,.56)_48%,rgba(220,231,217,.42))] dark:bg-[radial-gradient(circle_at_8%_0%,rgba(232,137,95,.18),transparent_34%),linear-gradient(135deg,rgba(70,48,37,.42),rgba(255,255,255,.035)_48%,rgba(77,97,75,.16))]" />
         <div className="absolute -right-16 -top-20 size-56 rounded-full bg-[var(--orange-soft)]/70 blur-3xl" />
         <div className="absolute -bottom-24 left-16 size-56 rounded-full bg-[var(--sage-soft)]/60 blur-3xl" />
         <div className="relative z-10 sm:hidden">
-          <div className="flex items-center gap-3.5">
-            <div className="relative size-20 shrink-0 overflow-hidden rounded-[1.35rem] border border-white/75 bg-white/75 shadow-lg shadow-orange-200/25 ring-1 ring-black/[.03] dark:border-white/10 dark:bg-white/[.08] dark:shadow-black/20 dark:ring-white/[.06]">
-              {dog.avatarUrl ? <Image src={imageVariantUrl(dog.avatarUrl, "thumb")} alt={dog.name} fill priority unoptimized className="object-cover" sizes="80px" /> : <div className="grid size-full place-items-center"><PawPrint className="size-10 text-[var(--orange)]" /></div>}
+          <div className="flex items-center gap-3">
+            <div className="relative size-16 shrink-0 overflow-hidden rounded-2xl border border-white/75 bg-white/75 shadow-lg shadow-orange-200/25 ring-1 ring-black/[.03] dark:border-white/10 dark:bg-white/[.08] dark:shadow-black/20 dark:ring-white/[.06]">
+              {dog.avatarUrl ? <Image src={imageVariantUrl(dog.avatarUrl, "thumb")} alt={dog.name} fill priority unoptimized className="object-cover" sizes="64px" /> : <div className="grid size-full place-items-center"><PawPrint className="size-8 text-[var(--orange)]" /></div>}
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-[10px] font-semibold uppercase tracking-[.22em] text-[var(--orange)]">MY BEST FRIEND</p>
-              <h2 className="mt-1 truncate text-3xl font-semibold tracking-[-.055em]">{dog.name}</h2>
+              <h2 className="mt-1 truncate text-2xl font-semibold tracking-[-.045em]">{dog.name}</h2>
               <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-[var(--muted)]">今天也在认真长大，慢慢留下普通日子里的小事。</p>
             </div>
           </div>
 
-          <div className="mt-4 grid grid-cols-2 gap-2.5">
+          <div className="mt-3 grid grid-cols-2 gap-2.5">
             <ProfileFact label="品种" value={dog.breed || "未记录"} tone="orange" />
             <ProfileFact label="性别" value={dog.sex || "未知"} tone="sage" />
             <ProfileFact label="年龄" value={dogAge(dog.birthDate)} tone="gold" />
             <ProfileFact label="陪伴" value={together ? `${together} 天` : "待记录"} tone="violet" />
           </div>
 
-          <Button asChild variant="outline" className="mt-4 w-full border-orange-200/70 bg-white/70 text-[#8d4d2f] shadow-sm shadow-orange-200/20 hover:bg-white/85 dark:border-white/10 dark:bg-white/[.06] dark:text-[#ffc09b] dark:hover:bg-white/[.1]">
+          <Button asChild variant="outline" className="mt-3 w-full border-orange-200/70 bg-white/70 text-[#8d4d2f] shadow-sm shadow-orange-200/20 hover:bg-white/85 sm:mt-4 dark:border-white/10 dark:bg-white/[.06] dark:text-[#ffc09b] dark:hover:bg-white/[.1]">
             <Link href="/dog">查看档案<ArrowUpRight className="size-4" /></Link>
           </Button>
         </div>
@@ -115,7 +115,7 @@ export default async function DashboardPage() {
         <PawPrint className="absolute -bottom-12 -right-5 size-44 rotate-[-18deg] text-[var(--orange)] opacity-[.055]" />
       </section>
 
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         <Stat
           icon={NotebookPen}
           label="最近记录"
@@ -151,7 +151,7 @@ export default async function DashboardPage() {
         />
       </section>
 
-      <section className="grid gap-5 xl:grid-cols-[1.15fr_.85fr]">
+      <section className="grid gap-4 sm:gap-5 xl:grid-cols-[1.15fr_.85fr]">
         <Card>
           <CardHeader>
             <div><CardTitle>最近的日子</CardTitle><p className="mt-1 text-xs text-[var(--muted)]">刚刚发生的小事</p></div>
@@ -159,7 +159,7 @@ export default async function DashboardPage() {
           </CardHeader>
           <CardContent>
             {logs.length ? <div className="space-y-1">
-              {logs.map((log) => <Link href="/logs" key={log.id} className="flex items-center gap-3 rounded-2xl p-3 transition hover:bg-black/[.035] dark:hover:bg-white/[.04]">
+              {logs.map((log) => <Link href="/logs" key={log.id} className="flex items-center gap-2.5 rounded-xl p-2.5 transition hover:bg-black/[.035] sm:gap-3 sm:rounded-2xl sm:p-3 dark:hover:bg-white/[.04]">
                 <TypeIcon kind="log" type={log.type} size="sm" />
                 <div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{log.title}</p><p className="mt-0.5 text-xs text-[var(--muted)]">{log.type} · {formatDateTime(log.occurredAt)}</p></div>
                 {log.mood && <span className="text-xs text-[var(--muted)]">{log.mood}</span>}
@@ -201,14 +201,14 @@ function Stat({ icon: Icon, label, value, meta, tone, href, urgent }: { icon: ty
         <div className={`grid size-10 place-items-center rounded-2xl ${tones[tone]}`}><Icon className="size-5" /></div>
         {href ? <ArrowUpRight className="size-4 text-[var(--muted)]" /> : null}
       </div>
-      <p className="mt-5 text-xs font-medium text-[var(--muted)]">{label}</p>
-      <p className="mt-1 truncate text-lg font-semibold tracking-tight">{value}</p>
+      <p className="mt-4 text-xs font-medium text-[var(--muted)] sm:mt-5">{label}</p>
+      <p className="mt-1 truncate text-base font-semibold tracking-tight sm:text-lg">{value}</p>
       <p className={cn("mt-1 truncate text-xs text-[var(--muted)]", urgent && "font-medium text-red-600 dark:text-red-300")}>{meta}</p>
     </>
   );
 
-  if (href) return <Link href={href} className={cn("soft-card block rounded-3xl p-5 transition hover:-translate-y-0.5 hover:shadow-lg", urgent && "border-red-500/20 bg-red-500/10 shadow-red-500/10")}>{content}</Link>;
-  return <Card className="p-5">{content}</Card>;
+  if (href) return <Link href={href} className={cn("soft-card block rounded-2xl p-4 transition hover:-translate-y-0.5 hover:shadow-lg sm:rounded-3xl sm:p-5", urgent && "border-red-500/20 bg-red-500/10 shadow-red-500/10")}>{content}</Link>;
+  return <Card className="p-4 sm:p-5">{content}</Card>;
 }
 
 function ProfileFact({ label, value, tone }: { label: string; value: string; tone: "orange" | "sage" | "gold" | "violet" }) {
@@ -220,10 +220,10 @@ function ProfileFact({ label, value, tone }: { label: string; value: string; ton
   };
 
   return (
-    <div className="group overflow-hidden rounded-2xl border border-black/[.035] bg-white/[.66] p-3 shadow-sm shadow-stone-900/[.02] backdrop-blur transition hover:-translate-y-0.5 hover:bg-white/80 hover:shadow-md dark:border-white/[.08] dark:bg-white/[.045] dark:hover:bg-white/[.07]">
+    <div className="group overflow-hidden rounded-xl border border-black/[.035] bg-white/[.66] p-2.5 shadow-sm shadow-stone-900/[.02] backdrop-blur transition hover:-translate-y-0.5 hover:bg-white/80 hover:shadow-md sm:rounded-2xl sm:p-3 dark:border-white/[.08] dark:bg-white/[.045] dark:hover:bg-white/[.07]">
       <p className="text-[10px] font-semibold uppercase tracking-[.18em] text-[var(--muted)]">{label}</p>
       <span className={`mt-1.5 block h-1 w-7 rounded-full bg-gradient-to-r ${tones[tone]}`} />
-      <p className="mt-2 truncate text-sm font-semibold tracking-[-.02em] text-[var(--foreground)] sm:text-base">{value}</p>
+      <p className="mt-1.5 truncate text-sm font-semibold tracking-[-.02em] text-[var(--foreground)] sm:mt-2 sm:text-base">{value}</p>
     </div>
   );
 }

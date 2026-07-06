@@ -51,7 +51,7 @@ export default async function DogPage() {
     return (
       <>
         <PageHeader eyebrow="DOG PROFILE" title="小狗档案" description="从名字开始，建立属于它的成长档案。" />
-        <div className="soft-card rounded-3xl">
+        <div className="soft-card rounded-2xl sm:rounded-3xl">
           <EmptyState title="还没有小狗档案" description="先记录名字和生日，PawDay 才能开始计算你们的陪伴时光。" action={canWrite ? <DogForm onboarding /> : undefined} />
         </div>
       </>
@@ -111,33 +111,33 @@ export default async function DogPage() {
         </div>}
       />
 
-      <section className="grid gap-5 xl:grid-cols-[0.86fr_1.14fr]">
-        <div className="relative min-h-[440px] overflow-hidden rounded-[2rem] bg-gradient-to-br from-[#efd8c1] to-[#d8e3d5] dark:from-[#47362c] dark:to-[#27382b]">
+      <section className="grid gap-4 sm:gap-5 xl:grid-cols-[0.86fr_1.14fr]">
+        <div className="relative min-h-[300px] overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-[#efd8c1] to-[#d8e3d5] sm:min-h-[440px] sm:rounded-[2rem] dark:from-[#47362c] dark:to-[#27382b]">
           {dog.avatarUrl ? (
             <Image src={imageVariantUrl(dog.avatarUrl, "medium")} alt={dog.name} fill priority unoptimized className="object-cover" sizes="(max-width:1024px) 100vw, 42vw" />
           ) : (
             <div className="grid h-full place-items-center"><PawPrint className="size-32 text-white/70" /></div>
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/58 via-black/5 to-transparent" />
-          <div className="absolute inset-x-0 bottom-0 p-7 text-white">
+          <div className="absolute inset-x-0 bottom-0 p-5 text-white sm:p-7">
             <p className="text-sm text-white/70">MY LITTLE FAMILY</p>
-            <h2 className="mt-1 text-4xl font-semibold tracking-[-.05em]">{dog.name}</h2>
+            <h2 className="mt-1 text-3xl font-semibold tracking-[-.04em] sm:text-4xl sm:tracking-[-.05em]">{dog.name}</h2>
             <p className="mt-2 text-sm text-white/75">{dog.breed || "特别可爱的小狗"} · {dog.sex || "性别未记录"}</p>
           </div>
         </div>
 
-        <div className="space-y-5">
-          <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-4 sm:space-y-5">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
             <Info icon={CalendarDays} label="年龄" value={dogAge(dog.birthDate)} color="orange" />
             <Info icon={Heart} label="陪伴天数" value={together ? `${together} 天` : "待记录"} color="sage" />
             <Info icon={Scale} label="当前体重" value={dog.weightGrams ? `${(dog.weightGrams / 1000).toFixed(2)} kg` : "待记录"} color="gold" />
             <Info icon={VenusAndMars} label="性别" value={dog.sex || "未知"} color="violet" />
           </div>
 
-          <div className="grid gap-5 lg:grid-cols-[1.05fr_.95fr]">
-            <div className="soft-card rounded-3xl p-6">
+          <div className="grid gap-4 sm:gap-5 lg:grid-cols-[1.05fr_.95fr]">
+            <div className="soft-card rounded-2xl p-4 sm:rounded-3xl sm:p-6">
               <h3 className="font-semibold">成长小档案</h3>
-              <div className="mt-5 divide-y">
+              <div className="mt-4 divide-y sm:mt-5">
                 <Row label="生日" value={formatDate(dog.birthDate)} />
                 <Row label="来到家的日子" value={dog.adoptionDate ? formatDate(dog.adoptionDate) : "还没有记录"} />
                 <Row label="日常记录" value={`${dog._count.dailyLogs} 条`} />
@@ -150,10 +150,10 @@ export default async function DogPage() {
         </div>
       </section>
 
-      <section className="mt-8 grid gap-5 xl:grid-cols-[1.15fr_.85fr]">
+      <section className="mt-6 grid gap-5 sm:mt-8 xl:grid-cols-[1.15fr_.85fr]">
         <div>
           <SectionTitle title="证件信息" description="狗证和免疫证集中保存，正反面图片都能随时查看。" />
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
             <DogDocumentCard
               type="狗证"
               document={dogLicense}
@@ -169,27 +169,27 @@ export default async function DogPage() {
 
         <div>
           <SectionTitle title="健康护理" description="从健康记录里自动汇总疫苗和驱虫，点开能看具体信息。" />
-          <div className="soft-card rounded-3xl p-4 sm:p-5">
+          <div className="soft-card rounded-2xl p-3.5 sm:rounded-3xl sm:p-5">
             <DogHealthSummary vaccines={vaccines} deworming={deworming} />
           </div>
         </div>
       </section>
 
-      <section className="mt-8">
+      <section className="mt-6 sm:mt-8">
         <div className="mb-4 flex items-end justify-between">
           <SectionTitle title="最近的模样" description="成长总是在照片里最明显。" compact />
           <Button asChild variant="ghost" size="sm"><Link href="/photos">打开相册</Link></Button>
         </div>
         {dog.photos.length ? (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-5 sm:gap-3">
             {dog.photos.map((photo, index) => (
-              <div key={photo.id} className={`relative overflow-hidden rounded-3xl ${index === 0 ? "col-span-2 row-span-2 aspect-square" : "aspect-square"}`}>
+              <div key={photo.id} className={`relative overflow-hidden rounded-2xl sm:rounded-3xl ${index === 0 ? "col-span-2 row-span-2 aspect-square" : "aspect-square"}`}>
                 <Image src={imageVariantUrl(photo.url, "thumb")} alt={photo.title || dog.name} fill unoptimized className="object-cover" sizes="20vw" />
               </div>
             ))}
           </div>
         ) : (
-          <div className="soft-card rounded-3xl">
+          <div className="soft-card rounded-2xl sm:rounded-3xl">
             <EmptyState compact title="相册还是空的" description="下一次它看向镜头时，就把那一刻留下来。" />
           </div>
         )}
@@ -207,10 +207,10 @@ function Info({ icon: Icon, label, value, color }: { icon: LucideIcon; label: st
   };
 
   return (
-    <div className="soft-card rounded-3xl p-5">
+    <div className="soft-card rounded-2xl p-4 sm:rounded-3xl sm:p-5">
       <div className={`grid size-9 place-items-center rounded-xl ${tones[color]}`}><Icon className="size-4" /></div>
-      <p className="mt-4 text-xs text-[var(--muted)]">{label}</p>
-      <p className="mt-1 text-lg font-semibold">{value}</p>
+      <p className="mt-3 text-xs text-[var(--muted)] sm:mt-4">{label}</p>
+      <p className="mt-1 truncate text-base font-semibold sm:text-lg">{value}</p>
     </div>
   );
 }
@@ -230,18 +230,18 @@ function CompletenessCard({ items }: { items: { label: string; done: boolean }[]
   const missing = items.filter((item) => !item.done).slice(0, 4);
 
   return (
-    <div className="soft-card rounded-3xl p-6">
+    <div className="soft-card rounded-2xl p-4 sm:rounded-3xl sm:p-6">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h3 className="font-semibold">档案完整度</h3>
           <p className="mt-1 text-xs text-[var(--muted)]">把常用信息补齐，日后查询会轻很多。</p>
         </div>
-        <div className="grid size-12 place-items-center rounded-2xl bg-[var(--sage-soft)] text-sm font-bold text-[var(--sage)]">{percent}%</div>
+        <div className="grid size-11 place-items-center rounded-xl bg-[var(--sage-soft)] text-sm font-bold text-[var(--sage)] sm:size-12 sm:rounded-2xl">{percent}%</div>
       </div>
-      <div className="mt-5 h-2 overflow-hidden rounded-full bg-black/[.05] dark:bg-white/[.06]">
+      <div className="mt-4 h-2 overflow-hidden rounded-full bg-black/[.05] sm:mt-5 dark:bg-white/[.06]">
         <div className="h-full rounded-full bg-gradient-to-r from-[var(--orange)] to-[var(--sage)]" style={{ width: `${percent}%` }} />
       </div>
-      <div className="mt-5 flex flex-wrap gap-2">
+      <div className="mt-4 flex flex-wrap gap-1.5 sm:mt-5 sm:gap-2">
         {items.map((item) => (
           <span key={item.label} className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${item.done ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : "bg-black/[.04] text-[var(--muted)] dark:bg-white/[.055]"}`}>
             {item.done && <CheckCircle2 className="size-3" />}
@@ -249,7 +249,7 @@ function CompletenessCard({ items }: { items: { label: string; done: boolean }[]
           </span>
         ))}
       </div>
-      <p className="mt-4 text-xs leading-relaxed text-[var(--muted)]">
+      <p className="mt-3 text-xs leading-relaxed text-[var(--muted)] sm:mt-4">
         {missing.length ? `建议继续补充：${missing.map((item) => item.label).join("、")}。` : "档案信息已经很完整，可以放心查询和备份。"}
       </p>
     </div>

@@ -8,7 +8,7 @@ import { HealthForm } from "@/components/forms/health-form";
 import { LogForm } from "@/components/forms/log-form";
 import { PhotoForm } from "@/components/forms/photo-form";
 
-const quickButtonClass = "h-11 w-full justify-start rounded-2xl px-3.5 text-sm shadow-none";
+const quickButtonClass = "h-10 w-full justify-start rounded-xl px-3 text-sm shadow-none sm:h-11 sm:rounded-2xl sm:px-3.5";
 
 export function QuickCreate({ canWrite, dogExists, logs }: { canWrite: boolean; dogExists: boolean; logs: { id: string; title: string }[] }) {
   const [open, setOpen] = useState(false);
@@ -17,9 +17,9 @@ export function QuickCreate({ canWrite, dogExists, logs }: { canWrite: boolean; 
   const disabled = !dogExists;
 
   return (
-    <div className="no-print pointer-events-none fixed bottom-[calc(5.95rem+env(safe-area-inset-bottom))] right-4 z-40 lg:bottom-7 lg:right-7">
+    <div className="no-print pointer-events-none fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] right-3 z-40 sm:right-4 lg:bottom-7 lg:right-7">
       <div className={cn(
-        "mb-3 w-[min(18rem,calc(100vw-2rem))] origin-bottom-right rounded-3xl border bg-[var(--card)]/96 p-2 shadow-2xl shadow-stone-950/12 backdrop-blur-xl transition",
+        "mb-2 w-[min(17rem,calc(100vw-1.5rem))] origin-bottom-right rounded-2xl border bg-[var(--card)]/96 p-2 shadow-2xl shadow-stone-950/12 backdrop-blur-xl transition sm:mb-3 sm:w-[min(18rem,calc(100vw-2rem))] sm:rounded-3xl",
         open ? "pointer-events-auto translate-y-0 opacity-100" : "pointer-events-none translate-y-2 opacity-0",
       )}>
         <div className="grid gap-1.5">
@@ -36,7 +36,7 @@ export function QuickCreate({ canWrite, dogExists, logs }: { canWrite: boolean; 
         onClick={() => setOpen((value) => !value)}
         aria-label={open ? "关闭快速记录" : "打开快速记录"}
         aria-expanded={open}
-        className="pointer-events-auto ml-auto grid size-14 place-items-center rounded-3xl bg-gradient-to-br from-[var(--orange)] to-[#d87755] text-white shadow-2xl shadow-orange-300/35 transition hover:brightness-105 active:scale-95 dark:shadow-black/35"
+        className="pointer-events-auto ml-auto grid size-12 place-items-center rounded-2xl bg-gradient-to-br from-[var(--orange)] to-[#d87755] text-white shadow-2xl shadow-orange-300/35 transition hover:brightness-105 active:scale-95 sm:size-14 sm:rounded-3xl dark:shadow-black/35"
       >
         {open ? <X className="size-5" /> : <Plus className="size-6" />}
       </button>

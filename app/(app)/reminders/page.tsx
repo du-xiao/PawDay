@@ -63,14 +63,14 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
     <div className="page-enter">
       <PageHeader eyebrow="REMINDERS" title="提醒中心" description="把固定节奏交给提醒，驱虫、洗澡、买粮就不容易漏掉。" action={canWrite ? <ReminderForm disabled={!dog} /> : undefined} />
 
-      <section className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+      <section className="mb-5 grid grid-cols-2 gap-3 sm:mb-6 sm:gap-4 xl:grid-cols-4">
         <Metric icon={BellRing} label="待处理" value={`${active.length} 项`} tone="orange" />
         <Metric icon={Clock3} label="已逾期" value={`${overdueCount} 项`} tone="red" />
         <Metric icon={CalendarClock} label="今天到期" value={`${todayCount} 项`} tone="sage" />
         <Metric icon={Repeat2} label="重复提醒" value={`${repeatingCount} 项`} tone="violet" />
       </section>
 
-      <section id="reminder-list" className="soft-card scroll-mt-24 rounded-3xl">
+      <section id="reminder-list" className="soft-card scroll-mt-24 rounded-2xl sm:rounded-3xl">
         <div className="flex flex-col gap-4 border-b p-4 sm:flex-row sm:items-end sm:justify-between sm:p-6">
           <div>
             <h2 className="font-semibold">提醒列表</h2>
@@ -89,7 +89,7 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
             {reminders.map((reminder) => {
               const overdue = !reminder.completed && differenceInCalendarDays(reminder.dueAt, now) < 0;
               return (
-                <article key={reminder.id} className={cn("rounded-3xl border bg-[var(--card)]/72 p-4 shadow-sm shadow-stone-900/[.025] sm:rounded-none sm:border-0 sm:bg-transparent sm:p-5 sm:shadow-none", overdue && "border-red-500/15 bg-red-500/[.06] sm:bg-red-500/[.035]")}>
+                <article key={reminder.id} className={cn("rounded-2xl border bg-[var(--card)]/72 p-3.5 shadow-sm shadow-stone-900/[.025] sm:rounded-none sm:border-0 sm:bg-transparent sm:p-5 sm:shadow-none", overdue && "border-red-500/15 bg-red-500/[.06] sm:bg-red-500/[.035]")}>
                   <div className="flex gap-3 sm:gap-4">
                     <span className={cn("mt-0.5 grid size-10 shrink-0 place-items-center rounded-2xl bg-[var(--orange-soft)] text-[var(--orange)] ring-1 ring-inset ring-black/5 sm:size-11 dark:ring-white/10", reminder.completed && "bg-[var(--sage-soft)] text-[var(--sage)]", overdue && "bg-red-500/10 text-red-600 dark:text-red-300")}>
                       {reminder.completed ? <CheckCircle2 className="size-5" /> : <CalendarClock className="size-5" />}
@@ -160,7 +160,7 @@ function Metric({ icon: Icon, label, value, tone }: { icon: typeof BellRing; lab
     sage: "bg-[var(--sage-soft)] text-[var(--sage)]",
     violet: "bg-violet-500/10 text-violet-600 dark:text-violet-300",
   };
-  return <div className="soft-card rounded-3xl p-4 sm:p-5"><div className={`grid size-9 place-items-center rounded-2xl sm:size-10 ${tones[tone]}`}><Icon className="size-4 sm:size-5" /></div><p className="mt-4 text-xs text-[var(--muted)] sm:mt-5">{label}</p><p className="mt-1 text-xl font-semibold tracking-tight sm:text-2xl">{value}</p></div>;
+  return <div className="soft-card rounded-2xl p-4 sm:rounded-3xl sm:p-5"><div className={`grid size-9 place-items-center rounded-xl sm:size-10 sm:rounded-2xl ${tones[tone]}`}><Icon className="size-4 sm:size-5" /></div><p className="mt-4 text-xs text-[var(--muted)] sm:mt-5">{label}</p><p className="mt-1 text-lg font-semibold tracking-tight sm:text-2xl">{value}</p></div>;
 }
 
 function reminderDetail(dueAt: Date, now: Date) {

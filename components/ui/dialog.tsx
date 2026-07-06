@@ -13,7 +13,7 @@ export function DialogContent({ className, children, ...props }: React.Component
   return (
     <DialogPrimitive.Portal>
       <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/38 backdrop-blur-md data-[state=open]:animate-in" />
-      <DialogPrimitive.Content className={cn("fixed left-1/2 top-1/2 z-50 max-h-[92vh] w-[calc(100%-1.5rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-3xl border bg-[var(--background)] p-5 shadow-2xl shadow-stone-950/15 outline-none sm:p-7 dark:shadow-black/35", className)} {...props}>
+      <DialogPrimitive.Content className={cn("fixed left-1/2 top-1/2 z-50 max-h-[92vh] w-[calc(100%-1rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl border bg-[var(--background)] p-4 shadow-2xl shadow-stone-950/15 outline-none sm:w-[calc(100%-1.5rem)] sm:rounded-3xl sm:p-7 dark:shadow-black/35", className)} {...props}>
         {children}
         <DialogPrimitive.Close className="absolute right-4 top-4 grid size-9 place-items-center rounded-full bg-black/[.04] text-[var(--muted)] transition hover:bg-black/[.08] hover:text-[var(--foreground)] dark:bg-white/[.06]"><X className="size-4" /><span className="sr-only">关闭</span></DialogPrimitive.Close>
       </DialogPrimitive.Content>

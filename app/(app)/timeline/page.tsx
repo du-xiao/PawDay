@@ -145,13 +145,13 @@ export default async function TimelinePage({ searchParams }: { searchParams: Pro
   const expenseTotal = expenses.reduce((sum, item) => sum + item.amountCents, 0);
 
   return (
-    <div className="page-enter space-y-6 sm:space-y-8">
+    <div className="page-enter space-y-5 sm:space-y-8">
       <PageHeader eyebrow="TIMELINE" title="成长回顾" description="默认汇总全部记录，用月份把日常、照片、健康、开销和提醒整理成一张清晰回顾。" />
 
-      <section className="overflow-hidden rounded-3xl border bg-[var(--card)]/72 shadow-sm shadow-stone-900/[.025]">
-        <div className="flex flex-col gap-4 p-4 sm:p-5 lg:flex-row lg:items-center lg:justify-between">
+      <section className="overflow-hidden rounded-2xl border bg-[var(--card)]/72 shadow-sm shadow-stone-900/[.025] sm:rounded-3xl">
+        <div className="flex flex-col gap-3 p-3.5 sm:gap-4 sm:p-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex min-w-0 items-start gap-3">
-            <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-[var(--orange-soft)] text-[var(--orange)]"><CalendarDays className="size-5" /></span>
+            <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[var(--orange-soft)] text-[var(--orange)] sm:size-11 sm:rounded-2xl"><CalendarDays className="size-5" /></span>
             <div className="min-w-0">
               <p className="text-sm font-semibold">{format(monthStart, "yyyy年M月", { locale: zhCN })}</p>
               <p className="mt-1 text-xs leading-relaxed text-[var(--muted)]">
@@ -169,19 +169,19 @@ export default async function TimelinePage({ searchParams }: { searchParams: Pro
       </section>
 
       {!dog ? (
-        <div className="soft-card rounded-3xl">
+        <div className="soft-card rounded-2xl sm:rounded-3xl">
           <EmptyState title="先创建小狗档案" description="有了档案后，成长回顾才会开始记录。" />
         </div>
       ) : (
         <>
-          <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <section className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <Metric icon={Sparkles} label="本月事件" value={`${allItems.length} 件`} meta={`${counts.log} 条日常 · ${counts.photo} 张照片`} tone="orange" />
             <Metric icon={HeartPulse} label="健康与提醒" value={`${counts.health + counts.reminder} 件`} meta={`${counts.health} 条健康 · ${counts.reminder} 个提醒`} tone="sage" />
             <Metric icon={CircleDollarSign} label="本月开销" value={money(expenseTotal)} meta={`${counts.expense} 笔记录`} tone="violet" />
             <Metric icon={Camera} label="照片回忆" value={`${counts.photo} 张`} meta={photoHighlight ? format(photoHighlight.date, "M月d日", { locale: zhCN }) : "等待第一张照片"} tone="pink" />
           </section>
 
-          <section className="grid gap-5 xl:grid-cols-[minmax(0,1.25fr)_minmax(320px,.75fr)]">
+          <section className="grid gap-4 sm:gap-5 xl:grid-cols-[minmax(0,1.25fr)_minmax(320px,.75fr)]">
             <div className="space-y-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                 <div>
@@ -206,7 +206,7 @@ export default async function TimelinePage({ searchParams }: { searchParams: Pro
               </div>
             </div>
 
-            <aside className="space-y-4">
+            <aside className="space-y-3 sm:space-y-4">
               <h2 className="font-semibold">本月亮点</h2>
               {photoHighlight ? <HighlightPhoto photo={{ url: photoHighlight.url, title: photoHighlight.title || photoHighlight.dailyLog?.title || "照片回忆", date: photoHighlight.date }} /> : <HighlightEmpty />}
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
@@ -229,7 +229,7 @@ export default async function TimelinePage({ searchParams }: { searchParams: Pro
               </div>
             </section>
           ) : (
-            <div className="soft-card rounded-3xl">
+            <div className="soft-card rounded-2xl sm:rounded-3xl">
               <EmptyState title="这个月还没有记录" description="日常、照片、健康、开销或提醒都会出现在这里。" />
             </div>
           )}
@@ -266,7 +266,7 @@ function countKinds(items: TimelineItem[]) {
 function MonthNav({ month }: { month: string }) {
   const current = new Date(`${month}-01T00:00:00`);
   return (
-    <div className="flex w-full items-center justify-between rounded-2xl bg-black/[.035] p-1 dark:bg-white/[.055] sm:w-auto">
+    <div className="flex w-full items-center justify-between rounded-xl bg-black/[.035] p-1 dark:bg-white/[.055] sm:w-auto sm:rounded-2xl">
       <Button asChild variant="ghost" size="icon" aria-label="上个月"><Link href={timelineHref(format(addMonths(current, -1), "yyyy-MM"))}><ArrowLeft className="size-4" /></Link></Button>
       <Button asChild variant="ghost" size="sm" className="px-4"><Link href={timelineHref(format(new Date(), "yyyy-MM"))}>本月</Link></Button>
       <Button asChild variant="ghost" size="icon" aria-label="下个月"><Link href={timelineHref(format(addMonths(current, 1), "yyyy-MM"))}><ArrowRight className="size-4" /></Link></Button>
@@ -280,7 +280,7 @@ function CalendarCell({ day, currentMonth, items }: { day: Date; currentMonth: D
   const preview = items.slice(0, 4);
   return (
     <div className={cn(
-      "min-h-[4.1rem] overflow-hidden rounded-2xl border bg-[var(--card)]/58 p-1.5 shadow-sm shadow-stone-900/[.015] sm:min-h-[6.75rem] sm:p-2.5",
+      "min-h-12 overflow-hidden rounded-xl border bg-[var(--card)]/58 p-1.5 shadow-sm shadow-stone-900/[.015] sm:min-h-[6.75rem] sm:rounded-2xl sm:p-2.5",
       !inMonth && "opacity-35",
       items.length && "border-orange-300/35 bg-[var(--card)] shadow-md shadow-orange-900/[.03]",
       isCurrentDay && inMonth && "ring-2 ring-[var(--orange)]/20",
@@ -289,7 +289,7 @@ function CalendarCell({ day, currentMonth, items }: { day: Date; currentMonth: D
         <span className={cn("text-xs font-semibold tabular-nums", !inMonth && "text-[var(--muted)]")}>{format(day, "d")}</span>
         {items.length > 4 && <span className="rounded-full bg-black/[.045] px-1.5 py-0.5 text-[10px] leading-none text-[var(--muted)] dark:bg-white/[.06]">+{items.length - 4}</span>}
       </div>
-      <div className="mt-2 flex flex-wrap gap-1 sm:block sm:space-y-1">
+      <div className="mt-1.5 flex flex-wrap gap-1 sm:mt-2 sm:block sm:space-y-1">
         {preview.map((item) => <div key={item.id} className="flex min-w-0 items-center gap-1.5">
           <span className={cn("size-1.5 shrink-0 rounded-full", kindDot(item.kind))} />
           <span className="hidden min-w-0 truncate text-[10px] text-[var(--muted)] sm:block">{item.title}</span>
@@ -307,10 +307,10 @@ function Metric({ icon: Icon, label, value, meta, tone }: { icon: typeof Sparkle
     pink: "bg-pink-500/10 text-pink-700 dark:text-pink-300",
   };
   return (
-    <div className="soft-card min-w-0 rounded-3xl p-4 sm:p-5">
-      <div className={cn("grid size-10 place-items-center rounded-2xl", tones[tone])}><Icon className="size-5" /></div>
-      <p className="mt-5 text-xs text-[var(--muted)]">{label}</p>
-      <p className="mt-1 truncate text-xl font-semibold tracking-tight">{value}</p>
+    <div className="soft-card min-w-0 rounded-2xl p-4 sm:rounded-3xl sm:p-5">
+      <div className={cn("grid size-9 place-items-center rounded-xl sm:size-10 sm:rounded-2xl", tones[tone])}><Icon className="size-4 sm:size-5" /></div>
+      <p className="mt-4 text-xs text-[var(--muted)] sm:mt-5">{label}</p>
+      <p className="mt-1 truncate text-lg font-semibold tracking-tight sm:text-xl">{value}</p>
       <p className="mt-1 truncate text-xs text-[var(--muted)]">{meta}</p>
     </div>
   );
@@ -318,10 +318,10 @@ function Metric({ icon: Icon, label, value, meta, tone }: { icon: typeof Sparkle
 
 function HighlightPhoto({ photo }: { photo: { url: string; title: string; date: Date } }) {
   return (
-    <Link href="/photos" className="group block overflow-hidden rounded-3xl border bg-[var(--card)] shadow-sm shadow-stone-900/[.025] transition hover:-translate-y-0.5 hover:shadow-xl">
+    <Link href="/photos" className="group block overflow-hidden rounded-2xl border bg-[var(--card)] shadow-sm shadow-stone-900/[.025] transition hover:-translate-y-0.5 hover:shadow-xl sm:rounded-3xl">
       <div className="relative aspect-[4/3]">
         <Image src={imageVariantUrl(photo.url, "medium")} alt={photo.title} fill unoptimized className="object-cover transition duration-500 group-hover:scale-[1.035]" sizes="(max-width: 1280px) 100vw, 380px" />
-        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent p-4 pt-16 text-white">
+        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent p-3 pt-12 text-white sm:p-4 sm:pt-16">
           <p className="text-xs text-white/70">{format(photo.date, "M月d日", { locale: zhCN })}</p>
           <p className="mt-1 line-clamp-2 font-semibold">{photo.title}</p>
         </div>
@@ -332,8 +332,8 @@ function HighlightPhoto({ photo }: { photo: { url: string; title: string; date: 
 
 function HighlightEmpty() {
   return (
-    <div className="rounded-3xl border bg-[var(--card)]/60 p-5">
-      <div className="grid aspect-[4/3] place-items-center rounded-2xl bg-black/[.025] text-center dark:bg-white/[.035]">
+    <div className="rounded-2xl border bg-[var(--card)]/60 p-4 sm:rounded-3xl sm:p-5">
+      <div className="grid aspect-[4/3] place-items-center rounded-xl bg-black/[.025] text-center sm:rounded-2xl dark:bg-white/[.035]">
         <div>
           <Camera className="mx-auto size-6 text-[var(--orange)]" />
           <p className="mt-3 text-sm font-semibold">暂无照片亮点</p>
@@ -350,8 +350,8 @@ function HighlightLine({ icon: Icon, label, value, meta, tone, href }: { icon: t
     violet: "bg-violet-500/10 text-violet-600 dark:text-violet-300",
   };
   return (
-    <Link href={href} className="flex min-w-0 items-center gap-3 rounded-3xl border bg-[var(--card)]/72 p-4 shadow-sm shadow-stone-900/[.025] transition hover:-translate-y-0.5 hover:shadow-lg">
-      <span className={cn("grid size-10 shrink-0 place-items-center rounded-2xl", tones[tone])}><Icon className="size-5" /></span>
+    <Link href={href} className="flex min-w-0 items-center gap-3 rounded-2xl border bg-[var(--card)]/72 p-3.5 shadow-sm shadow-stone-900/[.025] transition hover:-translate-y-0.5 hover:shadow-lg sm:rounded-3xl sm:p-4">
+      <span className={cn("grid size-9 shrink-0 place-items-center rounded-xl sm:size-10 sm:rounded-2xl", tones[tone])}><Icon className="size-4 sm:size-5" /></span>
       <span className="min-w-0 flex-1">
         <span className="block text-xs text-[var(--muted)]">{label}</span>
         <span className="mt-0.5 block truncate font-semibold">{value}</span>
@@ -365,7 +365,7 @@ function HighlightLine({ icon: Icon, label, value, meta, tone, href }: { icon: t
 function DayRecap({ day, items }: { day: string; items: TimelineItem[] }) {
   const photoItems = items.filter((item): item is TimelineItem & { imageUrl: string } => Boolean(item.imageUrl));
   return (
-    <section className="grid gap-3 rounded-3xl border bg-[var(--card)]/62 p-3 shadow-sm shadow-stone-900/[.02] sm:grid-cols-[8rem_minmax(0,1fr)] sm:p-5 lg:grid-cols-[9rem_minmax(0,1fr)]">
+    <section className="grid gap-2 rounded-2xl border bg-[var(--card)]/62 p-2.5 shadow-sm shadow-stone-900/[.02] sm:grid-cols-[8rem_minmax(0,1fr)] sm:gap-3 sm:rounded-3xl sm:p-5 lg:grid-cols-[9rem_minmax(0,1fr)]">
       <div className="flex min-w-0 items-start justify-between gap-3 sm:block">
         <div className="min-w-0">
           <p className="text-sm font-semibold">{format(new Date(`${day}T00:00:00`), "M月d日", { locale: zhCN })}</p>
@@ -415,7 +415,7 @@ function DayPhotoPreview({ photos }: { photos: Array<TimelineItem & { imageUrl: 
 
 function EventRow({ item }: { item: TimelineItem }) {
   return (
-    <Link href={item.href} className="group flex min-w-0 items-start gap-2.5 rounded-2xl p-2.5 transition hover:bg-black/[.025] dark:hover:bg-white/[.04] sm:gap-3">
+    <Link href={item.href} className="group flex min-w-0 items-start gap-2.5 rounded-xl p-2 transition hover:bg-black/[.025] dark:hover:bg-white/[.04] sm:gap-3 sm:rounded-2xl sm:p-2.5">
       {item.kind === "photo" || item.kind === "reminder" ? (
         <span className={cn("mt-0.5 grid size-8 shrink-0 place-items-center rounded-xl", kindIconTone(item.kind))}>{item.kind === "photo" ? <Camera className="size-4" /> : <BellRing className="size-4" />}</span>
       ) : (

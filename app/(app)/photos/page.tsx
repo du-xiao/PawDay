@@ -32,8 +32,8 @@ export default async function PhotosPage() {
   return <div className="page-enter">
     <PageHeader eyebrow="PHOTOS" title="成长相册" description="不必每张都完美，它看向你的那一刻就已经值得收藏。" action={canWrite ? <PhotoForm logs={logs} disabled={!dog} /> : undefined} />
     {photos.length ? <>
-      <div className="mb-5 flex items-center gap-3 rounded-3xl border bg-[var(--card)]/55 p-4 text-sm text-[var(--muted)] shadow-sm">
-        <span className="grid size-10 place-items-center rounded-2xl bg-[var(--orange-soft)] text-[var(--orange)]"><Images className="size-5" /></span>
+      <div className="mb-4 flex items-center gap-3 rounded-2xl border bg-[var(--card)]/55 p-3 text-sm text-[var(--muted)] shadow-sm sm:mb-5 sm:rounded-3xl sm:p-4">
+        <span className="grid size-9 place-items-center rounded-xl bg-[var(--orange-soft)] text-[var(--orange)] sm:size-10 sm:rounded-2xl"><Images className="size-4 sm:size-5" /></span>
         已收藏 <strong className="text-[var(--foreground)]">{photos.length}</strong> 张照片，最新的回忆排在前面。
       </div>
       <PhotoGallery canWrite={canWrite} photos={photos.map((photo) => ({
@@ -44,7 +44,7 @@ export default async function PhotosPage() {
         date: photo.date.toISOString(),
         dailyLogTitle: photo.dailyLog?.title || null,
       }))} />
-    </> : <div className="soft-card rounded-3xl">
+    </> : <div className="soft-card rounded-2xl sm:rounded-3xl">
       <EmptyState title="第一张照片会是什么？" description="支持 JPG、PNG、WebP。上传后可以写下标题、日期，也可以关联一条日常记录。" action={canWrite ? <PhotoForm logs={logs} disabled={!dog} /> : undefined} />
     </div>}
   </div>;
